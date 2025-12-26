@@ -1,0 +1,57 @@
+{% load static %}
+<nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+    <div class="container-fluid">
+        <a class="navbar-brand" href="{% url 'dashboard' %}">
+            <i class="bi bi-mortarboard-fill"></i> School MS
+        </a>
+        
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        
+        <div class="collapse navbar-collapse" id="navbarNav">
+            <ul class="navbar-nav ms-auto">
+                {% if user.is_teacher or user.is_admin or user.is_staff %}
+                <li class="nav-item">
+                    <a class="nav-link" href="/admin/results/result/" style="background: rgba(255,255,255,0.15); border-radius: 5px; padding: 8px 15px; margin-right: 8px;">
+                        <i class="bi bi-table"></i> <strong>View Results</strong>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="{% url 'exams:exam_list' %}" style="background: rgba(255,255,255,0.1); border-radius: 5px; padding: 8px 15px; margin-right: 10px;">
+                        <i class="bi bi-file-earmark-text-fill"></i> <strong>Report Processing</strong>
+                    </a>
+                </li>
+                {% endif %}
+                
+                <li class="nav-item">
+                    <a class="nav-link" href="{% url 'notifications:notice_board' %}">
+                        <i class="bi bi-megaphone"></i> Notices
+                    </a>
+                </li>
+                
+                <li class="nav-item">
+                    <a class="nav-link" href="{% url 'notifications:notifications' %}">
+                        <i class="bi bi-bell"></i> Notifications
+                        <span class="badge bg-danger">3</span>
+                    </a>
+                </li>
+                
+                <li class="nav-item dropdown">
+                    <a class="nav-link dropdown-toggle" href="#" id="userDropdown" role="button" data-bs-toggle="dropdown">
+                        <i class="bi bi-person-circle"></i> {{ user.get_full_name }}
+                    </a>
+                    <ul class="dropdown-menu dropdown-menu-end">
+                        <li><a class="dropdown-item" href="{% url 'accounts:profile' %}">
+                            <i class="bi bi-person"></i> Profile
+                        </a></li>
+                        <li><hr class="dropdown-divider"></li>
+                        <li><a class="dropdown-item" href="{% url 'accounts:logout' %}">
+                            <i class="bi bi-box-arrow-right"></i> Logout
+                        </a></li>
+                    </ul>
+                </li>
+            </ul>
+        </div>
+    </div>
+</nav>

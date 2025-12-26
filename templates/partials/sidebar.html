@@ -1,0 +1,114 @@
+{% load static %}
+<div class="position-sticky pt-3">
+    <ul class="nav flex-column">
+        <li class="nav-item">
+            <a class="nav-link {% if request.path == '/dashboard/' %}active{% endif %}" href="{% url 'dashboard' %}">
+                <i class="bi bi-house-door"></i> Dashboard
+            </a>
+        </li>
+        
+        {% if user.is_admin or user.is_staff %}
+            <li class="nav-item">
+                <a class="nav-link" href="{% url 'students:student_list' %}">
+                    <i class="bi bi-people"></i> Students
+                </a>
+            </li>
+            
+            <li class="nav-item">
+                <a class="nav-link" href="{% url 'teachers:teacher_list' %}">
+                    <i class="bi bi-person-badge"></i> Teachers
+                </a>
+            </li>
+            
+            <li class="nav-item">
+                <a class="nav-link" href="{% url 'parents:parent_list' %}">
+                    <i class="bi bi-person-hearts"></i> Parents
+                </a>
+            </li>
+            
+            <li class="nav-item">
+                <a class="nav-link" href="{% url 'staff:staff_list' %}">
+                    <i class="bi bi-person-workspace"></i> Staff
+                </a>
+            </li>
+        {% endif %}
+        
+        <li class="nav-item">
+            <a class="nav-link" href="{% url 'classes:class_list' %}">
+                <i class="bi bi-door-open"></i> Classes
+            </a>
+        </li>
+        
+        <li class="nav-item">
+            <a class="nav-link" href="{% url 'classes:subject_list' %}">
+                <i class="bi bi-book"></i> Subjects
+            </a>
+        </li>
+        
+        {% if user.is_teacher or user.is_admin %}
+            <li class="nav-item">
+                <a class="nav-link" href="#">
+                    <i class="bi bi-calendar-check"></i> Attendance
+                </a>
+            </li>
+        {% endif %}
+        
+        <li class="nav-item">
+            <a class="nav-link" href="{% url 'exams:exam_list' %}">
+                <i class="bi bi-clipboard-data"></i> Exams
+            </a>
+        </li>
+        
+        {% if user.is_teacher or user.is_admin or user.is_staff %}
+        <li class="nav-item">
+            <a class="nav-link" href="#" data-bs-toggle="collapse" data-bs-target="#resultsMenu">
+                <i class="bi bi-file-earmark-text"></i> Results & Reports
+            </a>
+            <div class="collapse" id="resultsMenu">
+                <ul class="nav flex-column ms-3">
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'exams:exam_list' %}">
+                            <i class="bi bi-pencil-square"></i> Process Reports
+                        </a>
+                    </li>
+                </ul>
+            </div>
+        </li>
+        {% else %}
+        <li class="nav-item">
+            <a class="nav-link" href="#">
+                <i class="bi bi-trophy"></i> My Results
+            </a>
+        </li>
+        {% endif %}
+        
+        {% if user.is_admin %}
+            <li class="nav-item">
+                <a class="nav-link" href="{% url 'fees:fee_structure' %}">
+                    <i class="bi bi-currency-dollar"></i> Fees
+                </a>
+            </li>
+            
+            <li class="nav-item">
+                <a class="nav-link" href="{% url 'promotions:promotion_list' %}">
+                    <i class="bi bi-arrow-up-circle"></i> Promotions
+                </a>
+            </li>
+        {% endif %}
+        
+        <li class="nav-item">
+            <a class="nav-link" href="{% url 'notifications:notice_board' %}">
+                <i class="bi bi-pin-angle"></i> Notice Board
+            </a>
+        </li>
+        
+        {% if user.is_admin or user.is_staff %}
+            <li class="nav-item mt-3">
+                <hr>
+                <a class="nav-link" href="/admin/">
+                    <i class="bi bi-gear"></i> Admin Panel
+                </a>
+            </li>
+        {% endif %}
+    </ul>
+</div>

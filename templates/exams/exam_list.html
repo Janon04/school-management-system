@@ -1,0 +1,144 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Exams List - SMS{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+    <h1 class="h2">
+        <i class="bi bi-journal-text"></i> Exams Management
+    </h1>
+    <div class="btn-toolbar mb-2 mb-md-0">
+        {% if user.is_admin or user.is_staff or user.is_teacher %}
+        <a href="{% url 'admin:exams_exam_add' %}" class="btn btn-primary">
+            <i class="bi bi-plus-circle"></i> Add Exam
+        </a>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Filter -->
+<div class="card mb-4">
+    <div class="card-body">
+        <form method="get" class="row g-3">
+            <div class="col-md-5">
+                <input type="text" name="q" class="form-control" placeholder="Search by exam name" value="{{ query }}">
+            </div>
+            <div class="col-md-3">
+                <select name="exam_type" class="form-select">
+                    <option value="">All Types</option>
+                    <option value="MID_TERM" {% if exam_type_filter == "MID_TERM" %}selected{% endif %}>Mid Term</option>
+                    <option value="FINAL" {% if exam_type_filter == "FINAL" %}selected{% endif %}>Final</option>
+                    <option value="QUARTERLY" {% if exam_type_filter == "QUARTERLY" %}selected{% endif %}>Quarterly</option>
+                    <option value="HALF_YEARLY" {% if exam_type_filter == "HALF_YEARLY" %}selected{% endif %}>Half Yearly</option>
+                    <option value="ANNUAL" {% if exam_type_filter == "ANNUAL" %}selected{% endif %}>Annual</option>
+                    <option value="ASSESSMENT" {% if exam_type_filter == "ASSESSMENT" %}selected{% endif %}>Assessment</option>
+                </select>
+            </div>
+            <div class="col-md-2">
+                <select name="status" class="form-select">
+                    <option value="">All Status</option>
+                    <option value="upcoming" {% if status_filter == "upcoming" %}selected{% endif %}>Upcoming</option>
+                    <option value="ongoing" {% if status_filter == "ongoing" %}selected{% endif %}>Ongoing</option>
+                    <option value="completed" {% if status_filter == "completed" %}selected{% endif %}>Completed</option>
+                </select>
+            </div>
+            <div class="col-md-2">
+                <button type="submit" class="btn btn-primary w-100">
+                    <i class="bi bi-search"></i> Search
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Exams Grid -->
+<div class="row">
+    {% if exams %}
+        {% for exam in exams %}
+        <div class="col-md-6 col-lg-4 mb-4">
+            <div class="card h-100">
+                <div class="card-header 
+                    {% if exam.end_date < today %}bg-secondary
+                    {% elif exam.start_date <= today and exam.end_date >= today %}bg-success
+                    {% else %}bg-primary
+                    {% endif %} text-white">
+                    <h6 class="card-title mb-0">
+                        <i class="bi bi-journal-text"></i> {{ exam.name }}
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <div class="mb-2">
+                        <small class="text-muted">Type</small>
+                        <div><span class="badge bg-info">{{ exam.get_exam_type_display }}</span></div>
+                    </div>
+                    
+                    <div class="mb-2">
+                        <small class="text-muted">Academic Year</small>
+                        <div><strong>{{ exam.academic_year.name }}</strong></div>
+                    </div>
+                    
+                    <div class="mb-2">
+                        <small class="text-muted">Period</small>
+                        <div>
+                            <i class="bi bi-calendar-event"></i> 
+                            <strong>{{ exam.start_date|date:"M d, Y" }}</strong> - 
+                            <strong>{{ exam.end_date|date:"M d, Y" }}</strong>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <small class="text-muted">Status</small>
+                        <div>
+                            {% if exam.end_date < today %}
+                            <span class="badge bg-secondary">Completed</span>
+                            {% elif exam.start_date <= today and exam.end_date >= today %}
+                            <span class="badge bg-success">Ongoing</span>
+                            {% else %}
+                            <span class="badge bg-primary">Upcoming</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    {% if exam.description %}
+                    <div class="mb-2">
+                        <small class="text-muted">Description</small>
+                        <div><small>{{ exam.description|truncatewords:15 }}</small></div>
+                    </div>
+                    {% endif %}
+                </div>
+                <div class="card-footer">
+                    <div class="d-flex justify-content-between gap-1">
+                        <a href="{% url 'exams:exam_detail' exam.pk %}" class="btn btn-sm btn-outline-primary">
+                            <i class="bi bi-eye"></i> Details
+                        </a>
+                        {% if user.is_admin or user.is_staff or user.is_teacher %}
+                        <a href="{% url 'results:report_processing' exam.pk %}" class="btn btn-sm btn-success">
+                            <i class="bi bi-file-earmark-text"></i> Reports
+                        </a>
+                        <a href="{% url 'admin:exams_exam_change' exam.pk %}" class="btn btn-sm btn-outline-secondary">
+                            <i class="bi bi-pencil"></i>
+                        </a>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    {% else %}
+    <div class="col-12">
+        <div class="card">
+            <div class="card-body text-center py-5">
+                <i class="bi bi-inbox display-1 text-muted"></i>
+                <p class="text-muted mt-3">No exams found</p>
+                {% if user.is_admin or user.is_staff or user.is_teacher %}
+                <a href="{% url 'admin:exams_exam_add' %}" class="btn btn-primary">
+                    <i class="bi bi-plus-circle"></i> Add First Exam
+                </a>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

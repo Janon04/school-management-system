@@ -1,0 +1,186 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ parent.user.get_full_name }} - Parent Profile{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+    <h1 class="h2">
+        <i class="bi bi-person-badge"></i> Parent Profile
+    </h1>
+    <div class="btn-toolbar mb-2 mb-md-0">
+        <div class="btn-group me-2">
+            <a href="{% url 'parents:parent_list' %}" class="btn btn-sm btn-outline-secondary">
+                <i class="bi bi-arrow-left"></i> Back to List
+            </a>
+        </div>
+        {% if user.is_admin or user.is_staff %}
+        <a href="{% url 'admin:parents_parent_change' parent.pk %}" class="btn btn-sm btn-primary">
+            <i class="bi bi-pencil"></i> Edit Profile
+        </a>
+        {% endif %}
+    </div>
+</div>
+
+<div class="row">
+    <!-- Profile Card -->
+    <div class="col-md-4 mb-4">
+        <div class="card">
+            <div class="card-body text-center">
+                {% if parent.user.profile_picture %}
+                <img src="{{ parent.user.profile_picture.url }}" class="rounded-circle mb-3" width="120" height="120" alt="{{ parent.user.get_full_name }}">
+                {% else %}
+                <div class="rounded-circle bg-info text-white d-flex align-items-center justify-content-center mx-auto mb-3" style="width: 120px; height: 120px; font-size: 48px;">
+                    {{ parent.user.first_name.0 }}{{ parent.user.last_name.0 }}
+                </div>
+                {% endif %}
+                <h5 class="card-title">{{ parent.user.get_full_name }}</h5>
+                <p class="text-muted">{{ parent.relationship|default:"Guardian" }}</p>
+            </div>
+        </div>
+        
+        <!-- Quick Info Card -->
+        <div class="card mt-3">
+            <div class="card-header">
+                <h6 class="mb-0">Contact Information</h6>
+            </div>
+            <div class="card-body">
+                <div class="mb-2">
+                    <small class="text-muted"><i class="bi bi-envelope"></i> Email</small>
+                    <div><strong>{{ parent.user.email }}</strong></div>
+                </div>
+                <div class="mb-2">
+                    <small class="text-muted"><i class="bi bi-telephone"></i> Phone</small>
+                    <div><strong>{{ parent.user.phone_number|default:"N/A" }}</strong></div>
+                </div>
+                <div class="mb-2">
+                    <small class="text-muted"><i class="bi bi-telephone-fill"></i> Emergency</small>
+                    <div><strong>{{ parent.emergency_contact|default:"N/A" }}</strong></div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Children Count Card -->
+        <div class="card mt-3">
+            <div class="card-body text-center">
+                <h2 class="text-primary mb-0">{{ parent.student_set.count }}</h2>
+                <small class="text-muted">Child(ren) Registered</small>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Detailed Information -->
+    <div class="col-md-8">
+        <!-- Personal Information -->
+        <div class="card mb-3">
+            <div class="card-header">
+                <h6 class="mb-0"><i class="bi bi-person"></i> Personal Information</h6>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <small class="text-muted">Full Name</small>
+                        <div><strong>{{ parent.user.get_full_name }}</strong></div>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <small class="text-muted">Relationship</small>
+                        <div><strong>{{ parent.relationship|default:"Guardian" }}</strong></div>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <small class="text-muted">Email</small>
+                        <div><strong>{{ parent.user.email }}</strong></div>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <small class="text-muted">Phone Number</small>
+                        <div><strong>{{ parent.user.phone_number|default:"N/A" }}</strong></div>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <small class="text-muted">Occupation</small>
+                        <div><strong>{{ parent.occupation|default:"N/A" }}</strong></div>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <small class="text-muted">Emergency Contact</small>
+                        <div><strong>{{ parent.emergency_contact|default:"N/A" }}</strong></div>
+                    </div>
+                    <div class="col-md-12 mb-3">
+                        <small class="text-muted">Address</small>
+                        <div><strong>{{ parent.address|default:"N/A" }}</strong></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Children Information -->
+        <div class="card mb-3">
+            <div class="card-header">
+                <h6 class="mb-0"><i class="bi bi-people-fill"></i> Children</h6>
+            </div>
+            <div class="card-body">
+                {% if parent.student_set.all %}
+                <div class="table-responsive">
+                    <table class="table table-sm">
+                        <thead>
+                            <tr>
+                                <th>Admission No.</th>
+                                <th>Name</th>
+                                <th>Class</th>
+                                <th>Status</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for student in parent.student_set.all %}
+                            <tr>
+                                <td>{{ student.admission_number }}</td>
+                                <td>
+                                    <div class="d-flex align-items-center">
+                                        {% if student.user.profile_picture %}
+                                        <img src="{{ student.user.profile_picture.url }}" class="rounded-circle me-2" width="24" height="24" alt="{{ student.user.get_full_name }}">
+                                        {% else %}
+                                        <div class="rounded-circle bg-primary text-white d-flex align-items-center justify-content-center me-2" style="width: 24px; height: 24px; font-size: 10px;">
+                                            {{ student.user.first_name.0 }}{{ student.user.last_name.0 }}
+                                        </div>
+                                        {% endif %}
+                                        <span>{{ student.user.get_full_name }}</span>
+                                    </div>
+                                </td>
+                                <td>{{ student.class_assigned|default:"Not Assigned" }}</td>
+                                <td>
+                                    {% if student.is_active %}
+                                    <span class="badge bg-success">Active</span>
+                                    {% else %}
+                                    <span class="badge bg-danger">Inactive</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <a href="{% url 'students:student_detail' student.pk %}" class="btn btn-sm btn-outline-primary">
+                                        <i class="bi bi-eye"></i> View
+                                    </a>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <p class="text-muted text-center py-3">No children registered</p>
+                {% endif %}
+            </div>
+        </div>
+        
+        <!-- Additional Information -->
+        <div class="card">
+            <div class="card-header">
+                <h6 class="mb-0"><i class="bi bi-info-circle"></i> Additional Notes</h6>
+            </div>
+            <div class="card-body">
+                {% if parent.notes %}
+                <p>{{ parent.notes|linebreaks }}</p>
+                {% else %}
+                <p class="text-muted">No additional notes</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

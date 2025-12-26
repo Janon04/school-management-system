@@ -1,0 +1,131 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Report Processing - {{ exam.name }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2><i class="bi bi-file-earmark-text"></i> Report Processing - {{ exam.name }}</h2>
+        <a href="{% url 'exams:exam_list' %}" class="btn btn-outline-secondary">
+            <i class="bi bi-arrow-left"></i> Back to Exams
+        </a>
+    </div>
+
+    <!-- Exam Information -->
+    <div class="card mb-4">
+        <div class="card-header bg-primary text-white">
+            <h5 class="mb-0"><i class="bi bi-info-circle"></i> Exam Information</h5>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-3">
+                    <strong>Exam Type:</strong><br>
+                    <span class="badge bg-info">{{ exam.get_exam_type_display }}</span>
+                </div>
+                <div class="col-md-3">
+                    <strong>Term:</strong><br>
+                    {{ exam.term }}
+                </div>
+                <div class="col-md-3">
+                    <strong>Academic Year:</strong><br>
+                    {{ exam.academic_year.name }}
+                </div>
+                <div class="col-md-3">
+                    <strong>Duration:</strong><br>
+                    {{ exam.start_date }} to {{ exam.end_date }}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Class Selection -->
+    <div class="card mb-4">
+        <div class="card-header">
+            <h5 class="mb-0"><i class="bi bi-door-open"></i> Select Class for Report Processing</h5>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                {% for schedule in schedules %}
+                    <div class="col-md-6 col-lg-4 mb-3">
+                        <div class="card border h-100">
+                            <div class="card-body">
+                                <h6 class="card-title">{{ schedule.class_room.name }}</h6>
+                                <p class="text-muted mb-2">{{ schedule.class_room.academic_year.name }}</p>
+                                
+                                <div class="d-flex justify-content-between align-items-center mb-3">
+                                    <small class="text-muted">
+                                        <i class="bi bi-people"></i> {{ schedule.class_room.students.count }} Students
+                                    </small>
+                                    <small class="text-muted">
+                                        <i class="bi bi-book"></i> {{ schedule.subjects.count }} Subjects
+                                    </small>
+                                </div>
+
+                                <div class="progress mb-3" style="height: 20px;">
+                                    <div class="progress-bar bg-success" role="progressbar" 
+                                         style="width: {{ schedule.completion_percentage }}%">
+                                        {{ schedule.completion_percentage|floatformat:0 }}% Complete
+                                    </div>
+                                </div>
+
+                                <div class="btn-group w-100" role="group">
+                                    <a href="{% url 'results:enter_results' exam.pk schedule.class_room.pk %}" 
+                                       class="btn btn-sm btn-primary">
+                                        <i class="bi bi-pencil"></i> Enter Results
+                                    </a>
+                                    <a href="{% url 'results:generate_reports' exam.pk schedule.class_room.pk %}" 
+                                       class="btn btn-sm btn-success">
+                                        <i class="bi bi-file-earmark-pdf"></i> Generate Reports
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                {% empty %}
+                    <div class="col-12">
+                        <div class="alert alert-info">
+                            <i class="bi bi-info-circle"></i> No exam schedules found. Please create exam schedules first.
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Overall Statistics -->
+    <div class="card">
+        <div class="card-header">
+            <h5 class="mb-0"><i class="bi bi-graph-up"></i> Overall Statistics</h5>
+        </div>
+        <div class="card-body">
+            <div class="row text-center">
+                <div class="col-md-3">
+                    <div class="p-3 bg-light rounded">
+                        <h3 class="mb-0 text-primary">{{ total_classes }}</h3>
+                        <small class="text-muted">Total Classes</small>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="p-3 bg-light rounded">
+                        <h3 class="mb-0 text-success">{{ results_entered }}</h3>
+                        <small class="text-muted">Results Entered</small>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="p-3 bg-light rounded">
+                        <h3 class="mb-0 text-warning">{{ results_pending }}</h3>
+                        <small class="text-muted">Pending</small>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="p-3 bg-light rounded">
+                        <h3 class="mb-0 text-info">{{ reports_generated }}</h3>
+                        <small class="text-muted">Reports Generated</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

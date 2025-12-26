@@ -1,0 +1,275 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Dashboard - School Management System{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+    <h1 class="h2">
+        <i class="bi bi-speedometer2"></i> Dashboard
+    </h1>
+    <div class="btn-toolbar mb-2 mb-md-0">
+        <div class="btn-group me-2">
+            <button type="button" class="btn btn-sm btn-outline-secondary">
+                <i class="bi bi-calendar3"></i> {{ current_date|date:"F d, Y" }}
+            </button>
+        </div>
+    </div>
+</div>
+
+{% if user.is_admin or user.is_staff_member or user.is_superuser %}
+    <!-- Admin Dashboard -->
+    <div class="row">
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-primary shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
+                                Total Students
+                            </div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ total_students }}</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="bi bi-people fs-2 text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-success shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-success text-uppercase mb-1">
+                                Total Teachers
+                            </div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ total_teachers }}</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="bi bi-person-badge fs-2 text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-info shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-info text-uppercase mb-1">
+                                Active Classes
+                            </div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ active_classes }}</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="bi bi-book fs-2 text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-warning shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">
+                                Upcoming Exams
+                            </div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ upcoming_exams }}</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="bi bi-clipboard-check fs-2 text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Recent Activity -->
+    <div class="row">
+        <div class="col-lg-8">
+            <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">Recent Payments</h6>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-bordered">
+                            <thead>
+                                <tr>
+                                    <th>Receipt No</th>
+                                    <th>Student</th>
+                                    <th>Amount</th>
+                                    <th>Date</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for payment in recent_payments %}
+                                <tr>
+                                    <td>{{ payment.receipt_number }}</td>
+                                    <td>{{ payment.student.full_name }}</td>
+                                    <td>${{ payment.amount_paid }}</td>
+                                    <td>{{ payment.payment_date }}</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-4">
+            <div class="card shadow mb-4">
+                <div class="card-header py-3 bg-success text-white">
+                    <h6 class="m-0 font-weight-bold">📝 Report Processing</h6>
+                </div>
+                <div class="card-body">
+                    <p class="mb-3">Process student exam reports and generate report cards</p>
+                    <a href="{% url 'exams:exam_list' %}" class="btn btn-success btn-block mb-2 w-100">
+                        <i class="bi bi-file-earmark-text"></i> Process Reports
+                    </a>
+                    <hr>
+                    <h6 class="font-weight-bold">Quick Actions:</h6>
+                    <a href="{% url 'students:student_list' %}" class="btn btn-outline-primary btn-sm btn-block mb-2 w-100">
+                        <i class="bi bi-plus-circle"></i> Add Student
+                    </a>
+                    <a href="#" class="btn btn-outline-success btn-sm btn-block mb-2 w-100">
+                        <i class="bi bi-calendar-check"></i> Mark Attendance
+                    </a>
+                    <a href="{% url 'notifications:notice_board' %}" class="btn btn-outline-info btn-sm btn-block w-100">
+                        <i class="bi bi-megaphone"></i> Post Notice
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+{% elif user.is_teacher %}
+    <!-- Teacher Dashboard -->
+    <div class="row">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header">
+                    <h5>My Classes</h5>
+                </div>
+                <div class="card-body">
+                    {% if classes_assigned %}
+                        <ul class="list-group">
+                            {% for class_room in classes_assigned %}
+                            <li class="list-group-item">
+                                <a href="{% url 'classes:class_detail' class_room.pk %}">
+                                    {{ class_room.full_name }}
+                                </a>
+                            </li>
+                            {% endfor %}
+                        </ul>
+                    {% else %}
+                        <p class="text-muted">No classes assigned yet.</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-header">
+                    <h5>My Subjects</h5>
+                </div>
+                <div class="card-body">
+                    {% if subjects %}
+                        <ul class="list-group">
+                            {% for subject in subjects %}
+                            <li class="list-group-item">{{ subject.name }}</li>
+                            {% endfor %}
+                        </ul>
+                    {% else %}
+                        <p class="text-muted">No subjects assigned.</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+{% elif user.is_student %}
+    <!-- Student Dashboard -->
+    <div class="row">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h5>My Profile</h5>
+                </div>
+                <div class="card-body">
+                    <p><strong>Admission Number:</strong> {{ student.admission_number }}</p>
+                    <p><strong>Class:</strong> {{ student.class_assigned }}</p>
+                    <p><strong>Roll Number:</strong> {{ student.roll_number }}</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h5>Recent Results</h5>
+                </div>
+                <div class="card-body">
+                    {% if recent_results %}
+                        <ul class="list-group">
+                            {% for result in recent_results %}
+                            <li class="list-group-item">
+                                {{ result.subject.name }}: {{ result.marks_obtained }}/{{ result.max_marks }}
+                            </li>
+                            {% endfor %}
+                        </ul>
+                    {% else %}
+                        <p class="text-muted">No results available.</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+{% elif user.is_parent %}
+    <!-- Parent Dashboard -->
+    <div class="row">
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5>My Children</h5>
+                </div>
+                <div class="card-body">
+                    {% if children %}
+                        <div class="row">
+                            {% for child in children %}
+                            <div class="col-md-4">
+                                <div class="card mb-3">
+                                    <div class="card-body">
+                                        <h5 class="card-title">{{ child.full_name }}</h5>
+                                        <p class="card-text">
+                                            <strong>Admission No:</strong> {{ child.admission_number }}<br>
+                                            <strong>Class:</strong> {{ child.class_assigned }}
+                                        </p>
+                                        <a href="{% url 'students:student_detail' child.pk %}" class="btn btn-sm btn-primary">
+                                            View Details
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <p class="text-muted">No children linked to your account.</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+{% endif %}
+
+{% endblock %}

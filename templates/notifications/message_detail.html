@@ -1,0 +1,106 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ message.subject }} - Message Details{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+    <h1 class="h2">
+        <i class="bi bi-chat-dots"></i> Message Details
+    </h1>
+    <div class="btn-toolbar mb-2 mb-md-0">
+        <a href="{% url 'notifications:message_list' %}" class="btn btn-sm btn-outline-secondary">
+            <i class="bi bi-arrow-left"></i> Back to Messages
+        </a>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-8 offset-md-2">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">{{ message.subject }}</h5>
+            </div>
+            <div class="card-body">
+                <div class="mb-3 pb-3 border-bottom">
+                    <div class="row">
+                        <div class="col-6">
+                            <small class="text-muted">From:</small>
+                            <div>
+                                <strong>{{ message.sender.get_full_name }}</strong>
+                                <br>
+                                <small class="text-muted">{{ message.sender.email }}</small>
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <small class="text-muted">To:</small>
+                            <div>
+                                <strong>{{ message.recipient.get_full_name }}</strong>
+                                <br>
+                                <small class="text-muted">{{ message.recipient.email }}</small>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="mt-3">
+                        <small class="text-muted">
+                            <i class="bi bi-calendar3"></i> {{ message.created_at|date:"F d, Y" }}
+                            <span class="mx-2">|</span>
+                            <i class="bi bi-clock"></i> {{ message.created_at|time:"h:i A" }}
+                        </small>
+                    </div>
+                </div>
+                
+                <div class="message-content">
+                    {{ message.message|linebreaks }}
+                </div>
+                
+                {% if message.attachment %}
+                <div class="mt-3 pt-3 border-top">
+                    <a href="{{ message.attachment.url }}" target="_blank" class="btn btn-sm btn-outline-primary">
+                        <i class="bi bi-paperclip"></i> View Attachment
+                    </a>
+                </div>
+                {% endif %}
+            </div>
+            <div class="card-footer">
+                {% if message.recipient == user %}
+                <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#replyModal">
+                    <i class="bi bi-reply"></i> Reply
+                </button>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Reply Modal -->
+<div class="modal fade" id="replyModal" tabindex="-1" aria-labelledby="replyModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="replyModalLabel">
+                    <i class="bi bi-reply"></i> Reply to {{ message.sender.get_full_name }}
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form method="post" action="{% url 'notifications:send_message' %}">
+                {% csrf_token %}
+                <input type="hidden" name="recipient" value="{{ message.sender.id }}">
+                <input type="hidden" name="subject" value="Re: {{ message.subject }}">
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label for="reply_message" class="form-label">Message:</label>
+                        <textarea name="message" id="reply_message" class="form-control" rows="5" required></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="bi bi-send"></i> Send Reply
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

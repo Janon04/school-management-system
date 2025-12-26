@@ -1,0 +1,246 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Generate Reports - {{ class_room.name }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2><i class="bi bi-file-earmark-pdf"></i> Generate Report Cards</h2>
+        <a href="{% url 'results:report_processing' exam.pk %}" class="btn btn-outline-secondary">
+            <i class="bi bi-arrow-left"></i> Back
+        </a>
+    </div>
+
+    <!-- Info Card -->
+    <div class="card mb-4">
+        <div class="card-header bg-primary text-white">
+            <h5 class="mb-0">{{ exam.name }} - {{ class_room.name }}</h5>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-3">
+                    <strong>Term:</strong> {{ exam.term }}
+                </div>
+                <div class="col-md-3">
+                    <strong>Academic Year:</strong> {{ exam.academic_year.name }}
+                </div>
+                <div class="col-md-3">
+                    <strong>Total Students:</strong> {{ students.count }}
+                </div>
+                <div class="col-md-3">
+                    <strong>Reports Generated:</strong> {{ report_cards.count }}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Actions -->
+    <div class="card mb-4">
+        <div class="card-header">
+            <h5 class="mb-0"><i class="bi bi-gear"></i> Bulk Actions</h5>
+        </div>
+        <div class="card-body">
+            <div class="d-flex gap-2 flex-wrap">
+                <form method="post" action="{% url 'results:generate_all_reports' exam.pk class_room.pk %}" class="d-inline">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-success">
+                        <i class="bi bi-file-earmark-plus"></i> Generate All Report Cards
+                    </button>
+                </form>
+                
+                <button type="button" class="btn btn-info" onclick="downloadAllReports()">
+                    <i class="bi bi-download"></i> Download All (PDF)
+                </button>
+                
+                <button type="button" class="btn btn-primary" onclick="printAllReports()">
+                    <i class="bi bi-printer"></i> Print All Reports
+                </button>
+                
+                <form method="post" action="{% url 'results:calculate_ranks' exam.pk class_room.pk %}" class="d-inline">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-warning">
+                        <i class="bi bi-trophy"></i> Calculate Class Ranks
+                    </button>
+                </form>
+                
+                <button type="button" class="btn btn-secondary" onclick="publishResults()">
+                    <i class="bi bi-eye"></i> Publish Results to Students
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Student List with Reports -->
+    <div class="card">
+        <div class="card-header">
+            <h5 class="mb-0"><i class="bi bi-people"></i> Student Report Cards</h5>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead class="table-light">
+                        <tr>
+                            <th>#</th>
+                            <th>Admission No.</th>
+                            <th>Student Name</th>
+                            <th>Marks Obtained</th>
+                            <th>Total Marks</th>
+                            <th>Percentage</th>
+                            <th>Grade</th>
+                            <th>Rank</th>
+                            <th>Status</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for student in students %}
+                        {% with report=student.report_card %}
+                        <tr>
+                            <td>{{ forloop.counter }}</td>
+                            <td>{{ student.admission_number }}</td>
+                            <td>
+                                <div class="d-flex align-items-center">
+                                    {% if student.user.profile_picture %}
+                                    <img src="{{ student.user.profile_picture.url }}" 
+                                         class="rounded-circle me-2" 
+                                         width="32" height="32" 
+                                         alt="{{ student.user.get_full_name }}">
+                                    {% else %}
+                                    <div class="rounded-circle bg-primary text-white d-flex align-items-center justify-content-center me-2" 
+                                         style="width: 32px; height: 32px; font-size: 12px;">
+                                        {{ student.user.first_name.0 }}{{ student.user.last_name.0 }}
+                                    </div>
+                                    {% endif %}
+                                    <strong>{{ student.user.get_full_name }}</strong>
+                                </div>
+                            </td>
+                            <td>
+                                {% if report %}
+                                    {{ report.marks_obtained|floatformat:2 }}
+                                {% else %}
+                                    <span class="text-muted">-</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if report %}
+                                    {{ report.total_marks|floatformat:2 }}
+                                {% else %}
+                                    <span class="text-muted">-</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if report %}
+                                    <strong>{{ report.percentage|floatformat:2 }}%</strong>
+                                {% else %}
+                                    <span class="text-muted">-</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if report %}
+                                    <span class="badge bg-{% if report.overall_grade == 'A' %}success{% elif report.overall_grade == 'B' %}info{% elif report.overall_grade == 'C' %}primary{% elif report.overall_grade == 'D' %}warning{% else %}danger{% endif %}">
+                                        {{ report.overall_grade }}
+                                    </span>
+                                {% else %}
+                                    <span class="text-muted">-</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if report and report.rank %}
+                                    <span class="badge bg-secondary">{{ report.rank }}</span>
+                                {% else %}
+                                    <span class="text-muted">-</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if report %}
+                                    <span class="badge bg-success">Generated</span>
+                                {% else %}
+                                    <span class="badge bg-warning">Pending</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <div class="btn-group btn-group-sm">
+                                    {% if report %}
+                                        <a href="{% url 'results:report_card' student.pk exam.pk %}" 
+                                           class="btn btn-outline-primary" target="_blank">
+                                            <i class="bi bi-eye"></i>
+                                        </a>
+                                        <a href="{% url 'results:report_card_pdf' student.pk exam.pk %}" 
+                                           class="btn btn-outline-success">
+                                            <i class="bi bi-download"></i>
+                                        </a>
+                                        <button class="btn btn-outline-info" 
+                                                onclick="printReport('{{ student.pk }}', '{{ exam.pk }}')">
+                                            <i class="bi bi-printer"></i>
+                                        </button>
+                                    {% else %}
+                                        <form method="post" 
+                                              action="{% url 'results:generate_single_report' exam.pk student.pk %}" 
+                                              class="d-inline">
+                                            {% csrf_token %}
+                                            <button type="submit" class="btn btn-outline-success btn-sm">
+                                                <i class="bi bi-plus"></i> Generate
+                                            </button>
+                                        </form>
+                                    {% endif %}
+                                </div>
+                            </td>
+                        </tr>
+                        {% endwith %}
+                        {% empty %}
+                        <tr>
+                            <td colspan="10" class="text-center text-muted">No students found</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function printReport(studentId, examId) {
+    const url = `/results/report-card/${studentId}/${examId}/`;
+    const printWindow = window.open(url, '_blank');
+    printWindow.onload = function() {
+        printWindow.print();
+    };
+}
+
+function printAllReports() {
+    if (confirm('This will open all report cards in new tabs for printing. Continue?')) {
+        {% for student in students %}
+            {% if student.report_card %}
+                setTimeout(() => printReport('{{ student.pk }}', '{{ exam.pk }}'), {{ forloop.counter }}00);
+            {% endif %}
+        {% endfor %}
+    }
+}
+
+function downloadAllReports() {
+    alert('Bulk PDF download feature will be implemented. This will create a ZIP file with all reports.');
+}
+
+function publishResults() {
+    if (confirm('Publish results to students and parents? They will receive notifications.')) {
+        fetch('{% url "results:publish_results" exam.pk class_room.pk %}', {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': '{{ csrf_token }}'
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                alert('Results published successfully!');
+                location.reload();
+            } else {
+                alert('Error: ' + data.error);
+            }
+        });
+    }
+}
+</script>
+{% endblock %}

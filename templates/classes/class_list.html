@@ -1,0 +1,137 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Classes List - SMS{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+    <h1 class="h2">
+        <i class="bi bi-door-open"></i> Classes Management
+    </h1>
+    <div class="btn-toolbar mb-2 mb-md-0">
+        {% if user.is_admin or user.is_staff %}
+        <a href="{% url 'admin:classes_classroom_add' %}" class="btn btn-primary">
+            <i class="bi bi-plus-circle"></i> Add Class
+        </a>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Academic Year Filter -->
+<div class="card mb-4">
+    <div class="card-body">
+        <form method="get" class="row g-3">
+            <div class="col-md-10">
+                <select name="academic_year" class="form-select">
+                    <option value="">All Academic Years</option>
+                    {% comment %}
+                    {% for year in academic_years %}
+                    <option value="{{ year.id }}" {% if year_filter == year.id|stringformat:"s" %}selected{% endif %}>
+                        {{ year.name }}
+                    </option>
+                    {% endfor %}
+                    {% endcomment %}
+                </select>
+            </div>
+            <div class="col-md-2">
+                <button type="submit" class="btn btn-primary w-100">
+                    <i class="bi bi-funnel"></i> Filter
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Classes Grid -->
+<div class="row">
+    {% if classes %}
+        {% for class in classes %}
+        <div class="col-md-6 col-lg-4 mb-4">
+            <div class="card h-100 class-card">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="card-title mb-0">
+                        <i class="bi bi-door-open"></i> {{ class.name }}
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <small class="text-muted">Class Teacher</small>
+                        <div>
+                            {% if class.class_teacher %}
+                            <strong>{{ class.class_teacher.user.get_full_name }}</strong>
+                            {% else %}
+                            <span class="text-muted">Not Assigned</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <small class="text-muted">Academic Year</small>
+                        <div><strong>{{ class.academic_year.name }}</strong></div>
+                    </div>
+                    
+                    <div class="row text-center">
+                        <div class="col-6">
+                            <div class="p-2 bg-light rounded">
+                                <h4 class="mb-0 text-primary">{{ class.student_set.count }}</h4>
+                                <small class="text-muted">Students</small>
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <div class="p-2 bg-light rounded">
+                                <h4 class="mb-0 text-success">{{ class.capacity }}</h4>
+                                <small class="text-muted">Capacity</small>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    {% if class.student_set.count >= class.capacity %}
+                    <div class="alert alert-warning mt-3 mb-0" role="alert">
+                        <small><i class="bi bi-exclamation-triangle"></i> Class is full</small>
+                    </div>
+                    {% endif %}
+                </div>
+                <div class="card-footer">
+                    <div class="d-flex justify-content-between">
+                        <a href="{% url 'classes:class_detail' class.pk %}" class="btn btn-sm btn-outline-primary">
+                            <i class="bi bi-eye"></i> View Details
+                        </a>
+                        {% if user.is_admin or user.is_staff %}
+                        <a href="{% url 'admin:classes_classroom_change' class.pk %}" class="btn btn-sm btn-outline-secondary">
+                            <i class="bi bi-pencil"></i> Edit
+                        </a>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    {% else %}
+    <div class="col-12">
+        <div class="card">
+            <div class="card-body text-center py-5">
+                <i class="bi bi-inbox display-1 text-muted"></i>
+                <p class="text-muted mt-3">No classes found</p>
+                {% if user.is_admin or user.is_staff %}
+                <a href="{% url 'admin:classes_classroom_add' %}" class="btn btn-primary">
+                    <i class="bi bi-plus-circle"></i> Add First Class
+                </a>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+.class-card {
+    transition: transform 0.2s;
+}
+.class-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+}
+</style>
+{% endblock %}

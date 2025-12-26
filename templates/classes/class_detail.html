@@ -1,0 +1,204 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load class_filters %}
+
+{% block title %}{{ class_room.name }} - Class Details{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+    <h1 class="h2">
+        <i class="bi bi-door-open"></i> {{ class_room.name }}
+    </h1>
+    <div class="btn-toolbar mb-2 mb-md-0">
+        <div class="btn-group me-2">
+            <a href="{% url 'classes:class_list' %}" class="btn btn-sm btn-outline-secondary">
+                <i class="bi bi-arrow-left"></i> Back to List
+            </a>
+        </div>
+        {% if user.is_admin or user.is_staff %}
+        <a href="{% url 'admin:classes_classroom_change' class_room.pk %}" class="btn btn-sm btn-primary">
+            <i class="bi bi-pencil"></i> Edit Class
+        </a>
+        {% endif %}
+    </div>
+</div>
+
+<div class="row">
+    <!-- Class Information Card -->
+    <div class="col-md-4 mb-4">
+        <div class="card">
+            <div class="card-header bg-primary text-white">
+                <h6 class="mb-0">Class Information</h6>
+            </div>
+            <div class="card-body">
+                <div class="mb-3">
+                    <small class="text-muted">Class Name</small>
+                    <div><strong>{{ class_room.name }}</strong></div>
+                </div>
+                <div class="mb-3">
+                    <small class="text-muted">Academic Year</small>
+                    <div><strong>{{ class_room.academic_year.name }}</strong></div>
+                </div>
+                <div class="mb-3">
+                    <small class="text-muted">Class Teacher</small>
+                    <div>
+                        {% if class_room.class_teacher %}
+                        <strong>{{ class_room.class_teacher.user.get_full_name }}</strong>
+                        {% else %}
+                        <span class="text-muted">Not Assigned</span>
+                        {% endif %}
+                    </div>
+                </div>
+                <div class="mb-3">
+                    <small class="text-muted">Capacity</small>
+                    <div><strong>{{ class_room.capacity }} students</strong></div>
+                </div>
+                <div class="mb-3">
+                    <small class="text-muted">Current Enrollment</small>
+                    <div>
+                        <strong>{{ class_room.students.count }} students</strong>
+                        <div class="progress mt-2">
+                            <div class="progress-bar {% if class_room.students.count >= class_room.capacity %}bg-danger{% elif class_room.students.count >= class_room.capacity|floatformat:0|add:"-10" %}bg-warning{% else %}bg-success{% endif %}" 
+                                 role="progressbar" 
+                                 style="width: {{ class_room.students.count|percentage:class_room.capacity }}%"
+                                 aria-valuenow="{{ class_room.students.count }}" 
+                                 aria-valuemin="0" 
+                                 aria-valuemax="{{ class_room.capacity }}">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Stats Card -->
+        <div class="card mt-3">
+            <div class="card-header">
+                <h6 class="mb-0">Quick Stats</h6>
+            </div>
+            <div class="card-body">
+                <div class="row text-center">
+                    <div class="col-12 mb-3">
+                        <div class="p-3 bg-light rounded">
+                            <h3 class="mb-0 text-primary">{{ class_room.students.count }}</h3>
+                            <small class="text-muted">Total Students</small>
+                        </div>
+                    </div>
+                    <div class="col-12 mb-3">
+                        <div class="p-3 bg-light rounded">
+                            <h3 class="mb-0 text-success">{{ class_room.classsubject_set.count }}</h3>
+                            <small class="text-muted">Subjects</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Students and Subjects -->
+    <div class="col-md-8">
+        <!-- Subjects -->
+        <div class="card mb-3">
+            <div class="card-header">
+                <h6 class="mb-0"><i class="bi bi-book"></i> Subjects</h6>
+            </div>
+            <div class="card-body">
+                {% if class_room.classsubject_set.all %}
+                <div class="table-responsive">
+                    <table class="table table-sm">
+                        <thead>
+                            <tr>
+                                <th>Subject</th>
+                                <th>Code</th>
+                                <th>Teacher</th>
+                                <th>Type</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for class_subject in class_room.classsubject_set.all %}
+                            <tr>
+                                <td><strong>{{ class_subject.subject.name }}</strong></td>
+                                <td>{{ class_subject.subject.code }}</td>
+                                <td>
+                                    {% if class_subject.teacher %}
+                                    {{ class_subject.teacher.user.get_full_name }}
+                                    {% else %}
+                                    <span class="text-muted">Not Assigned</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <span class="badge bg-info">{{ class_subject.subject.get_subject_type_display }}</span>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <p class="text-muted text-center py-3">No subjects assigned to this class</p>
+                {% endif %}
+            </div>
+        </div>
+        
+        <!-- Students List -->
+        <div class="card">
+            <div class="card-header">
+                <h6 class="mb-0"><i class="bi bi-people-fill"></i> Students</h6>
+            </div>
+            <div class="card-body">
+                {% if class_room.students.all %}
+                <div class="table-responsive">
+                    <table class="table table-hover table-sm">
+                        <thead>
+                            <tr>
+                                <th>Admission No.</th>
+                                <th>Name</th>
+                                <th>Gender</th>
+                                <th>Parent</th>
+                                <th>Status</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for student in class_room.students.all %}
+                            <tr>
+                                <td>{{ student.admission_number }}</td>
+                                <td>
+                                    <div class="d-flex align-items-center">
+                                        {% if student.user.profile_picture %}
+                                        <img src="{{ student.user.profile_picture.url }}" class="rounded-circle me-2" width="24" height="24" alt="{{ student.user.get_full_name }}">
+                                        {% else %}
+                                        <div class="rounded-circle bg-primary text-white d-flex align-items-center justify-content-center me-2" style="width: 24px; height: 24px; font-size: 10px;">
+                                            {{ student.user.first_name.0 }}{{ student.user.last_name.0 }}
+                                        </div>
+                                        {% endif %}
+                                        <span>{{ student.user.get_full_name }}</span>
+                                    </div>
+                                </td>
+                                <td>{{ student.get_gender_display }}</td>
+                                <td>{{ student.parent.user.get_full_name|default:"N/A" }}</td>
+                                <td>
+                                    {% if student.is_active %}
+                                    <span class="badge bg-success">Active</span>
+                                    {% else %}
+                                    <span class="badge bg-danger">Inactive</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <a href="{% url 'students:student_detail' student.pk %}" class="btn btn-sm btn-outline-primary">
+                                        <i class="bi bi-eye"></i>
+                                    </a>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <p class="text-muted text-center py-3">No students enrolled in this class</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

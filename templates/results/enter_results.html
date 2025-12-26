@@ -1,0 +1,273 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Enter Results - {{ class_room.name }}{% endblock %}
+
+{% block extra_css %}
+<style>
+    .result-entry-table {
+        font-size: 0.9rem;
+    }
+    .result-entry-table input {
+        max-width: 80px;
+    }
+    .sticky-header {
+        position: sticky;
+        top: 0;
+        background: white;
+        z-index: 10;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    @media print {
+        .no-print {
+            display: none !important;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4 no-print">
+        <h2><i class="bi bi-pencil-square"></i> Enter Results - {{ class_room.name }}</h2>
+        <div>
+            <button type="button" class="btn btn-success" id="saveAllResults">
+                <i class="bi bi-save"></i> Save All Results
+            </button>
+            <a href="{% url 'results:report_processing' exam.pk %}" class="btn btn-outline-secondary">
+                <i class="bi bi-arrow-left"></i> Back
+            </a>
+        </div>
+    </div>
+
+    <!-- Exam and Class Info -->
+    <div class="card mb-4 no-print">
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-4">
+                    <strong>Exam:</strong> {{ exam.name }} ({{ exam.term }})<br>
+                    <strong>Class:</strong> {{ class_room.name }}
+                </div>
+                <div class="col-md-4">
+                    <strong>Total Students:</strong> {{ students.count }}<br>
+                    <strong>Total Subjects:</strong> {{ subjects.count }}
+                </div>
+                <div class="col-md-4">
+                    <strong>Progress:</strong><br>
+                    <div class="progress" style="height: 25px;">
+                        <div class="progress-bar bg-success" style="width: {{ completion_percentage }}%">
+                            {{ completion_percentage|floatformat:0 }}% Complete
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Subject Tabs -->
+    <div class="card">
+        <div class="card-header no-print">
+            <ul class="nav nav-tabs card-header-tabs" id="subjectTabs" role="tablist">
+                {% for subject in subjects %}
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link {% if forloop.first %}active{% endif %}" 
+                            id="subject-{{ subject.pk }}-tab" 
+                            data-bs-toggle="tab" 
+                            data-bs-target="#subject-{{ subject.pk }}" 
+                            type="button">
+                        {{ subject.name }}
+                        <span class="badge bg-secondary ms-2">{{ subject.code }}</span>
+                    </button>
+                </li>
+                {% endfor %}
+            </ul>
+        </div>
+        <div class="card-body">
+            <div class="tab-content" id="subjectTabContent">
+                {% for subject in subjects %}
+                <div class="tab-pane fade {% if forloop.first %}show active{% endif %}" 
+                     id="subject-{{ subject.pk }}" 
+                     role="tabpanel">
+                    
+                    <div class="d-flex justify-content-between align-items-center mb-3 no-print">
+                        <h5>{{ subject.name }} - Max Marks: {{ subject.max_marks|default:100 }}</h5>
+                        <div>
+                            <button class="btn btn-sm btn-outline-primary" onclick="fillAbsent('{{ subject.pk }}')">
+                                <i class="bi bi-x-circle"></i> Mark All Absent
+                            </button>
+                            <button class="btn btn-sm btn-success" onclick="saveSubjectResults('{{ subject.pk }}')">
+                                <i class="bi bi-save"></i> Save Subject Results
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="table-responsive">
+                        <table class="table table-bordered table-hover result-entry-table">
+                            <thead class="table-light sticky-header">
+                                <tr>
+                                    <th width="5%">#</th>
+                                    <th width="15%">Admission No.</th>
+                                    <th width="30%">Student Name</th>
+                                    <th width="15%">Marks Obtained</th>
+                                    <th width="10%">Grade</th>
+                                    <th width="10%">Absent</th>
+                                    <th width="15%">Remarks</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for student in students %}
+                                <tr data-student="{{ student.pk }}" data-subject="{{ subject.pk }}">
+                                    <td>{{ forloop.counter }}</td>
+                                    <td>{{ student.admission_number }}</td>
+                                    <td>
+                                        <strong>{{ student.user.get_full_name }}</strong>
+                                    </td>
+                                    <td>
+                                        <input type="number" 
+                                               class="form-control form-control-sm marks-input" 
+                                               name="marks_{{ student.pk }}_{{ subject.pk }}"
+                                               value="{{ student.result_marks|default:'' }}"
+                                               min="0" 
+                                               max="{{ subject.max_marks|default:100 }}"
+                                               step="0.01"
+                                               onchange="calculateGrade(this)">
+                                    </td>
+                                    <td>
+                                        <input type="text" 
+                                               class="form-control form-control-sm grade-input" 
+                                               name="grade_{{ student.pk }}_{{ subject.pk }}"
+                                               value="{{ student.result_grade|default:'' }}"
+                                               readonly>
+                                    </td>
+                                    <td class="text-center">
+                                        <input type="checkbox" 
+                                               class="form-check-input absent-checkbox" 
+                                               name="absent_{{ student.pk }}_{{ subject.pk }}"
+                                               onchange="toggleAbsent(this)">
+                                    </td>
+                                    <td>
+                                        <input type="text" 
+                                               class="form-control form-control-sm remarks-input" 
+                                               name="remarks_{{ student.pk }}_{{ subject.pk }}"
+                                               value="{{ student.result_remarks|default:'' }}"
+                                               placeholder="Optional">
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function calculateGrade(marksInput) {
+    const row = marksInput.closest('tr');
+    const gradeInput = row.querySelector('.grade-input');
+    const marks = parseFloat(marksInput.value) || 0;
+    const maxMarks = parseFloat(marksInput.max) || 100;
+    const percentage = (marks / maxMarks) * 100;
+    
+    let grade = '';
+    if (percentage >= 80) grade = 'A';
+    else if (percentage >= 70) grade = 'B';
+    else if (percentage >= 60) grade = 'C';
+    else if (percentage >= 50) grade = 'D';
+    else if (percentage >= 40) grade = 'E';
+    else grade = 'F';
+    
+    gradeInput.value = grade;
+}
+
+function toggleAbsent(checkbox) {
+    const row = checkbox.closest('tr');
+    const marksInput = row.querySelector('.marks-input');
+    const gradeInput = row.querySelector('.grade-input');
+    
+    if (checkbox.checked) {
+        marksInput.value = '';
+        marksInput.disabled = true;
+        gradeInput.value = 'ABS';
+    } else {
+        marksInput.disabled = false;
+        gradeInput.value = '';
+    }
+}
+
+function fillAbsent(subjectId) {
+    const tabPane = document.getElementById('subject-' + subjectId);
+    const checkboxes = tabPane.querySelectorAll('.absent-checkbox');
+    const confirmed = confirm('Mark all students as absent for this subject?');
+    
+    if (confirmed) {
+        checkboxes.forEach(cb => {
+            cb.checked = true;
+            toggleAbsent(cb);
+        });
+    }
+}
+
+function saveSubjectResults(subjectId) {
+    const tabPane = document.getElementById('subject-' + subjectId);
+    const rows = tabPane.querySelectorAll('tbody tr');
+    const results = [];
+    
+    rows.forEach(row => {
+        const studentId = row.dataset.student;
+        const marksInput = row.querySelector('.marks-input');
+        const gradeInput = row.querySelector('.grade-input');
+        const absentCheckbox = row.querySelector('.absent-checkbox');
+        const remarksInput = row.querySelector('.remarks-input');
+        
+        results.push({
+            student: studentId,
+            subject: subjectId,
+            marks: marksInput.value,
+            grade: gradeInput.value,
+            is_absent: absentCheckbox.checked,
+            remarks: remarksInput.value
+        });
+    });
+    
+    // Send AJAX request to save results
+    fetch('{% url "results:save_results" exam.pk class_room.pk %}', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': '{{ csrf_token }}'
+        },
+        body: JSON.stringify({
+            subject: subjectId,
+            results: results
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            alert('Results saved successfully!');
+            location.reload();
+        } else {
+            alert('Error saving results: ' + data.error);
+        }
+    })
+    .catch(error => {
+        alert('Error saving results: ' + error);
+    });
+}
+
+document.getElementById('saveAllResults').addEventListener('click', function() {
+    const confirmed = confirm('Save all results for all subjects?');
+    if (!confirmed) return;
+    
+    const activeTab = document.querySelector('.nav-link.active');
+    if (activeTab) {
+        const subjectId = activeTab.id.replace('subject-', '').replace('-tab', '');
+        saveSubjectResults(subjectId);
+    }
+});
+</script>
+{% endblock %}

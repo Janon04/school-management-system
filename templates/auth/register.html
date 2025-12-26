@@ -1,0 +1,463 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Create Account - School Management System</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 40px 20px;
+        }
+        
+        .register-wrapper {
+            width: 100%;
+            max-width: 900px;
+        }
+        
+        .register-card {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            overflow: hidden;
+        }
+        
+        .register-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 40px;
+            text-align: center;
+            color: white;
+        }
+        
+        .register-header .logo {
+            width: 70px;
+            height: 70px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 20px;
+            font-size: 36px;
+            backdrop-filter: blur(10px);
+        }
+        
+        .register-header h1 {
+            font-size: 2rem;
+            font-weight: 700;
+            margin-bottom: 10px;
+        }
+        
+        .register-header p {
+            font-size: 1rem;
+            opacity: 0.95;
+            margin: 0;
+        }
+        
+        .register-body {
+            padding: 50px;
+        }
+        
+        .form-section {
+            margin-bottom: 30px;
+        }
+        
+        .section-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: #2d3748;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #e2e8f0;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .section-title i {
+            font-size: 1.2rem;
+            color: #667eea;
+        }
+        
+        .form-label {
+            font-weight: 600;
+            color: #4a5568;
+            margin-bottom: 8px;
+            font-size: 0.9rem;
+        }
+        
+        .form-control, .form-select {
+            border: 2px solid #e2e8f0;
+            border-radius: 10px;
+            padding: 12px 16px;
+            font-size: 0.95rem;
+            transition: all 0.3s;
+        }
+        
+        .form-control:focus, .form-select:focus {
+            border-color: #667eea;
+            box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.1);
+        }
+        
+        .input-group {
+            position: relative;
+        }
+        
+        .input-group-icon {
+            position: absolute;
+            left: 16px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #a0aec0;
+            font-size: 1.1rem;
+            z-index: 10;
+        }
+        
+        .input-group .form-control {
+            padding-left: 45px;
+        }
+        
+        .password-toggle {
+            position: absolute;
+            right: 16px;
+            top: 50%;
+            transform: translateY(-50%);
+            cursor: pointer;
+            color: #a0aec0;
+            font-size: 1.1rem;
+            z-index: 10;
+        }
+        
+        .password-toggle:hover {
+            color: #667eea;
+        }
+        
+        .btn-register {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border: none;
+            padding: 14px 30px;
+            font-size: 1rem;
+            font-weight: 600;
+            border-radius: 10px;
+            color: white;
+            width: 100%;
+            transition: all 0.3s;
+        }
+        
+        .btn-register:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(102, 126, 234, 0.4);
+        }
+        
+        .divider {
+            display: flex;
+            align-items: center;
+            text-align: center;
+            margin: 30px 0;
+        }
+        
+        .divider::before,
+        .divider::after {
+            content: '';
+            flex: 1;
+            border-bottom: 1px solid #e2e8f0;
+        }
+        
+        .divider span {
+            padding: 0 15px;
+            color: #a0aec0;
+            font-size: 0.9rem;
+        }
+        
+        .login-link {
+            text-align: center;
+            padding: 20px;
+            background: #f7fafc;
+            border-radius: 10px;
+        }
+        
+        .login-link a {
+            color: #667eea;
+            text-decoration: none;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+        
+        .login-link a:hover {
+            color: #764ba2;
+        }
+        
+        .alert {
+            border-radius: 10px;
+            border: none;
+            padding: 15px 20px;
+            margin-bottom: 25px;
+        }
+        
+        .alert-danger {
+            background: #fee;
+            color: #c53030;
+        }
+        
+        .alert-success {
+            background: #d4edda;
+            color: #155724;
+        }
+        
+        .help-text {
+            font-size: 0.85rem;
+            color: #718096;
+            margin-top: 5px;
+        }
+        
+        @media (max-width: 768px) {
+            .register-body {
+                padding: 30px 20px;
+            }
+            
+            .register-header {
+                padding: 30px 20px;
+            }
+            
+            .register-header h1 {
+                font-size: 1.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="register-wrapper">
+        <div class="register-card">
+            <div class="register-header">
+                <div class="logo">
+                    <i class="bi bi-mortarboard-fill"></i>
+                </div>
+                <h1>Create Your Account</h1>
+                <p>Join our School Management System</p>
+            </div>
+            
+            <div class="register-body">
+                {% if messages %}
+                    {% for message in messages %}
+                        <div class="alert alert-{{ message.tags }}">
+                            <i class="bi bi-{% if message.tags == 'error' %}exclamation-circle{% else %}check-circle{% endif %}"></i>
+                            {{ message }}
+                        </div>
+                    {% endfor %}
+                {% endif %}
+                
+                {% if form.errors %}
+                    <div class="alert alert-danger">
+                        <i class="bi bi-exclamation-circle"></i>
+                        <strong>Please correct the errors below:</strong>
+                        <ul class="mb-0 mt-2">
+                            {% for field in form %}
+                                {% for error in field.errors %}
+                                    <li>{{ field.label }}: {{ error }}</li>
+                                {% endfor %}
+                            {% endfor %}
+                            {% for error in form.non_field_errors %}
+                                <li>{{ error }}</li>
+                            {% endfor %}
+                        </ul>
+                    </div>
+                {% endif %}
+                
+                <form method="post" action="{% url 'accounts:register' %}" id="registerForm">
+                    {% csrf_token %}
+                    
+                    <!-- Personal Information -->
+                    <div class="form-section">
+                        <div class="section-title">
+                            <i class="bi bi-person-circle"></i>
+                            Personal Information
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">First Name <span class="text-danger">*</span></label>
+                                <div class="input-group">
+                                    <i class="bi bi-person input-group-icon"></i>
+                                    <input type="text" 
+                                           name="first_name" 
+                                           class="form-control" 
+                                           placeholder="Enter first name"
+                                           value="{{ form.first_name.value|default:'' }}"
+                                           required>
+                                </div>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Last Name <span class="text-danger">*</span></label>
+                                <div class="input-group">
+                                    <i class="bi bi-person input-group-icon"></i>
+                                    <input type="text" 
+                                           name="last_name" 
+                                           class="form-control" 
+                                           placeholder="Enter last name"
+                                           value="{{ form.last_name.value|default:'' }}"
+                                           required>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label class="form-label">Phone Number</label>
+                            <div class="input-group">
+                                <i class="bi bi-telephone input-group-icon"></i>
+                                <input type="tel" 
+                                       name="phone_number" 
+                                       class="form-control" 
+                                       placeholder="Enter phone number"
+                                       value="{{ form.phone_number.value|default:'' }}">
+                            </div>
+                            <small class="help-text">Format: +1234567890 or 1234567890</small>
+                        </div>
+                    </div>
+                    
+                    <!-- Account Information -->
+                    <div class="form-section">
+                        <div class="section-title">
+                            <i class="bi bi-key-fill"></i>
+                            Account Information
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label class="form-label">Username <span class="text-danger">*</span></label>
+                            <div class="input-group">
+                                <i class="bi bi-at input-group-icon"></i>
+                                <input type="text" 
+                                       name="username" 
+                                       class="form-control" 
+                                       placeholder="Choose a username"
+                                       value="{{ form.username.value|default:'' }}"
+                                       required>
+                            </div>
+                            <small class="help-text">Letters, digits and @/./+/-/_ only</small>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label class="form-label">Email Address <span class="text-danger">*</span></label>
+                            <div class="input-group">
+                                <i class="bi bi-envelope input-group-icon"></i>
+                                <input type="email" 
+                                       name="email" 
+                                       class="form-control" 
+                                       placeholder="Enter your email"
+                                       value="{{ form.email.value|default:'' }}"
+                                       required>
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label class="form-label">Role <span class="text-danger">*</span></label>
+                            <div class="input-group">
+                                <i class="bi bi-person-badge input-group-icon"></i>
+                                <select name="role" class="form-select" style="padding-left: 45px;" required>
+                                    <option value="">Select your role</option>
+                                    <option value="STUDENT" {% if form.role.value == 'STUDENT' %}selected{% endif %}>Student</option>
+                                    <option value="TEACHER" {% if form.role.value == 'TEACHER' %}selected{% endif %}>Teacher</option>
+                                    <option value="PARENT" {% if form.role.value == 'PARENT' %}selected{% endif %}>Parent</option>
+                                    <option value="STAFF" {% if form.role.value == 'STAFF' %}selected{% endif %}>Staff</option>
+                                </select>
+                            </div>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Password <span class="text-danger">*</span></label>
+                                <div class="input-group">
+                                    <i class="bi bi-lock input-group-icon"></i>
+                                    <input type="password" 
+                                           name="password" 
+                                           id="password"
+                                           class="form-control" 
+                                           placeholder="Enter password"
+                                           required>
+                                    <i class="bi bi-eye password-toggle" onclick="togglePassword('password')"></i>
+                                </div>
+                                <small class="help-text">Minimum 8 characters</small>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Confirm Password <span class="text-danger">*</span></label>
+                                <div class="input-group">
+                                    <i class="bi bi-lock-fill input-group-icon"></i>
+                                    <input type="password" 
+                                           name="password_confirm" 
+                                           id="password_confirm"
+                                           class="form-control" 
+                                           placeholder="Confirm password"
+                                           required>
+                                    <i class="bi bi-eye password-toggle" onclick="togglePassword('password_confirm')"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <button type="submit" class="btn-register">
+                        <i class="bi bi-person-plus-fill"></i> Create Account
+                    </button>
+                </form>
+                
+                <div class="divider">
+                    <span>Already have an account?</span>
+                </div>
+                
+                <div class="login-link">
+                    <i class="bi bi-box-arrow-in-right"></i>
+                    <a href="{% url 'accounts:login' %}">Sign in to your account</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        function togglePassword(fieldId) {
+            const field = document.getElementById(fieldId);
+            const icon = field.parentElement.querySelector('.password-toggle');
+            
+            if (field.type === 'password') {
+                field.type = 'text';
+                icon.classList.remove('bi-eye');
+                icon.classList.add('bi-eye-slash');
+            } else {
+                field.type = 'password';
+                icon.classList.remove('bi-eye-slash');
+                icon.classList.add('bi-eye');
+            }
+        }
+        
+        // Form validation
+        document.getElementById('registerForm').addEventListener('submit', function(e) {
+            const password = document.getElementById('password').value;
+            const confirmPassword = document.getElementById('password_confirm').value;
+            
+            if (password !== confirmPassword) {
+                e.preventDefault();
+                alert('Passwords do not match!');
+                return false;
+            }
+            
+            if (password.length < 8) {
+                e.preventDefault();
+                alert('Password must be at least 8 characters long!');
+                return false;
+            }
+        });
+    </script>
+</body>
+</html>

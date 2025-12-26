@@ -1,0 +1,622 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Academic Report - {{ student.user.get_full_name }}</title>
+    <style>
+        @page {
+            size: A4 portrait;
+            margin: 12mm;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Arial', 'Helvetica', sans-serif;
+            font-size: 10pt;
+            line-height: 1.4;
+            color: #000;
+            background: white;
+        }
+        
+        .report-container {
+            max-width: 210mm;
+            margin: 0 auto;
+            background: white;
+            padding: 20px;
+            border: 4px double #003366;
+        }
+        
+        /* Header Section */
+        .report-header {
+            text-align: center;
+            border-bottom: 3px solid #003366;
+            padding-bottom: 15px;
+            margin-bottom: 20px;
+            background: linear-gradient(to bottom, #f8f9fa 0%, #ffffff 100%);
+            padding: 15px;
+        }
+        
+        .school-logo {
+            width: 70px;
+            height: 70px;
+            margin: 0 auto 10px;
+            background: #003366;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 32pt;
+            color: #fff;
+            border: 3px solid #0055aa;
+        }
+        
+        .school-name {
+            font-size: 24pt;
+            font-weight: bold;
+            color: #003366;
+            margin-bottom: 5px;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+        
+        .school-address {
+            font-size: 9pt;
+            color: #555;
+            margin-bottom: 3px;
+        }
+        
+        .school-motto {
+            font-size: 9pt;
+            color: #0055aa;
+            font-style: italic;
+            margin-top: 5px;
+            font-weight: 600;
+        }
+        
+        .report-title {
+            font-size: 18pt;
+            font-weight: bold;
+            color: #fff;
+            margin-top: 12px;
+            text-transform: uppercase;
+            letter-spacing: 3px;
+            padding: 10px;
+            background: #003366;
+            border: 2px solid #0055aa;
+        }
+        
+        /* Section Styling */
+        .section {
+            margin-bottom: 20px;
+            page-break-inside: avoid;
+        }
+        
+        .section-title {
+            font-size: 12pt;
+            font-weight: bold;
+            color: #fff;
+            background: #0055aa;
+            padding: 8px 12px;
+            margin-bottom: 10px;
+            border-left: 5px solid #003366;
+        }
+        
+        .info-grid {
+            margin: 15px 0;
+            border: 2px solid #000;
+        }
+        
+        .info-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        
+        .info-table td {
+            padding: 8px 12px;
+            border: 1px solid #000;
+        }
+        
+        .info-label {
+            font-weight: bold;
+            background: #e8e8e8;
+            width: 35%;
+        }
+        
+        .info-value {
+            width: 65%;
+        }
+        
+        .results-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 15px 0;
+            border: 2px solid #000;
+        }
+        
+        .results-table th {
+            background: #000;
+            color: white;
+            padding: 10px 8px;
+            text-align: center;
+            font-size: 10pt;
+            border: 1px solid #000;
+            font-weight: bold;
+        }
+        
+        .results-table td {
+            padding: 8px;
+            border: 1px solid #000;
+            font-size: 10pt;
+            text-align: center;
+        }
+        
+        .results-table tbody tr {
+            background: white;
+        }
+        
+        .results-table tbody tr:nth-child(even) {
+            background: #f5f5f5;
+        }
+        
+        .subject-name {
+            text-align: left !important;
+            font-weight: bold;
+            padding-left: 12px !important;
+        }
+        
+        .grade-cell {
+            font-weight: bold;
+            font-size: 11pt;
+        }
+        
+        .grade-A { color: #2E7D32; }
+        .grade-B { color: #1976D2; }
+        .grade-C { color: #7B1FA2; }
+        .grade-D { color: #F57C00; }
+        .grade-E { color: #E64A19; }
+        .grade-F { color: #C62828; }
+        
+        .total-row {
+            background: #000 !important;
+            color: white !important;
+            font-weight: bold;
+            font-size: 11pt;
+        }
+        
+        .total-row td {
+            border-color: #000 !important;
+        }
+        
+        .summary-section {
+            margin: 15px 0;
+            border: 2px solid #000;
+            padding: 15px;
+            background: #f9f9f9;
+        }
+        
+        .summary-title {
+            font-size: 12pt;
+            font-weight: bold;
+            margin-bottom: 10px;
+            text-align: center;
+            text-transform: uppercase;
+            border-bottom: 2px solid #000;
+            padding-bottom: 5px;
+        }
+        
+        .summary-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+        }
+        
+        .summary-item {
+            padding: 8px;
+            border: 1px solid #000;
+            background: white;
+        }
+        
+        .summary-label {
+            font-weight: bold;
+            font-size: 9pt;
+            color: #333;
+            text-transform: uppercase;
+        }
+        
+        .summary-value {
+            font-size: 14pt;
+            font-weight: bold;
+            color: #000;
+            margin-top: 3px;
+        }
+        
+        .grade-scale {
+            margin: 15px 0;
+            padding: 10px;
+            border: 1px solid #000;
+            background: #f5f5f5;
+        }
+        
+        .grade-scale-title {
+            font-weight: bold;
+            margin-bottom: 8px;
+            font-size: 11pt;
+            text-align: center;
+        }
+        
+        .grade-scale-content {
+            display: flex;
+            justify-content: space-around;
+            flex-wrap: wrap;
+            font-size: 9pt;
+        }
+        
+        .grade-scale-item {
+            padding: 3px 8px;
+            margin: 2px;
+            border: 1px solid #000;
+            background: white;
+        }
+        
+        .remarks-section {
+            margin: 15px 0;
+            border: 2px solid #000;
+            min-height: 80px;
+        }
+        
+        .remarks-header {
+            background: #e8e8e8;
+            padding: 8px 12px;
+            font-weight: bold;
+            border-bottom: 1px solid #000;
+        }
+        
+        .remarks-content {
+            padding: 12px;
+            min-height: 60px;
+            line-height: 1.6;
+        }
+        
+        .attendance-conduct {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin: 15px 0;
+        }
+        
+        .ac-box {
+            border: 2px solid #000;
+            padding: 10px;
+            background: #f9f9f9;
+        }
+        
+        .ac-title {
+            font-weight: bold;
+            text-align: center;
+            margin-bottom: 8px;
+            font-size: 11pt;
+            text-transform: uppercase;
+        }
+        
+        .ac-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 5px 0;
+            border-bottom: 1px dotted #999;
+        }
+        
+        .signature-section {
+            margin-top: 30px;
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 20px;
+        }
+        
+        .signature-box {
+            text-align: center;
+        }
+        
+        .signature-line {
+            border-top: 2px solid #000;
+            margin-top: 60px;
+            padding-top: 8px;
+            font-size: 10pt;
+            font-weight: bold;
+        }
+        
+        .signature-label {
+            font-size: 9pt;
+            color: #555;
+            margin-top: 3px;
+        }
+        
+        .footer {
+            text-align: center;
+            margin-top: 25px;
+            padding-top: 15px;
+            border-top: 2px double #000;
+            font-size: 8pt;
+            color: #555;
+        }
+        
+        .watermark {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%) rotate(-45deg);
+            font-size: 80pt;
+            color: rgba(0, 0, 0, 0.03);
+            font-weight: bold;
+            z-index: -1;
+            pointer-events: none;
+        }
+        
+        @media print {
+            .no-print {
+                display: none !important;
+            }
+            
+            .report-container {
+                padding: 0;
+                border: none;
+            }
+            
+            body {
+                print-color-adjust: exact;
+                -webkit-print-color-adjust: exact;
+            }
+            
+            .page-break {
+                page-break-after: always;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="report-container">
+        <!-- Print Buttons -->
+        <div class="no-print" style="text-align: right; margin-bottom: 20px; position: fixed; top: 10px; right: 10px; z-index: 1000; background: white; padding: 10px; border: 2px solid #000; border-radius: 5px;">
+            <button onclick="window.print()" style="padding: 10px 20px; font-size: 14px; cursor: pointer; background: #000; color: white; border: none; border-radius: 3px; margin-right: 5px;">
+                🖨️ Print Report
+            </button>
+            <button onclick="window.close()" style="padding: 10px 20px; font-size: 14px; cursor: pointer; background: #666; color: white; border: none; border-radius: 3px;">
+                ✖️ Close
+            </button>
+        </div>
+
+        <!-- Watermark -->
+        <div class="watermark">CONFIDENTIAL</div>
+
+        <!-- Header -->
+        <div class="report-header">
+            <div class="school-logo">🎓</div>
+            <div class="school-name">YOUR SCHOOL NAME</div>
+            <div class="school-address">
+                P.O. Box 12345, City Name, Country | Tel: +123 456 7890 | Email: info@yourschool.edu
+            </div>
+            <div class="school-motto">"Excellence • Integrity • Leadership"</div>
+            <div class="report-title">STUDENT PROGRESS REPORT</div>
+        </div>
+
+        <!-- Exam Information -->
+        <div class="exam-info">
+            <strong>{{ exam.get_exam_type_display }}</strong> | {{ exam.term }} | Academic Year: {{ exam.academic_year.name }}
+        </div>
+
+        <!-- Student Information -->
+        <div class="student-info">
+            <table class="info-table">
+                <tr>
+                    <td class="info-label">STUDENT NAME</td>
+                    <td class="info-value" colspan="3">{{ student.user.get_full_name|upper }}</td>
+                </tr>
+                <tr>
+                    <td class="info-label">ADMISSION NO.</td>
+                    <td class="info-value">{{ student.admission_number }}</td>
+                    <td class="info-label">CLASS</td>
+                    <td class="info-value">{{ student.current_class.name }}</td>
+                </tr>
+                <tr>
+                    <td class="info-label">DATE OF BIRTH</td>
+                    <td class="info-value">{{ student.date_of_birth|date:"d-M-Y" }}</td>
+                    <td class="info-label">GENDER</td>
+                    <td class="info-value">{{ student.get_gender_display }}</td>
+                </tr>
+            </table>
+        </div>
+
+        <!-- Academic Performance -->
+        <table class="results-table">
+            <thead>
+                <tr>
+                    <th rowspan="2" style="width: 5%;">S/N</th>
+                    <th rowspan="2" style="width: 30%;">SUBJECT</th>
+                    <th colspan="2">MARKS</th>
+                    <th rowspan="2" style="width: 12%;">PERCENTAGE</th>
+                    <th rowspan="2" style="width: 10%;">GRADE</th>
+                    <th rowspan="2" style="width: 23%;">REMARKS</th>
+                </tr>
+                <tr>
+                    <th style="width: 10%;">Obtained</th>
+                    <th style="width: 10%;">Total</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for result in results %}
+                <tr>
+                    <td>{{ forloop.counter }}</td>
+                    <td class="subject-name">{{ result.subject.name|upper }}</td>
+                    <td>
+                        {% if result.is_absent %}
+                            <strong>ABS</strong>
+                        {% else %}
+                            {{ result.marks_obtained|floatformat:0 }}
+                        {% endif %}
+                    </td>
+                    <td>{{ result.max_marks }}</td>
+                    <td>
+                        {% if not result.is_absent %}
+                            {{ result.percentage|floatformat:1 }}%
+                        {% else %}
+                            -
+                        {% endif %}
+                    </td>
+                    <td class="grade-cell grade-{{ result.grade }}">
+                        {% if result.is_absent %}
+                            ABS
+                        {% else %}
+                            {{ result.grade }}
+                        {% endif %}
+                    </td>
+                    <td style="font-size: 9pt; text-align: left; padding-left: 8px;">
+                        {% if result.is_absent %}
+                            Absent
+                        {% elif result.grade == 'A' %}
+                            Excellent
+                        {% elif result.grade == 'B' %}
+                            Very Good
+                        {% elif result.grade == 'C' %}
+                            Good
+                        {% elif result.grade == 'D' %}
+                            Satisfactory
+                        {% elif result.grade == 'E' %}
+                            Pass
+                        {% else %}
+                            Needs Improvement
+                        {% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+            <tfoot>
+                <tr class="total-row">
+                    <td colspan="2" style="text-align: right; padding-right: 15px;">TOTAL</td>
+                    <td>{{ report_card.marks_obtained|floatformat:0 }}</td>
+                    <td>{{ report_card.total_marks }}</td>
+                    <td>{{ report_card.percentage|floatformat:2 }}%</td>
+                    <td>{{ report_card.overall_grade }}</td>
+                    <td></td>
+                </tr>
+            </tfoot>
+        </table>
+
+        <!-- Performance Summary -->
+        <div class="summary-section">
+            <div class="summary-title">Performance Summary</div>
+            <div class="summary-grid">
+                <div class="summary-item">
+                    <div class="summary-label">Total Marks Obtained</div>
+                    <div class="summary-value">{{ report_card.marks_obtained|floatformat:0 }} / {{ report_card.total_marks }}</div>
+                </div>
+                <div class="summary-item">
+                    <div class="summary-label">Overall Percentage</div>
+                    <div class="summary-value">{{ report_card.percentage|floatformat:2 }}%</div>
+                </div>
+                <div class="summary-item">
+                    <div class="summary-label">Overall Grade</div>
+                    <div class="summary-value">{{ report_card.overall_grade }}</div>
+                </div>
+                {% if report_card.rank %}
+                <div class="summary-item">
+                    <div class="summary-label">Class Rank</div>
+                    <div class="summary-value">{{ report_card.rank }} / {{ total_students }}</div>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Attendance and Conduct -->
+        <div class="attendance-conduct">
+            <div class="ac-box">
+                <div class="ac-title">Attendance Record</div>
+                <div class="ac-item">
+                    <span>Days Present:</span>
+                    <strong>_____ days</strong>
+                </div>
+                <div class="ac-item">
+                    <span>Days Absent:</span>
+                    <strong>_____ days</strong>
+                </div>
+                <div class="ac-item">
+                    <span>Total School Days:</span>
+                    <strong>_____ days</strong>
+                </div>
+            </div>
+            <div class="ac-box">
+                <div class="ac-title">Conduct & Character</div>
+                <div class="ac-item">
+                    <span>Discipline:</span>
+                    <strong>___________</strong>
+                </div>
+                <div class="ac-item">
+                    <span>Punctuality:</span>
+                    <strong>___________</strong>
+                </div>
+                <div class="ac-item">
+                    <span>Cooperation:</span>
+                    <strong>___________</strong>
+                </div>
+            </div>
+        </div>
+
+        <!-- Grading Scale -->
+        <div class="grade-scale">
+            <div class="grade-scale-title">GRADING SCALE</div>
+            <div class="grade-scale-content">
+                <span class="grade-scale-item"><strong>A:</strong> 80-100% (Excellent)</span>
+                <span class="grade-scale-item"><strong>B:</strong> 70-79% (Very Good)</span>
+                <span class="grade-scale-item"><strong>C:</strong> 60-69% (Good)</span>
+                <span class="grade-scale-item"><strong>D:</strong> 50-59% (Satisfactory)</span>
+                <span class="grade-scale-item"><strong>E:</strong> 40-49% (Pass)</span>
+                <span class="grade-scale-item"><strong>F:</strong> Below 40% (Fail)</span>
+            </div>
+        </div>
+
+        <!-- Class Teacher's Remarks -->
+        <div class="remarks-section">
+            <div class="remarks-header">CLASS TEACHER'S REMARKS</div>
+            <div class="remarks-content">
+                {{ report_card.remarks|default:"The student has shown consistent effort and dedication. Keep up the good work!" }}
+            </div>
+        </div>
+
+        <!-- Signatures -->
+        <div class="signature-section">
+            <div class="signature-box">
+                <div class="signature-line">
+                    CLASS TEACHER
+                </div>
+                <div class="signature-label">Signature & Date</div>
+            </div>
+            <div class="signature-box">
+                <div class="signature-line">
+                    PRINCIPAL
+                </div>
+                <div class="signature-label">Signature & Stamp</div>
+            </div>
+            <div class="signature-box">
+                <div class="signature-line">
+                    PARENT/GUARDIAN
+                </div>
+                <div class="signature-label">Signature & Date</div>
+            </div>
+        </div>
+
+        <!-- Footer -->
+        <div class="footer">
+            <p><strong>Date of Issue:</strong> {{ report_card.generated_at|date:"d-m-Y" }}</p>
+            <p style="margin-top: 8px; font-style: italic;">
+                This is an official academic document. Please preserve it for future reference.<br>
+                Next term begins on: ________________
+            </p>
+        </div>
+    </div>
+</body>
+</html>

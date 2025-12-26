@@ -1,0 +1,193 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ exam.name }} - Exam Details{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+    <h1 class="h2">
+        <i class="bi bi-journal-text"></i> {{ exam.name }}
+    </h1>
+    <div class="btn-toolbar mb-2 mb-md-0">
+        <div class="btn-group me-2">
+            <a href="{% url 'exams:exam_list' %}" class="btn btn-sm btn-outline-secondary">
+                <i class="bi bi-arrow-left"></i> Back to List
+            </a>
+        </div>
+        {% if user.is_admin or user.is_staff or user.is_teacher %}
+        <a href="{% url 'admin:exams_exam_change' exam.pk %}" class="btn btn-sm btn-primary">
+            <i class="bi bi-pencil"></i> Edit Exam
+        </a>
+        {% endif %}
+    </div>
+</div>
+
+<div class="row">
+    <!-- Exam Information Card -->
+    <div class="col-md-4 mb-4">
+        <div class="card">
+            <div class="card-header 
+                {% if exam.end_date < today %}bg-secondary
+                {% elif exam.start_date <= today and exam.end_date >= today %}bg-success
+                {% else %}bg-primary
+                {% endif %} text-white">
+                <h6 class="mb-0">Exam Information</h6>
+            </div>
+            <div class="card-body">
+                <div class="mb-3">
+                    <small class="text-muted">Exam Name</small>
+                    <div><strong>{{ exam.name }}</strong></div>
+                </div>
+                
+                <div class="mb-3">
+                    <small class="text-muted">Type</small>
+                    <div><span class="badge bg-info">{{ exam.get_exam_type_display }}</span></div>
+                </div>
+                
+                <div class="mb-3">
+                    <small class="text-muted">Academic Year</small>
+                    <div><strong>{{ exam.academic_year.name }}</strong></div>
+                </div>
+                
+                <div class="mb-3">
+                    <small class="text-muted">Start Date</small>
+                    <div><strong>{{ exam.start_date|date:"F d, Y" }}</strong></div>
+                </div>
+                
+                <div class="mb-3">
+                    <small class="text-muted">End Date</small>
+                    <div><strong>{{ exam.end_date|date:"F d, Y" }}</strong></div>
+                </div>
+                
+                <div class="mb-3">
+                    <small class="text-muted">Status</small>
+                    <div>
+                        {% if exam.end_date < today %}
+                        <span class="badge bg-secondary">Completed</span>
+                        {% elif exam.start_date <= today and exam.end_date >= today %}
+                        <span class="badge bg-success">Ongoing</span>
+                        {% else %}
+                        <span class="badge bg-primary">Upcoming</span>
+                        {% endif %}
+                    </div>
+                </div>
+                
+                {% if exam.description %}
+                <div class="mb-3">
+                    <small class="text-muted">Description</small>
+                    <div>{{ exam.description|linebreaks }}</div>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+        
+        <!-- Quick Actions -->
+        {% if user.is_admin or user.is_staff or user.is_teacher %}
+        <div class="card mt-3">
+            <div class="card-header bg-success text-white">
+                <h6 class="mb-0"><i class="bi bi-star"></i> Report Processing</h6>
+            </div>
+            <div class="card-body">
+                <a href="{% url 'results:report_processing' exam.pk %}" class="btn btn-success w-100 mb-3">
+                    <i class="bi bi-file-earmark-text"></i> Process Student Reports
+                </a>
+                <hr>
+                <h6 class="text-muted mb-2">Other Actions:</h6>
+                <a href="{% url 'admin:exams_examschedule_add' %}?exam={{ exam.pk }}" class="btn btn-sm btn-outline-primary w-100 mb-2">
+                    <i class="bi bi-calendar-plus"></i> Add Schedule
+                </a>
+                <a href="{% url 'admin:results_result_add' %}?exam={{ exam.pk }}" class="btn btn-sm btn-outline-info w-100 mb-2">
+                    <i class="bi bi-clipboard-plus"></i> Quick Add Result
+                </a>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+    
+    <!-- Exam Schedule -->
+    <div class="col-md-8">
+        <div class="card mb-3">
+            <div class="card-header">
+                <h6 class="mb-0"><i class="bi bi-calendar3"></i> Exam Schedule</h6>
+            </div>
+            <div class="card-body">
+                {% if exam.examschedule_set.all %}
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>Date</th>
+                                <th>Subject</th>
+                                <th>Class</th>
+                                <th>Time</th>
+                                <th>Room</th>
+                                <th>Marks</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for schedule in exam.examschedule_set.all %}
+                            <tr>
+                                <td><strong>{{ schedule.date|date:"M d, Y" }}</strong></td>
+                                <td>{{ schedule.subject.name }}</td>
+                                <td>{{ schedule.class_room.name }}</td>
+                                <td>
+                                    {{ schedule.start_time|time:"h:i A" }} - 
+                                    {{ schedule.end_time|time:"h:i A" }}
+                                </td>
+                                <td>{{ schedule.room_number|default:"TBA" }}</td>
+                                <td>{{ schedule.total_marks }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <p class="text-muted text-center py-3">No exam schedule available yet</p>
+                {% if user.is_admin or user.is_staff or user.is_teacher %}
+                <div class="text-center">
+                    <a href="{% url 'admin:exams_examschedule_add' %}?exam={{ exam.pk }}" class="btn btn-primary">
+                        <i class="bi bi-calendar-plus"></i> Create Schedule
+                    </a>
+                </div>
+                {% endif %}
+                {% endif %}
+            </div>
+        </div>
+        
+        <!-- Statistics -->
+        <div class="card">
+            <div class="card-header">
+                <h6 class="mb-0"><i class="bi bi-graph-up"></i> Statistics</h6>
+            </div>
+            <div class="card-body">
+                <div class="row text-center">
+                    <div class="col-md-4">
+                        <div class="card bg-light">
+                            <div class="card-body">
+                                <h3 class="text-primary mb-0">{{ exam.examschedule_set.count }}</h3>
+                                <small class="text-muted">Scheduled Papers</small>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="card bg-light">
+                            <div class="card-body">
+                                <h3 class="text-success mb-0">0</h3>
+                                <small class="text-muted">Results Entered</small>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="card bg-light">
+                            <div class="card-body">
+                                <h3 class="text-info mb-0">{{ exam.examschedule_set.count }}</h3>
+                                <small class="text-muted">Subjects</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

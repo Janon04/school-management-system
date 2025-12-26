@@ -1,0 +1,122 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Subjects List - SMS{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+    <h1 class="h2">
+        <i class="bi bi-book"></i> Subjects Management
+    </h1>
+    <div class="btn-toolbar mb-2 mb-md-0">
+        {% if user.is_admin or user.is_staff %}
+        <a href="{% url 'admin:classes_subject_add' %}" class="btn btn-primary">
+            <i class="bi bi-plus-circle"></i> Add Subject
+        </a>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Search and Filter -->
+<div class="card mb-4">
+    <div class="card-body">
+        <form method="get" class="row g-3">
+            <div class="col-md-8">
+                <input type="text" name="q" class="form-control" placeholder="Search by subject name or code" value="{{ query }}">
+            </div>
+            <div class="col-md-2">
+                <select name="type" class="form-select">
+                    <option value="">All Types</option>
+                    <option value="CORE" {% if type_filter == "CORE" %}selected{% endif %}>Core</option>
+                    <option value="ELECTIVE" {% if type_filter == "ELECTIVE" %}selected{% endif %}>Elective</option>
+                    <option value="OPTIONAL" {% if type_filter == "OPTIONAL" %}selected{% endif %}>Optional</option>
+                </select>
+            </div>
+            <div class="col-md-2">
+                <button type="submit" class="btn btn-primary w-100">
+                    <i class="bi bi-search"></i> Search
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Subjects Table -->
+<div class="card">
+    <div class="card-body">
+        {% if subjects %}
+        <div class="table-responsive">
+            <table class="table table-hover">
+                <thead>
+                    <tr>
+                        <th>Code</th>
+                        <th>Subject Name</th>
+                        <th>Type</th>
+                        <th>Total Marks</th>
+                        <th>Pass Marks</th>
+                        <th>Teachers</th>
+                        <th>Classes</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for subject in subjects %}
+                    <tr>
+                        <td><strong>{{ subject.code }}</strong></td>
+                        <td>
+                            <i class="bi bi-book-fill text-primary"></i>
+                            <strong>{{ subject.name }}</strong>
+                        </td>
+                        <td>
+                            <span class="badge 
+                                {% if subject.subject_type == 'CORE' %}bg-danger
+                                {% elif subject.subject_type == 'ELECTIVE' %}bg-warning
+                                {% else %}bg-info
+                                {% endif %}">
+                                {{ subject.get_subject_type_display }}
+                            </span>
+                        </td>
+                        <td>{{ subject.total_marks }}</td>
+                        <td>{{ subject.pass_marks }}</td>
+                        <td>
+                            <span class="badge bg-success">{{ subject.teacher_set.count }} teacher(s)</span>
+                        </td>
+                        <td>
+                            <span class="badge bg-primary">{{ subject.classsubject_set.count }} class(es)</span>
+                        </td>
+                        <td>
+                            <div class="btn-group btn-group-sm" role="group">
+                                <a href="{% url 'classes:subject_detail' subject.pk %}" class="btn btn-outline-primary" title="View Details">
+                                    <i class="bi bi-eye"></i>
+                                </a>
+                                {% if user.is_admin or user.is_staff %}
+                                <a href="{% url 'admin:classes_subject_change' subject.pk %}" class="btn btn-outline-secondary" title="Edit">
+                                    <i class="bi bi-pencil"></i>
+                                </a>
+                                {% endif %}
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        
+        <!-- Pagination would go here -->
+        <div class="mt-3">
+            <p class="text-muted">Showing {{ subjects.count }} subject(s)</p>
+        </div>
+        {% else %}
+        <div class="text-center py-5">
+            <i class="bi bi-inbox display-1 text-muted"></i>
+            <p class="text-muted mt-3">No subjects found</p>
+            {% if user.is_admin or user.is_staff %}
+            <a href="{% url 'admin:classes_subject_add' %}" class="btn btn-primary">
+                <i class="bi bi-plus-circle"></i> Add First Subject
+            </a>
+            {% endif %}
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

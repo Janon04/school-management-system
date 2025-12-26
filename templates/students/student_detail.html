@@ -1,0 +1,209 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ student.user.get_full_name }} - Student Profile{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+    <h1 class="h2">
+        <i class="bi bi-person-badge"></i> Student Profile
+    </h1>
+    <div class="btn-toolbar mb-2 mb-md-0">
+        <div class="btn-group me-2">
+            <a href="{% url 'students:student_list' %}" class="btn btn-sm btn-outline-secondary">
+                <i class="bi bi-arrow-left"></i> Back to List
+            </a>
+        </div>
+        {% if user.is_admin or user.is_staff %}
+        <a href="{% url 'admin:students_student_change' student.pk %}" class="btn btn-sm btn-primary">
+            <i class="bi bi-pencil"></i> Edit Profile
+        </a>
+        {% endif %}
+    </div>
+</div>
+
+<div class="row">
+    <!-- Profile Card -->
+    <div class="col-md-4 mb-4">
+        <div class="card">
+            <div class="card-body text-center">
+                {% if student.user.profile_picture %}
+                <img src="{{ student.user.profile_picture.url }}" class="rounded-circle mb-3" width="120" height="120" alt="{{ student.user.get_full_name }}">
+                {% else %}
+                <div class="rounded-circle bg-primary text-white d-flex align-items-center justify-content-center mx-auto mb-3" style="width: 120px; height: 120px; font-size: 48px;">
+                    {{ student.user.first_name.0 }}{{ student.user.last_name.0 }}
+                </div>
+                {% endif %}
+                <h5 class="card-title">{{ student.user.get_full_name }}</h5>
+                <p class="text-muted">{{ student.admission_number }}</p>
+                {% if student.is_active %}
+                <span class="badge bg-success">Active</span>
+                {% else %}
+                <span class="badge bg-danger">Inactive</span>
+                {% endif %}
+            </div>
+        </div>
+        
+        <!-- Quick Info Card -->
+        <div class="card mt-3">
+            <div class="card-header">
+                <h6 class="mb-0">Quick Information</h6>
+            </div>
+            <div class="card-body">
+                <div class="mb-2">
+                    <small class="text-muted">Class:</small>
+                    <div><strong>{{ student.class_assigned|default:"Not Assigned" }}</strong></div>
+                </div>
+                <div class="mb-2">
+                    <small class="text-muted">Gender:</small>
+                    <div><strong>{{ student.get_gender_display }}</strong></div>
+                </div>
+                <div class="mb-2">
+                    <small class="text-muted">Date of Birth:</small>
+                    <div><strong>{{ student.date_of_birth|date:"F d, Y" }}</strong></div>
+                </div>
+                <div class="mb-2">
+                    <small class="text-muted">Admission Date:</small>
+                    <div><strong>{{ student.admission_date|date:"F d, Y" }}</strong></div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Detailed Information -->
+    <div class="col-md-8">
+        <!-- Personal Information -->
+        <div class="card mb-3">
+            <div class="card-header">
+                <h6 class="mb-0"><i class="bi bi-person"></i> Personal Information</h6>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <small class="text-muted">Full Name</small>
+                        <div><strong>{{ student.user.get_full_name }}</strong></div>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <small class="text-muted">Email</small>
+                        <div><strong>{{ student.user.email }}</strong></div>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <small class="text-muted">Phone</small>
+                        <div><strong>{{ student.user.phone_number|default:"N/A" }}</strong></div>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <small class="text-muted">Blood Group</small>
+                        <div><strong>{{ student.blood_group|default:"N/A" }}</strong></div>
+                    </div>
+                    <div class="col-md-12 mb-3">
+                        <small class="text-muted">Address</small>
+                        <div><strong>{{ student.address|default:"N/A" }}</strong></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Academic Information -->
+        <div class="card mb-3">
+            <div class="card-header">
+                <h6 class="mb-0"><i class="bi bi-book"></i> Academic Information</h6>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <small class="text-muted">Current Class</small>
+                        <div><strong>{{ student.class_assigned|default:"Not Assigned" }}</strong></div>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <small class="text-muted">Admission Number</small>
+                        <div><strong>{{ student.admission_number }}</strong></div>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <small class="text-muted">Admission Date</small>
+                        <div><strong>{{ student.admission_date|date:"F d, Y" }}</strong></div>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <small class="text-muted">Previous School</small>
+                        <div><strong>{{ student.previous_school|default:"N/A" }}</strong></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Parent Information -->
+        <div class="card mb-3">
+            <div class="card-header">
+                <h6 class="mb-0"><i class="bi bi-people"></i> Parent/Guardian Information</h6>
+            </div>
+            <div class="card-body">
+                {% if student.parent %}
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <small class="text-muted">Parent Name</small>
+                        <div><strong>{{ student.parent.user.get_full_name }}</strong></div>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <small class="text-muted">Relationship</small>
+                        <div><strong>{{ student.parent.relationship|default:"Guardian" }}</strong></div>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <small class="text-muted">Phone</small>
+                        <div><strong>{{ student.parent.user.phone_number|default:"N/A" }}</strong></div>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <small class="text-muted">Email</small>
+                        <div><strong>{{ student.parent.user.email }}</strong></div>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <small class="text-muted">Occupation</small>
+                        <div><strong>{{ student.parent.occupation|default:"N/A" }}</strong></div>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <small class="text-muted">Emergency Contact</small>
+                        <div><strong>{{ student.parent.emergency_contact|default:"N/A" }}</strong></div>
+                    </div>
+                </div>
+                {% else %}
+                <p class="text-muted">No parent information available</p>
+                {% endif %}
+            </div>
+        </div>
+        
+        <!-- Medical Information -->
+        {% if student.medical_info %}
+        <div class="card mb-3">
+            <div class="card-header">
+                <h6 class="mb-0"><i class="bi bi-heart-pulse"></i> Medical Information</h6>
+            </div>
+            <div class="card-body">
+                <p>{{ student.medical_info|linebreaks }}</p>
+            </div>
+        </div>
+        {% endif %}
+        
+        <!-- Documents -->
+        <div class="card">
+            <div class="card-header">
+                <h6 class="mb-0"><i class="bi bi-file-earmark-text"></i> Documents</h6>
+            </div>
+            <div class="card-body">
+                {% if student.studentdocument_set.all %}
+                <div class="list-group">
+                    {% for doc in student.studentdocument_set.all %}
+                    <a href="{{ doc.file.url }}" target="_blank" class="list-group-item list-group-item-action">
+                        <div class="d-flex w-100 justify-content-between">
+                            <h6 class="mb-1">{{ doc.document_type }}</h6>
+                            <small>{{ doc.uploaded_at|date:"M d, Y" }}</small>
+                        </div>
+                        <small class="text-muted">Click to view</small>
+                    </a>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <p class="text-muted">No documents uploaded</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

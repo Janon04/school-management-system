@@ -1,0 +1,187 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ staff.user.get_full_name }} - Staff Profile{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+    <h1 class="h2">
+        <i class="bi bi-person-badge"></i> Staff Profile
+    </h1>
+    <div class="btn-toolbar mb-2 mb-md-0">
+        <div class="btn-group me-2">
+            <a href="{% url 'staff:staff_list' %}" class="btn btn-sm btn-outline-secondary">
+                <i class="bi bi-arrow-left"></i> Back to List
+            </a>
+        </div>
+        {% if user.is_admin or user.is_staff %}
+        <a href="{% url 'admin:staff_staff_change' staff.pk %}" class="btn btn-sm btn-primary">
+            <i class="bi bi-pencil"></i> Edit Profile
+        </a>
+        {% endif %}
+    </div>
+</div>
+
+<div class="row">
+    <!-- Profile Card -->
+    <div class="col-md-4 mb-4">
+        <div class="card">
+            <div class="card-body text-center">
+                {% if staff.user.profile_picture %}
+                <img src="{{ staff.user.profile_picture.url }}" class="rounded-circle mb-3" width="120" height="120" alt="{{ staff.user.get_full_name }}">
+                {% else %}
+                <div class="rounded-circle bg-secondary text-white d-flex align-items-center justify-content-center mx-auto mb-3" style="width: 120px; height: 120px; font-size: 48px;">
+                    {{ staff.user.first_name.0 }}{{ staff.user.last_name.0 }}
+                </div>
+                {% endif %}
+                <h5 class="card-title">{{ staff.user.get_full_name }}</h5>
+                <p class="text-muted">{{ staff.employee_id }}</p>
+                {% if staff.is_active %}
+                <span class="badge bg-success">Active</span>
+                {% else %}
+                <span class="badge bg-danger">Inactive</span>
+                {% endif %}
+            </div>
+        </div>
+        
+        <!-- Quick Info Card -->
+        <div class="card mt-3">
+            <div class="card-header">
+                <h6 class="mb-0">Quick Information</h6>
+            </div>
+            <div class="card-body">
+                <div class="mb-2">
+                    <small class="text-muted">Department:</small>
+                    <div><strong>{{ staff.get_department_display }}</strong></div>
+                </div>
+                <div class="mb-2">
+                    <small class="text-muted">Position:</small>
+                    <div><strong>{{ staff.position|default:"N/A" }}</strong></div>
+                </div>
+                <div class="mb-2">
+                    <small class="text-muted">Date of Joining:</small>
+                    <div><strong>{{ staff.date_of_joining|date:"F d, Y" }}</strong></div>
+                </div>
+                <div class="mb-2">
+                    <small class="text-muted">Salary:</small>
+                    <div><strong>{{ staff.salary|default:"N/A" }}</strong></div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Detailed Information -->
+    <div class="col-md-8">
+        <!-- Personal Information -->
+        <div class="card mb-3">
+            <div class="card-header">
+                <h6 class="mb-0"><i class="bi bi-person"></i> Personal Information</h6>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <small class="text-muted">Full Name</small>
+                        <div><strong>{{ staff.user.get_full_name }}</strong></div>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <small class="text-muted">Email</small>
+                        <div><strong>{{ staff.user.email }}</strong></div>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <small class="text-muted">Phone</small>
+                        <div><strong>{{ staff.user.phone_number|default:"N/A" }}</strong></div>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <small class="text-muted">Date of Birth</small>
+                        <div><strong>{{ staff.date_of_birth|date:"F d, Y"|default:"N/A" }}</strong></div>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <small class="text-muted">Gender</small>
+                        <div><strong>{{ staff.get_gender_display|default:"N/A" }}</strong></div>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <small class="text-muted">Blood Group</small>
+                        <div><strong>{{ staff.blood_group|default:"N/A" }}</strong></div>
+                    </div>
+                    <div class="col-md-12 mb-3">
+                        <small class="text-muted">Address</small>
+                        <div><strong>{{ staff.address|default:"N/A" }}</strong></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Employment Information -->
+        <div class="card mb-3">
+            <div class="card-header">
+                <h6 class="mb-0"><i class="bi bi-briefcase"></i> Employment Information</h6>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <small class="text-muted">Employee ID</small>
+                        <div><strong>{{ staff.employee_id }}</strong></div>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <small class="text-muted">Department</small>
+                        <div><strong>{{ staff.get_department_display }}</strong></div>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <small class="text-muted">Position</small>
+                        <div><strong>{{ staff.position|default:"N/A" }}</strong></div>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <small class="text-muted">Date of Joining</small>
+                        <div><strong>{{ staff.date_of_joining|date:"F d, Y" }}</strong></div>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <small class="text-muted">Qualification</small>
+                        <div><strong>{{ staff.qualification|default:"N/A" }}</strong></div>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <small class="text-muted">Salary</small>
+                        <div><strong>{{ staff.salary|default:"N/A" }}</strong></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Emergency Contact -->
+        <div class="card mb-3">
+            <div class="card-header">
+                <h6 class="mb-0"><i class="bi bi-telephone"></i> Emergency Contact</h6>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <small class="text-muted">Contact Person</small>
+                        <div><strong>{{ staff.emergency_contact_name|default:"N/A" }}</strong></div>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <small class="text-muted">Contact Number</small>
+                        <div><strong>{{ staff.emergency_contact_phone|default:"N/A" }}</strong></div>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <small class="text-muted">Relationship</small>
+                        <div><strong>{{ staff.emergency_contact_relation|default:"N/A" }}</strong></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Additional Information -->
+        <div class="card">
+            <div class="card-header">
+                <h6 class="mb-0"><i class="bi bi-info-circle"></i> Additional Notes</h6>
+            </div>
+            <div class="card-body">
+                {% if staff.notes %}
+                <p>{{ staff.notes|linebreaks }}</p>
+                {% else %}
+                <p class="text-muted">No additional notes</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

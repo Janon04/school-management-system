@@ -1,0 +1,522 @@
+{% extends "admin/base_site.html" %}
+{% load i18n static %}
+
+{% block extrastyle %}
+{{ block.super }}
+<style>
+    .dashboard-header {
+        margin-bottom: 40px;
+    }
+    
+    .dashboard-header h1 {
+        font-size: 2.2rem;
+        font-weight: 700;
+        color: #2d3748;
+        margin-bottom: 8px;
+    }
+    
+    .dashboard-header p {
+        font-size: 1.05rem;
+        color: #718096;
+        margin: 0;
+    }
+    
+    .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+        gap: 25px;
+        margin-bottom: 40px;
+    }
+    
+    .stat-card {
+        background: white;
+        border-radius: 16px;
+        padding: 30px;
+        box-shadow: 0 4px 6px rgba(0,0,0,0.07);
+        transition: all 0.3s ease;
+        position: relative;
+        overflow: hidden;
+    }
+    
+    .stat-card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 4px;
+        height: 100%;
+    }
+    
+    .stat-card.blue::before {
+        background: linear-gradient(180deg, #667eea 0%, #764ba2 100%);
+    }
+    
+    .stat-card.green::before {
+        background: linear-gradient(180deg, #11998e 0%, #38ef7d 100%);
+    }
+    
+    .stat-card.orange::before {
+        background: linear-gradient(180deg, #ee0979 0%, #ff6a00 100%);
+    }
+    
+    .stat-card.purple::before {
+        background: linear-gradient(180deg, #4facfe 0%, #00f2fe 100%);
+    }
+    
+    .stat-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 12px 24px rgba(0,0,0,0.1);
+    }
+    
+    .stat-card-content {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+    
+    .stat-card-info h3 {
+        font-size: 2.8rem;
+        font-weight: 800;
+        color: #2d3748;
+        margin: 0 0 8px 0;
+        line-height: 1;
+    }
+    
+    .stat-card-info p {
+        font-size: 1rem;
+        color: #718096;
+        font-weight: 500;
+        margin: 0;
+    }
+    
+    .stat-card-icon {
+        width: 70px;
+        height: 70px;
+        border-radius: 16px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 32px;
+        color: white;
+    }
+    
+    .stat-card.blue .stat-card-icon {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    }
+    
+    .stat-card.green .stat-card-icon {
+        background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+    }
+    
+    .stat-card.orange .stat-card-icon {
+        background: linear-gradient(135deg, #ee0979 0%, #ff6a00 100%);
+    }
+    
+    .stat-card.purple .stat-card-icon {
+        background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+    }
+    
+    .admin-section {
+        background: white;
+        border-radius: 16px;
+        padding: 30px;
+        box-shadow: 0 4px 6px rgba(0,0,0,0.07);
+        margin-bottom: 30px;
+    }
+    
+    .admin-section-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 25px;
+        padding-bottom: 15px;
+        border-bottom: 2px solid #e2e8f0;
+    }
+    
+    .admin-section-header h2 {
+        font-size: 1.5rem;
+        font-weight: 700;
+        color: #2d3748;
+        margin: 0;
+    }
+    
+    .modules-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+        gap: 25px;
+    }
+    
+    .module-card {
+        background: linear-gradient(135deg, #f7fafc 0%, #ffffff 100%);
+        border: 2px solid #e2e8f0;
+        border-radius: 14px;
+        padding: 25px;
+        transition: all 0.3s ease;
+        position: relative;
+    }
+    
+    .module-card:hover {
+        border-color: #667eea;
+        box-shadow: 0 8px 16px rgba(102, 126, 234, 0.15);
+        transform: translateY(-3px);
+    }
+    
+    .module-header {
+        display: flex;
+        align-items: center;
+        gap: 15px;
+        margin-bottom: 20px;
+    }
+    
+    .module-icon {
+        width: 55px;
+        height: 55px;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-size: 26px;
+    }
+    
+    .module-title {
+        font-size: 1.2rem;
+        font-weight: 700;
+        color: #2d3748;
+        margin: 0;
+    }
+    
+    .module-links {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+    }
+    
+    .module-link {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 12px 15px;
+        background: white;
+        border: 1px solid #e2e8f0;
+        border-radius: 10px;
+        text-decoration: none;
+        color: #4a5568;
+        font-weight: 500;
+        transition: all 0.2s;
+    }
+    
+    .module-link:hover {
+        background: #667eea;
+        color: white;
+        border-color: #667eea;
+        transform: translateX(5px);
+    }
+    
+    .module-link i {
+        font-size: 18px;
+    }
+    
+    .quick-actions {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+        gap: 15px;
+        margin-top: 20px;
+    }
+    
+    .quick-action {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 15px 20px;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        border-radius: 10px;
+        text-decoration: none;
+        font-weight: 600;
+        transition: all 0.3s;
+    }
+    
+    .quick-action:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 8px 16px rgba(102, 126, 234, 0.3);
+        color: white;
+    }
+    
+    .quick-action i {
+        font-size: 22px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="dashboard-header">
+    <h1>Welcome, {{ user.get_full_name|default:user.username }}!</h1>
+    <p>Here's what's happening with your school today</p>
+</div>
+
+<!-- Statistics Cards -->
+<div class="stats-grid">
+    <div class="stat-card blue">
+        <div class="stat-card-content">
+            <div class="stat-card-info">
+                <h3>{{ total_students|default:0 }}</h3>
+                <p>Total Students</p>
+            </div>
+            <div class="stat-card-icon">
+                <i class="bi bi-people-fill"></i>
+            </div>
+        </div>
+    </div>
+    
+    <div class="stat-card green">
+        <div class="stat-card-content">
+            <div class="stat-card-info">
+                <h3>{{ total_teachers|default:0 }}</h3>
+                <p>Total Teachers</p>
+            </div>
+            <div class="stat-card-icon">
+                <i class="bi bi-person-workspace"></i>
+            </div>
+        </div>
+    </div>
+    
+    <div class="stat-card orange">
+        <div class="stat-card-content">
+            <div class="stat-card-info">
+                <h3>{{ total_classes|default:0 }}</h3>
+                <p>Active Classes</p>
+            </div>
+            <div class="stat-card-icon">
+                <i class="bi bi-door-open-fill"></i>
+            </div>
+        </div>
+    </div>
+    
+    <div class="stat-card purple">
+        <div class="stat-card-content">
+            <div class="stat-card-info">
+                <h3>{{ total_exams|default:0 }}</h3>
+                <p>Upcoming Exams</p>
+            </div>
+            <div class="stat-card-icon">
+                <i class="bi bi-clipboard-check-fill"></i>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Quick Actions -->
+<div class="admin-section">
+    <div class="admin-section-header">
+        <h2><i class="bi bi-lightning-fill"></i> Quick Actions</h2>
+    </div>
+    <div class="quick-actions">
+        <a href="{% url 'admin:students_student_add' %}" class="quick-action">
+            <i class="bi bi-person-plus-fill"></i>
+            <span>Add Student</span>
+        </a>
+        <a href="{% url 'admin:teachers_teacher_add' %}" class="quick-action">
+            <i class="bi bi-person-badge-fill"></i>
+            <span>Add Teacher</span>
+        </a>
+        <a href="{% url 'admin:classes_classroom_add' %}" class="quick-action">
+            <i class="bi bi-door-closed-fill"></i>
+            <span>Create Class</span>
+        </a>
+        <a href="{% url 'admin:exams_exam_add' %}" class="quick-action">
+            <i class="bi bi-journal-plus"></i>
+            <span>Schedule Exam</span>
+        </a>
+    </div>
+</div>
+
+<!-- Management Modules -->
+<div class="admin-section">
+    <div class="admin-section-header">
+        <h2><i class="bi bi-grid-3x3-gap-fill"></i> Management Modules</h2>
+    </div>
+    <div class="modules-grid">
+        <!-- Student Management -->
+        <div class="module-card">
+            <div class="module-header">
+                <div class="module-icon">
+                    <i class="bi bi-people-fill"></i>
+                </div>
+                <h3 class="module-title">Students</h3>
+            </div>
+            <div class="module-links">
+                <a href="{% url 'admin:students_student_changelist' %}" class="module-link">
+                    <span>View All Students</span>
+                    <i class="bi bi-arrow-right"></i>
+                </a>
+                <a href="{% url 'admin:students_student_add' %}" class="module-link">
+                    <span>Add New Student</span>
+                    <i class="bi bi-plus-circle"></i>
+                </a>
+            </div>
+        </div>
+        
+        <!-- Teacher Management -->
+        <div class="module-card">
+            <div class="module-header">
+                <div class="module-icon">
+                    <i class="bi bi-person-workspace"></i>
+                </div>
+                <h3 class="module-title">Teachers</h3>
+            </div>
+            <div class="module-links">
+                <a href="{% url 'admin:teachers_teacher_changelist' %}" class="module-link">
+                    <span>View All Teachers</span>
+                    <i class="bi bi-arrow-right"></i>
+                </a>
+                <a href="{% url 'admin:teachers_teacher_add' %}" class="module-link">
+                    <span>Add New Teacher</span>
+                    <i class="bi bi-plus-circle"></i>
+                </a>
+            </div>
+        </div>
+        
+        <!-- Parent Management -->
+        <div class="module-card">
+            <div class="module-header">
+                <div class="module-icon">
+                    <i class="bi bi-person-hearts"></i>
+                </div>
+                <h3 class="module-title">Parents</h3>
+            </div>
+            <div class="module-links">
+                <a href="{% url 'admin:parents_parent_changelist' %}" class="module-link">
+                    <span>View All Parents</span>
+                    <i class="bi bi-arrow-right"></i>
+                </a>
+                <a href="{% url 'admin:parents_parent_add' %}" class="module-link">
+                    <span>Add New Parent</span>
+                    <i class="bi bi-plus-circle"></i>
+                </a>
+            </div>
+        </div>
+        
+        <!-- Staff Management -->
+        <div class="module-card">
+            <div class="module-header">
+                <div class="module-icon">
+                    <i class="bi bi-person-badge"></i>
+                </div>
+                <h3 class="module-title">Staff</h3>
+            </div>
+            <div class="module-links">
+                <a href="{% url 'admin:staff_staff_changelist' %}" class="module-link">
+                    <span>View All Staff</span>
+                    <i class="bi bi-arrow-right"></i>
+                </a>
+                <a href="{% url 'admin:staff_staff_add' %}" class="module-link">
+                    <span>Add New Staff</span>
+                    <i class="bi bi-plus-circle"></i>
+                </a>
+            </div>
+        </div>
+        
+        <!-- Class Management -->
+        <div class="module-card">
+            <div class="module-header">
+                <div class="module-icon">
+                    <i class="bi bi-door-open-fill"></i>
+                </div>
+                <h3 class="module-title">Classes</h3>
+            </div>
+            <div class="module-links">
+                <a href="{% url 'admin:classes_classroom_changelist' %}" class="module-link">
+                    <span>View All Classes</span>
+                    <i class="bi bi-arrow-right"></i>
+                </a>
+                <a href="{% url 'admin:classes_subject_changelist' %}" class="module-link">
+                    <span>Manage Subjects</span>
+                    <i class="bi bi-book"></i>
+                </a>
+            </div>
+        </div>
+        
+        <!-- Attendance Management -->
+        <div class="module-card">
+            <div class="module-header">
+                <div class="module-icon">
+                    <i class="bi bi-calendar-check"></i>
+                </div>
+                <h3 class="module-title">Attendance</h3>
+            </div>
+            <div class="module-links">
+                <a href="{% url 'admin:attendance_attendance_changelist' %}" class="module-link">
+                    <span>View Attendance</span>
+                    <i class="bi bi-arrow-right"></i>
+                </a>
+                <a href="{% url 'admin:attendance_attendance_add' %}" class="module-link">
+                    <span>Mark Attendance</span>
+                    <i class="bi bi-plus-circle"></i>
+                </a>
+            </div>
+        </div>
+        
+        <!-- Exam Management -->
+        <div class="module-card">
+            <div class="module-header">
+                <div class="module-icon">
+                    <i class="bi bi-clipboard-check-fill"></i>
+                </div>
+                <h3 class="module-title">Exams</h3>
+            </div>
+            <div class="module-links">
+                <a href="{% url 'admin:exams_exam_changelist' %}" class="module-link">
+                    <span>View All Exams</span>
+                    <i class="bi bi-arrow-right"></i>
+                </a>
+                <a href="{% url 'admin:results_result_changelist' %}" class="module-link">
+                    <span>View Results</span>
+                    <i class="bi bi-trophy"></i>
+                </a>
+            </div>
+        </div>
+        
+        <!-- Fee Management -->
+        <div class="module-card">
+            <div class="module-header">
+                <div class="module-icon">
+                    <i class="bi bi-cash-coin"></i>
+                </div>
+                <h3 class="module-title">Fees</h3>
+            </div>
+            <div class="module-links">
+                <a href="{% url 'admin:fees_feestructure_changelist' %}" class="module-link">
+                    <span>Fee Structure</span>
+                    <i class="bi bi-arrow-right"></i>
+                </a>
+                <a href="{% url 'admin:fees_payment_changelist' %}" class="module-link">
+                    <span>Fee Payments</span>
+                    <i class="bi bi-credit-card"></i>
+                </a>
+            </div>
+        </div>
+        
+        <!-- Notifications -->
+        <div class="module-card">
+            <div class="module-header">
+                <div class="module-icon">
+                    <i class="bi bi-bell-fill"></i>
+                </div>
+                <h3 class="module-title">Notifications</h3>
+            </div>
+            <div class="module-links">
+                <a href="{% url 'admin:notifications_notification_changelist' %}" class="module-link">
+                    <span>All Notifications</span>
+                    <i class="bi bi-arrow-right"></i>
+                </a>
+                <a href="{% url 'admin:notifications_message_changelist' %}" class="module-link">
+                    <span>Messages</span>
+                    <i class="bi bi-envelope"></i>
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

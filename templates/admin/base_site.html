@@ -1,0 +1,1432 @@
+{% extends "admin/base.html" %}
+{% load static %}
+
+{% block title %}{{ title }} | School Management System{% endblock %}
+
+{% block extrastyle %}
+{{ block.super }}
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+<style>
+    * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+    }
+    
+    body {
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        background: white !important;
+        color: #000000 !important;
+    }
+    
+    /* Hide default Django admin header */
+    #header {
+        display: none !important;
+    }
+    
+    /* Hide default sidebar */
+    #nav-sidebar {
+        display: none !important;
+    }
+    
+    /* Custom Sidebar */
+    .custom-sidebar {
+        position: fixed;
+        top: 70px;
+        left: 0;
+        width: 260px;
+        height: calc(100vh - 70px);
+        background: white;
+        box-shadow: 2px 0 8px rgba(0,0,0,0.1);
+        overflow-y: auto;
+        z-index: 999;
+        transition: all 0.3s;
+    }
+    
+    .sidebar-nav {
+        padding: 20px 0;
+    }
+    
+    .sidebar-section {
+        margin-bottom: 25px;
+    }
+    
+    .sidebar-section-title {
+        padding: 10px 20px;
+        font-size: 0.75rem;
+        font-weight: 700;
+        color: #000000;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+    
+    .sidebar-menu {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+    }
+    
+    .sidebar-menu-item {
+        margin: 0;
+    }
+    
+    .sidebar-menu-link {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 12px 20px;
+        color: #000000;
+        font-weight: 600;
+        text-decoration: none;
+        transition: all 0.2s;
+        border-left: 3px solid transparent;
+    }
+    
+    .sidebar-menu-link:hover {
+        background: #f8f9fa;
+        border-left-color: #667eea;
+        color: #667eea;
+        font-weight: 700;
+    }
+    
+    .sidebar-menu-link.active {
+        background: #f8f9fa;
+        border-left-color: #667eea;
+        color: #667eea;
+        font-weight: 700;
+    }
+    
+    .sidebar-menu-icon {
+        font-size: 18px;
+        width: 20px;
+        text-align: center;
+    }
+    
+    .sidebar-toggle {
+        display: none;
+        position: fixed;
+        bottom: 20px;
+        left: 20px;
+        width: 50px;
+        height: 50px;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        border-radius: 50%;
+        color: white;
+        border: none;
+        cursor: pointer;
+        z-index: 1001;
+        align-items: center;
+        justify-content: center;
+        font-size: 20px;
+        box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+    }
+    
+    @media (max-width: 768px) {
+        .custom-sidebar {
+            transform: translateX(-100%);
+        }
+        
+        .custom-sidebar.open {
+            transform: translateX(0);
+        }
+        
+        .sidebar-toggle {
+            display: flex;
+        }
+        
+        #content {
+            margin-left: 0 !important;
+        }
+    }
+    
+    /* Custom Header */
+    .custom-admin-header {
+        background: white;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        z-index: 1000;
+        height: 70px;
+    }
+    
+    .header-content {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 0 30px;
+        height: 100%;
+    }
+    
+    .header-brand {
+        display: flex;
+        align-items: center;
+        gap: 15px;
+        text-decoration: none;
+    }
+    
+    .header-brand-icon {
+        width: 45px;
+        height: 45px;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-size: 24px;
+    }
+    
+    .header-brand-text h1 {
+        font-size: 1.3rem;
+        font-weight: 700;
+        color: #000000;
+        margin: 0;
+    }
+    
+    .header-brand-text p {
+        font-size: 0.75rem;
+        color: #000000;
+        font-weight: 600;
+        margin: 0;
+    }
+    
+    .header-actions {
+        display: flex;
+        align-items: center;
+        gap: 20px;
+    }
+    
+    .header-search {
+        position: relative;
+    }
+    
+    .header-search input {
+        padding: 8px 15px 8px 40px;
+        border: 2px solid #e2e8f0;
+        border-radius: 8px;
+        width: 300px;
+        font-size: 0.9rem;
+    }
+    
+    .header-search i {
+        position: absolute;
+        left: 12px;
+        top: 50%;
+        transform: translateY(-50%);
+        color: #a0aec0;
+    }
+    
+    .header-user {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 8px 15px;
+        background: white;
+        border: 2px solid #e2e8f0;
+        border-radius: 8px;
+        cursor: pointer;
+        text-decoration: none;
+        color: #000000;
+        font-weight: 600;
+    }
+    
+    .header-user:hover {
+        background: white;
+        border-color: #667eea;
+    }
+    
+    .header-user-avatar {
+        width: 35px;
+        height: 35px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-weight: 600;
+    }
+    
+    .header-btn {
+        padding: 8px 16px;
+        border-radius: 8px;
+        text-decoration: none;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        font-size: 0.9rem;
+        font-weight: 500;
+        transition: all 0.3s;
+    }
+    
+    .header-btn-primary {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+    }
+    
+    .header-btn-outline {
+        border: 2px solid #e2e8f0;
+        color: #4a5568;
+        background: transparent;
+    }
+    
+    .header-btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    }
+    
+    /* Content Area - Full Screen Width with WHITE background */
+    #content {
+        margin-top: 70px;
+        margin-left: 260px;
+        margin-right: 0 !important;
+        padding: 30px 40px !important;
+        min-height: calc(100vh - 70px);
+        transition: all 0.3s;
+        max-width: none !important;
+        width: calc(100% - 260px) !important;
+        background: white !important;
+    }
+    
+    .breadcrumbs {
+        background: white !important;
+        border: none !important;
+        padding: 15px 0 !important;
+        margin-bottom: 20px;
+        color: #000000 !important;
+        font-weight: 600 !important;
+    }
+    
+    .breadcrumbs a {
+        color: #667eea !important;
+        font-weight: 700 !important;
+        text-decoration: none;
+    }
+    
+    .breadcrumbs a:hover {
+        color: #764ba2 !important;
+    }
+    
+    /* Module Styling - Full Width with WHITE backgrounds */
+    .module {
+        background: white;
+        border-radius: 8px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+        border: 2px solid #e2e8f0;
+        overflow: hidden;
+        margin-bottom: 20px;
+        width: 100% !important;
+        max-width: 100% !important;
+    }
+    
+    .module h2 {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
+        color: white !important;
+        padding: 16px 20px !important;
+        font-size: 1.05rem;
+        font-weight: 700;
+        margin: 0 !important;
+    }
+    
+    .module table {
+        margin: 0 !important;
+        background: white !important;
+    }
+    
+    /* Buttons */
+    .button, input[type=submit], input[type=button], .submit-row input, button[type=submit] {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
+        border: none !important;
+        padding: 10px 20px !important;
+        border-radius: 8px !important;
+        color: white !important;
+        font-weight: 500 !important;
+        cursor: pointer;
+        transition: all 0.3s;
+    }
+    
+    .button:hover, input[type=submit]:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+    }
+    
+    /* Forms with WHITE backgrounds and BOLD BLACK text */
+    input[type=text], input[type=password], input[type=email], input[type=number],
+    input[type=date], input[type=time], select, textarea {
+        border: 2px solid #e2e8f0 !important;
+        border-radius: 8px !important;
+        padding: 12px 15px !important;
+        font-size: 0.95rem !important;
+        background: white !important;
+        background-color: white !important;
+        color: #000000 !important;
+        font-weight: 600 !important;
+    }
+    
+    /* Additional form widget fixes */
+    .vTextField,
+    .vLargeTextField, 
+    .vURLField,
+    .vIntegerField,
+    .vPositiveSmallIntegerField,
+    .vDateField input,
+    .vTimeField input,
+    input.vTextField,
+    textarea.vLargeTextField,
+    select.admin-autocomplete,
+    .admin-autocomplete {
+        background: white !important;
+        background-color: white !important;
+        color: #000000 !important;
+        font-weight: 600 !important;
+    }
+    
+    input:focus, select:focus, textarea:focus {
+        border-color: #667eea !important;
+        box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.15) !important;
+        outline: none !important;
+        background: white !important;
+        background-color: white !important;
+        color: #000000 !important;
+    }
+    
+    /* Force white backgrounds on ALL input-like elements */
+    input,
+    select,
+    textarea,
+    button:not(.button):not([type=submit]):not(.header-btn-primary):not(.sidebar-toggle) {
+        background: white !important;
+        background-color: white !important;
+        color: #000000 !important;
+    }
+    
+    /* Django admin widgets - force white */
+    .vDateField,
+    .vTimeField,
+    .vForeignKeyRawIdAdminField,
+    .related-widget-wrapper input,
+    .related-widget-wrapper select {
+        background: white !important;
+        background-color: white !important;
+    }
+    
+    /* Autocomplete search input */
+    .select2-search__field,
+    .select2-search input {
+        background: white !important;
+        background-color: white !important;
+        color: #000000 !important;
+        font-weight: 600 !important;
+    }
+    
+    /* Sidebar (if needed) - WHITE background */
+    #content-main {
+        background: white;
+    }
+    
+    /* Links - BOLD */
+    a {
+        color: #667eea;
+        font-weight: 700;
+        text-decoration: none;
+    }
+    
+    a:hover {
+        color: #764ba2;
+        font-weight: 700;
+    }
+    
+    /* Change list with WHITE background */
+    #changelist {
+        background: white;
+        border-radius: 12px;
+        padding: 20px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+    }
+    
+    #changelist-filter {
+        background: white;
+        border: 2px solid #e2e8f0;
+        border-radius: 12px;
+        padding: 20px;
+    }
+    
+    /* Messages with WHITE backgrounds */
+    .messagelist {
+        margin: 0 0 20px 0;
+        padding: 0;
+    }
+    
+    .messagelist li {
+        border-radius: 8px;
+        padding: 15px 20px;
+        margin-bottom: 10px;
+        background: white;
+        font-weight: 700;
+    }
+    
+    .success {
+        background: white !important;
+        border: 2px solid #28a745 !important;
+        border-left: 5px solid #28a745 !important;
+        color: #000000 !important;
+        font-weight: 700 !important;
+    }
+    
+    .error {
+        background: white !important;
+        border: 2px solid #dc3545 !important;
+        border-left: 5px solid #dc3545 !important;
+        color: #000000 !important;
+        font-weight: 700 !important;
+    }
+    
+    .warning {
+        background: white !important;
+        border: 2px solid #ffc107 !important;
+        border-left: 5px solid #ffc107 !important;
+        color: #000000 !important;
+        font-weight: 700 !important;
+    }
+    
+    /* Fix text visibility - ensure all text is BOLD BLACK and readable */
+    body, p, div, span, td, th, li, label, input, select, textarea, a {
+        color: #000000 !important;
+        font-weight: 600 !important;
+    }
+    
+    /* Table styling with BOLD BLACK text and better spacing for full data visibility */
+    table {
+        color: #000000 !important;
+        font-weight: 600 !important;
+        border-collapse: separate !important;
+        border-spacing: 0 !important;
+        width: 100% !important;
+        table-layout: auto !important;
+        background: white !important;
+    }
+    
+    table th {
+        background: white !important;
+        color: #000000 !important;
+        font-weight: 700 !important;
+        border-bottom: 3px solid #667eea !important;
+        padding: 16px 15px !important;
+        font-size: 14px !important;
+        white-space: nowrap !important;
+        text-align: left !important;
+        min-width: 120px !important;
+    }
+    
+    table td {
+        color: #000000 !important;
+        font-weight: 600 !important;
+        border-bottom: 1px solid #e2e8f0 !important;
+        padding: 14px 15px !important;
+        vertical-align: middle !important;
+        font-size: 13px !important;
+        white-space: normal !important;
+        word-wrap: break-word !important;
+        min-width: 100px !important;
+    }
+    
+    /* Results table specifically - more spacious layout with BOLD BLACK text */
+    #result_list {
+        margin: 0 !important;
+        width: 100% !important;
+        background: white !important;
+        border: 2px solid #e2e8f0 !important;
+        border-radius: 8px !important;
+        overflow: hidden !important;
+    }
+    
+    #result_list th, #result_list td {
+        color: #000000 !important;
+        font-weight: 700 !important;
+        padding: 16px 15px !important;
+        min-width: 120px !important;
+    }
+    
+    #result_list th {
+        background: #f8f9fa !important;
+        border-bottom: 3px solid #667eea !important;
+    }
+    
+    #result_list th a {
+        color: #000000 !important;
+        font-weight: 700 !important;
+        display: block !important;
+        padding: 5px 0 !important;
+        text-decoration: none !important;
+    }
+    
+    #result_list th a:hover {
+        color: #667eea !important;
+    }
+    
+    #result_list tbody tr {
+        transition: all 0.2s ease !important;
+        background: white !important;
+    }
+    
+    #result_list tbody tr:hover {
+        background: #f8f9fa !important;
+        box-shadow: 0 2px 8px rgba(102, 126, 234, 0.15) !important;
+    }
+    
+    #result_list tbody tr td {
+        border-bottom: 1px solid #e2e8f0 !important;
+    }
+    
+    /* Change list layout improvements - Full width with white background */
+    #changelist {
+        background: white !important;
+        border-radius: 8px !important;
+        padding: 30px !important;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.08) !important;
+        margin: 0 !important;
+        width: 100% !important;
+        max-width: 100% !important;
+        border: 1px solid #e2e8f0 !important;
+    }
+    
+    /* Filter sidebar spacing with white background */
+    #changelist-filter {
+        background: white !important;
+        border: 2px solid #e2e8f0 !important;
+        border-radius: 12px !important;
+        padding: 20px !important;
+        margin-left: 25px !important;
+        min-width: 260px !important;
+        max-width: 280px !important;
+        flex-shrink: 0 !important;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.06) !important;
+    }
+    
+    /* Create space between table and filter - Full screen layout */
+    .change-list {
+        display: flex !important;
+        gap: 30px !important;
+        width: 100% !important;
+    }
+    
+    /* Table takes full available width */
+    #changelist .results table {
+        width: 100% !important;
+        min-width: 100% !important;
+        max-width: 100% !important;
+        overflow-x: auto !important;
+    }
+    
+    /* Main content area takes remaining space */
+    #changelist .results {
+        flex: 1 !important;
+        min-width: 0 !important;
+        width: 100% !important;
+        overflow-x: auto !important;
+        background: white !important;
+    }
+    
+    #changelist .results {
+        overflow-x: auto;
+        margin-top: 20px !important;
+    }
+    
+    /* Search bar spacing - Wider for full screen */
+    #changelist-search {
+        margin-bottom: 20px !important;
+        padding-bottom: 20px !important;
+        border-bottom: 2px solid #e2e8f0 !important;
+        width: 100% !important;
+        background: white !important;
+    }
+    
+    #searchbar {
+        padding: 12px 15px !important;
+        border: 2px solid #e2e8f0 !important;
+        border-radius: 8px !important;
+        width: 450px !important;
+        max-width: 50% !important;
+        font-size: 14px !important;
+        color: #000000 !important;
+        font-weight: 600 !important;
+        background: white !important;
+    }
+    
+    #changelist-search input[type=submit] {
+        margin-right: 15px !important;
+    }
+    
+    /* Pagination spacing */
+    .paginator {
+        padding: 20px 0 !important;
+        margin-top: 20px !important;
+        border-top: 2px solid #e2e8f0 !important;
+        background: white !important;
+        color: #000000 !important;
+        font-weight: 700 !important;
+    }
+    
+    /* Column widths for better readability - Extended for full data view */
+    #result_list th:first-child,
+    #result_list td:first-child {
+        width: 60px !important;
+        text-align: center !important;
+    }
+    
+    /* Checkbox column */
+    #result_list .action-checkbox-column {
+        width: 50px !important;
+        padding-left: 15px !important;
+    }
+    
+    /* Ensure all table columns have adequate minimum width */
+    #result_list th,
+    #result_list td {
+        min-width: 120px !important;
+        max-width: none !important;
+    }
+    
+    /* ID/Number columns */
+    #result_list th[class*="field-id"],
+    #result_list td[class*="field-id"] {
+        min-width: 80px !important;
+    }
+    
+    /* Name columns - wider for full names */
+    #result_list th[class*="field-name"],
+    #result_list td[class*="field-name"],
+    #result_list th[class*="field-first_name"],
+    #result_list td[class*="field-first_name"],
+    #result_list th[class*="field-last_name"],
+    #result_list td[class*="field-last_name"] {
+        min-width: 150px !important;
+    }
+    
+    /* Email columns - wider for full emails */
+    #result_list th[class*="field-email"],
+    #result_list td[class*="field-email"] {
+        min-width: 200px !important;
+    }
+    
+    /* Date columns */
+    #result_list th[class*="field-date"],
+    #result_list td[class*="field-date"],
+    #result_list th[class*="field-created"],
+    #result_list td[class*="field-created"] {
+        min-width: 140px !important;
+    }
+    
+    /* Description/Text columns - extra wide */
+    #result_list th[class*="field-description"],
+    #result_list td[class*="field-description"],
+    #result_list th[class*="field-text"],
+    #result_list td[class*="field-text"] {
+        min-width: 250px !important;
+        white-space: normal !important;
+    }
+    
+    /* Allow table to scroll horizontally if needed */
+    .results {
+        overflow-x: auto !important;
+        width: 100% !important;
+    }
+    
+    /* Prevent text truncation in table cells */
+    #result_list td {
+        overflow: visible !important;
+        text-overflow: clip !important;
+        white-space: normal !important;
+        word-wrap: break-word !important;
+    }
+    
+    /* Object tools (add button) spacing */
+    .object-tools {
+        margin: 0 0 20px 0 !important;
+        padding: 0 !important;
+    }
+    
+    .object-tools li {
+        margin-left: 10px !important;
+    }
+    
+    .object-tools a {
+        padding: 10px 20px !important;
+        border-radius: 8px !important;
+        font-size: 14px !important;
+    }
+    
+    /* Form labels and help text - BOLD BLACK */
+    label, .form-row label {
+        color: #000000 !important;
+        font-weight: 700 !important;
+    }
+    
+    .help, .helptext {
+        color: #000000 !important;
+        font-weight: 600 !important;
+    }
+    
+    /* Field text - BOLD BLACK */
+    .field-box, .form-row {
+        color: #000000 !important;
+        font-weight: 600 !important;
+        background: white !important;
+    }
+    
+    /* Readonly fields - BOLD BLACK */
+    .readonly {
+        color: #000000 !important;
+        font-weight: 600 !important;
+    }
+    
+    /* Change list text - BOLD BLACK */
+    #changelist .results table {
+        color: #000000 !important;
+        font-weight: 700 !important;
+        background: white !important;
+    }
+    
+    /* Pagination text - BOLD BLACK */
+    .paginator {
+        color: #000000 !important;
+        font-weight: 700 !important;
+    }
+    
+    .paginator a {
+        color: #667eea !important;
+        font-weight: 700 !important;
+    }
+    
+    /* Filter sidebar text - BOLD BLACK */
+    #changelist-filter li {
+        color: #000000 !important;
+        font-weight: 600 !important;
+    }
+    
+    #changelist-filter a {
+        color: #000000 !important;
+        font-weight: 600 !important;
+    }
+    
+    #changelist-filter a:hover {
+        color: #667eea !important;
+        font-weight: 700 !important;
+    }
+    
+    #changelist-filter li.selected a {
+        color: #667eea !important;
+        font-weight: 700 !important;
+    }
+    
+    /* Action select and buttons - BOLD BLACK */
+    .actions label {
+        color: #000000 !important;
+        font-weight: 700 !important;
+    }
+    
+    .actions select {
+        color: #000000 !important;
+        font-weight: 600 !important;
+        background: white !important;
+    }
+    
+    /* Object tools */
+    .object-tools a {
+        color: white !important;
+        font-weight: 700 !important;
+    }
+    
+    /* Inline form text - BOLD BLACK */
+    .inline-group, .inline-related {
+        color: #000000 !important;
+        font-weight: 600 !important;
+        background: white !important;
+    }
+    
+    /* Fieldset text - BOLD BLACK */
+    fieldset h2 {
+        color: #000000 !important;
+        font-weight: 700 !important;
+    }
+    
+    /* Dashboard module text */
+    .module caption {
+        color: white !important;
+        font-weight: 700 !important;
+    }
+    
+    .module table th, .module table td {
+        color: #000000 !important;
+        font-weight: 700 !important;
+    }
+    
+    /* Ensure input text is BOLD BLACK and visible */
+    input[type=text], input[type=password], input[type=email], input[type=number],
+    input[type=date], input[type=time], input[type=datetime-local], 
+    select, textarea {
+        color: #000000 !important;
+        font-weight: 600 !important;
+        background-color: white !important;
+    }
+    
+    /* Dropdown options - BOLD BLACK */
+    option {
+        color: #000000 !important;
+        font-weight: 600 !important;
+        background-color: white !important;
+    }
+    
+    /* Checkbox and radio labels - BOLD BLACK */
+    input[type=checkbox] + label, input[type=radio] + label {
+        color: #000000 !important;
+        font-weight: 600 !important;
+    }
+    
+    /* Error messages */
+    .errorlist {
+        color: #dc3545 !important;
+    }
+    
+    /* Required field asterisk */
+    .required:after {
+        color: #dc3545 !important;
+    }
+    
+    /* Delete confirmation */
+    .delete-confirmation {
+        color: #2d3748 !important;
+    }
+    
+    /* Dashboard stats */
+    .dashboard-stats {
+        color: white !important;
+    }
+    
+    /* Additional white backgrounds for forms and fieldsets */
+    fieldset {
+        background: white !important;
+        border: 2px solid #e2e8f0 !important;
+        border-radius: 8px !important;
+        padding: 20px !important;
+        margin-bottom: 20px !important;
+    }
+    
+    .aligned label {
+        background: white !important;
+    }
+    
+    .form-row {
+        background: white !important;
+        padding: 12px 0 !important;
+    }
+    
+    .submit-row {
+        background: white !important;
+        padding: 20px !important;
+        border-top: 2px solid #e2e8f0 !important;
+        margin-top: 20px !important;
+    }
+    
+    /* Ensure all containers have white background */
+    #content-main {
+        background: white !important;
+    }
+    
+    .colM, .colMS, .colSM {
+        background: white !important;
+    }
+    
+    /* White backgrounds for inline groups */
+    .inline-group .tabular {
+        background: white !important;
+    }
+    
+    .inline-related {
+        background: white !important;
+        border: 1px solid #e2e8f0 !important;
+        padding: 15px !important;
+        border-radius: 8px !important;
+        margin-bottom: 15px !important;
+    }
+    
+    /* Professional table wrapper for better data viewing */
+    .results {
+        background: white !important;
+        border-radius: 8px !important;
+        padding: 0 !important;
+    }
+    
+    /* Professional table container */
+    #result_list thead {
+        background: #f8f9fa !important;
+        position: sticky !important;
+        top: 0 !important;
+        z-index: 10 !important;
+    }
+    
+    /* Ensure table cells show all content */
+    #result_list tbody td {
+        vertical-align: top !important;
+        line-height: 1.6 !important;
+    }
+    
+    /* Better visibility for alternating rows */
+    #result_list tbody tr:nth-child(even) {
+        background: #fafbfc !important;
+    }
+    
+    #result_list tbody tr:nth-child(odd) {
+        background: white !important;
+    }
+    
+    /* Professional hover effect */
+    #result_list tbody tr:hover {
+        background: #f0f4ff !important;
+        transform: scale(1.001) !important;
+        box-shadow: 0 4px 12px rgba(102, 126, 234, 0.15) !important;
+    }
+    
+    /* Object tools spacing and styling */
+    .object-tools {
+        margin: 0 0 20px 0 !important;
+        padding: 0 !important;
+    }
+    
+    .object-tools li {
+        margin-left: 10px !important;
+    }
+    
+    .object-tools a {
+        padding: 12px 24px !important;
+        border-radius: 8px !important;
+        font-size: 14px !important;
+        font-weight: 700 !important;
+        box-shadow: 0 2px 6px rgba(102, 126, 234, 0.25) !important;
+    }
+    
+    /* Dashboard specific enhancements */
+    .dashboard .module table th {
+        background: #f8f9fa !important;
+        color: #000000 !important;
+        font-weight: 700 !important;
+    }
+    
+    /* Better spacing for action buttons */
+    .actions {
+        padding: 15px 0 !important;
+        background: white !important;
+    }
+    
+    /* Improve filter sidebar appearance */
+    #changelist-filter h2,
+    #changelist-filter h3 {
+        color: #000000 !important;
+        font-weight: 700 !important;
+        margin-bottom: 12px !important;
+        padding-bottom: 10px !important;
+        border-bottom: 2px solid #667eea !important;
+    }
+    
+    /* CRITICAL: Fix ALL select elements and dropdowns - WHITE backgrounds */
+    select, 
+    select option,
+    .select2-container,
+    .select2-selection,
+    .django-select2,
+    input[type="select"],
+    .vTextField select,
+    .vForeignKeyRawIdAdminField,
+    .related-widget-wrapper select {
+        background: white !important;
+        background-color: white !important;
+        color: #000000 !important;
+        font-weight: 600 !important;
+        border: 2px solid #e2e8f0 !important;
+        padding: 10px 15px !important;
+    }
+    
+    /* Fix Django autocomplete widget backgrounds */
+    .select2-container--admin-autocomplete .select2-selection--single,
+    .select2-container--admin-autocomplete .select2-selection--multiple {
+        background: white !important;
+        background-color: white !important;
+        border: 2px solid #e2e8f0 !important;
+    }
+    
+    .select2-dropdown {
+        background: white !important;
+        background-color: white !important;
+        border: 2px solid #e2e8f0 !important;
+    }
+    
+    .select2-results__option {
+        background: white !important;
+        color: #000000 !important;
+        font-weight: 600 !important;
+    }
+    
+    .select2-results__option--highlighted {
+        background: #f0f4ff !important;
+        color: #000000 !important;
+    }
+    
+    /* NO WHITE TEXT ANYWHERE - Override all white text */
+    * {
+        color: #000000 !important;
+    }
+    
+    /* Exceptions: Keep white text only on colored backgrounds */
+    .header-brand-icon,
+    .header-btn-primary,
+    .button,
+    input[type=submit],
+    input[type=button],
+    .submit-row input,
+    button[type=submit],
+    .module h2,
+    .module caption,
+    .object-tools a,
+    .header-user-avatar,
+    .sidebar-toggle {
+        color: white !important;
+    }
+    
+    /* Fix related widget wrappers */
+    .related-widget-wrapper {
+        background: white !important;
+    }
+    
+    .related-widget-wrapper a {
+        color: #667eea !important;
+        background: white !important;
+    }
+    
+    /* Fix any remaining dark backgrounds on form elements */
+    .form-row,
+    .field-box,
+    .grp-row,
+    div.form-row,
+    .aligned label + *,
+    .vTextField,
+    .vIntegerField,
+    .vDateField,
+    .vTimeField {
+        background: white !important;
+        background-color: white !important;
+    }
+    
+    /* Fix calendar/date picker widgets */
+    .calendarbox,
+    .calendarnav,
+    .calendar,
+    .timelist {
+        background: white !important;
+        color: #000000 !important;
+    }
+    
+    .calendar caption,
+    .calendarbox h2 {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
+        color: white !important;
+    }
+    
+    .calendar td,
+    .calendar th {
+        background: white !important;
+        color: #000000 !important;
+    }
+    
+    .calendar td a {
+        color: #000000 !important;
+        font-weight: 600 !important;
+    }
+    
+    .calendar td a:hover {
+        background: #f0f4ff !important;
+        color: #667eea !important;
+    }
+    
+    /* Fix inline forms */
+    .inline-related h3,
+    .inline-group h2 {
+        background: white !important;
+        color: #000000 !important;
+        border-bottom: 2px solid #667eea !important;
+    }
+    
+    .inline-related {
+        background: white !important;
+    }
+    
+    /* Fix any dark overlays */
+    .ui-widget-overlay {
+        background: rgba(0,0,0,0.3) !important;
+    }
+    
+    /* Fix help text */
+    .help,
+    .helptext,
+    p.help {
+        color: #000000 !important;
+        font-weight: 600 !important;
+        background: transparent !important;
+    }
+    
+    /* Fix error messages - keep them visible */
+    .errorlist,
+    .errorlist li,
+    ul.errorlist,
+    .errornote {
+        color: #dc3545 !important;
+        background: white !important;
+        font-weight: 700 !important;
+    }
+    
+    /* Fix Django admin specific classes */
+    .selector,
+    .selector-available,
+    .selector-chosen {
+        background: white !important;
+    }
+    
+    .selector select {
+        background: white !important;
+        color: #000000 !important;
+    }
+    
+    .selector h2 {
+        background: #f8f9fa !important;
+        color: #000000 !important;
+    }
+
+</style>
+{% endblock %}
+
+{% block branding %}{% endblock %}
+{% block usertools %}{% endblock %}
+{% block nav-global %}{% endblock %}
+
+{% block messages %}
+    <div class="custom-admin-header">
+        <div class="header-content">
+            <a href="{% url 'admin:index' %}" class="header-brand">
+                <div class="header-brand-icon">
+                    <i class="bi bi-mortarboard-fill"></i>
+                </div>
+                <div class="header-brand-text">
+                    <h1>School Management</h1>
+                    <p>Administration Panel</p>
+                </div>
+            </a>
+            
+            <div class="header-actions">
+                <a href="/" class="header-btn header-btn-outline">
+                    <i class="bi bi-house-door"></i>
+                    View Site
+                </a>
+                
+                <div class="header-user">
+                    <div class="header-user-avatar">
+                        {{ user.first_name.0|default:"A" }}{{ user.last_name.0|default:"" }}
+                    </div>
+                    <div>
+                        <div style="font-weight: 600; font-size: 0.9rem;">{{ user.get_full_name|default:user.username }}</div>
+                        <div style="font-size: 0.75rem; color: #718096;">Administrator</div>
+                    </div>
+                </div>
+                
+                <a href="{% url 'admin:logout' %}" class="header-btn header-btn-primary">
+                    <i class="bi bi-box-arrow-right"></i>
+                    Logout
+                </a>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Sidebar Navigation -->
+    <aside class="custom-sidebar" id="adminSidebar">
+        <nav class="sidebar-nav">
+            <div class="sidebar-section">
+                <div class="sidebar-section-title">Main</div>
+                <ul class="sidebar-menu">
+                    <li class="sidebar-menu-item">
+                        <a href="{% url 'admin:index' %}" class="sidebar-menu-link">
+                            <i class="bi bi-speedometer2 sidebar-menu-icon"></i>
+                            <span>Dashboard</span>
+                        </a>
+                    </li>
+                </ul>
+            </div>
+            
+            <div class="sidebar-section">
+                <div class="sidebar-section-title">Academic</div>
+                <ul class="sidebar-menu">
+                    <li class="sidebar-menu-item">
+                        <a href="{% url 'admin:students_student_changelist' %}" class="sidebar-menu-link">
+                            <i class="bi bi-people sidebar-menu-icon"></i>
+                            <span>Students</span>
+                        </a>
+                    </li>
+                    <li class="sidebar-menu-item">
+                        <a href="{% url 'admin:teachers_teacher_changelist' %}" class="sidebar-menu-link">
+                            <i class="bi bi-person-workspace sidebar-menu-icon"></i>
+                            <span>Teachers</span>
+                        </a>
+                    </li>
+                    <li class="sidebar-menu-item">
+                        <a href="{% url 'admin:parents_parent_changelist' %}" class="sidebar-menu-link">
+                            <i class="bi bi-person-hearts sidebar-menu-icon"></i>
+                            <span>Parents</span>
+                        </a>
+                    </li>
+                    <li class="sidebar-menu-item">
+                        <a href="{% url 'admin:staff_staff_changelist' %}" class="sidebar-menu-link">
+                            <i class="bi bi-person-badge sidebar-menu-icon"></i>
+                            <span>Staff</span>
+                        </a>
+                    </li>
+                    <li class="sidebar-menu-item">
+                        <a href="{% url 'admin:classes_classroom_changelist' %}" class="sidebar-menu-link">
+                            <i class="bi bi-door-open sidebar-menu-icon"></i>
+                            <span>Classes</span>
+                        </a>
+                    </li>
+                    <li class="sidebar-menu-item">
+                        <a href="{% url 'admin:classes_subject_changelist' %}" class="sidebar-menu-link">
+                            <i class="bi bi-book sidebar-menu-icon"></i>
+                            <span>Subjects</span>
+                        </a>
+                    </li>
+                </ul>
+            </div>
+            
+            <div class="sidebar-section">
+                <div class="sidebar-section-title">Operations</div>
+                <ul class="sidebar-menu">
+                    <li class="sidebar-menu-item">
+                        <a href="{% url 'admin:attendance_attendance_changelist' %}" class="sidebar-menu-link">
+                            <i class="bi bi-calendar-check sidebar-menu-icon"></i>
+                            <span>Attendance</span>
+                        </a>
+                    </li>
+                    <li class="sidebar-menu-item">
+                        <a href="{% url 'admin:exams_exam_changelist' %}" class="sidebar-menu-link">
+                            <i class="bi bi-clipboard-check sidebar-menu-icon"></i>
+                            <span>Exams</span>
+                        </a>
+                    </li>
+                    <li class="sidebar-menu-item">
+                        <a href="{% url 'admin:results_result_changelist' %}" class="sidebar-menu-link">
+                            <i class="bi bi-trophy sidebar-menu-icon"></i>
+                            <span>Results</span>
+                        </a>
+                    </li>
+                    <li class="sidebar-menu-item">
+                        <a href="{% url 'admin:fees_feestructure_changelist' %}" class="sidebar-menu-link">
+                            <i class="bi bi-cash-coin sidebar-menu-icon"></i>
+                            <span>Fee Structure</span>
+                        </a>
+                    </li>
+                    <li class="sidebar-menu-item">
+                        <a href="{% url 'admin:fees_payment_changelist' %}" class="sidebar-menu-link">
+                            <i class="bi bi-credit-card sidebar-menu-icon"></i>
+                            <span>Payments</span>
+                        </a>
+                    </li>
+                </ul>
+            </div>
+            
+            <div class="sidebar-section">
+                <div class="sidebar-section-title">Communication</div>
+                <ul class="sidebar-menu">
+                    <li class="sidebar-menu-item">
+                        <a href="{% url 'admin:notifications_notification_changelist' %}" class="sidebar-menu-link">
+                            <i class="bi bi-bell sidebar-menu-icon"></i>
+                            <span>Notifications</span>
+                        </a>
+                    </li>
+                    <li class="sidebar-menu-item">
+                        <a href="{% url 'admin:notifications_message_changelist' %}" class="sidebar-menu-link">
+                            <i class="bi bi-envelope sidebar-menu-icon"></i>
+                            <span>Messages</span>
+                        </a>
+                    </li>
+                    <li class="sidebar-menu-item">
+                        <a href="{% url 'admin:notifications_notice_changelist' %}" class="sidebar-menu-link">
+                            <i class="bi bi-megaphone sidebar-menu-icon"></i>
+                            <span>Notices</span>
+                        </a>
+                    </li>
+                </ul>
+            </div>
+            
+            <div class="sidebar-section">
+                <div class="sidebar-section-title">System</div>
+                <ul class="sidebar-menu">
+                    <li class="sidebar-menu-item">
+                        <a href="{% url 'admin:accounts_user_changelist' %}" class="sidebar-menu-link">
+                            <i class="bi bi-people-fill sidebar-menu-icon"></i>
+                            <span>Users</span>
+                        </a>
+                    </li>
+                    <li class="sidebar-menu-item">
+                        <a href="{% url 'admin:auth_group_changelist' %}" class="sidebar-menu-link">
+                            <i class="bi bi-shield-lock sidebar-menu-icon"></i>
+                            <span>Groups</span>
+                        </a>
+                    </li>
+                </ul>
+            </div>
+        </nav>
+    </aside>
+    
+    <!-- Mobile Toggle Button -->
+    <button class="sidebar-toggle" onclick="document.getElementById('adminSidebar').classList.toggle('open')">
+        <i class="bi bi-list"></i>
+    </button>
+    
+    {% if messages %}
+        <div style="margin-top: 20px; margin-bottom: -10px;">
+            <ul class="messagelist">
+                {% for message in messages %}
+                    <li class="{% if message.tags %}{{ message.tags }}{% endif %}">
+                        {{ message }}
+                    </li>
+                {% endfor %}
+            </ul>
+        </div>
+    {% endif %}
+{% endblock %}
+
+{% block extrahead %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Highlight active menu item
+        const currentPath = window.location.pathname;
+        const menuLinks = document.querySelectorAll('.sidebar-menu-link');
+        
+        menuLinks.forEach(link => {
+            if (link.getAttribute('href') === currentPath) {
+                link.classList.add('active');
+            }
+        });
+        
+        // Close sidebar on mobile when clicking outside
+        document.addEventListener('click', function(event) {
+            const sidebar = document.getElementById('adminSidebar');
+            const toggle = document.querySelector('.sidebar-toggle');
+            
+            if (window.innerWidth <= 768 && 
+                !sidebar.contains(event.target) && 
+                !toggle.contains(event.target) &&
+                sidebar.classList.contains('open')) {
+                sidebar.classList.remove('open');
+            }
+        });
+    });
+</script>
+{% endblock %}
