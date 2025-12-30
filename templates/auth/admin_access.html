@@ -1,0 +1,212 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Admin Panel Access - Authentication Required{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row justify-content-center align-items-center" style="min-height: 80vh;">
+        <div class="col-md-6 col-lg-5">
+            <!-- Security Warning Card -->
+            <div class="card shadow-lg border-0 mb-4">
+                <div class="card-body text-center py-4" style="background: linear-gradient(135deg, #ff6b6b 0%, #c92a2a 100%); color: white; border-radius: 15px 15px 0 0;">
+                    <i class="bi bi-shield-lock display-1 mb-3"></i>
+                    <h3 class="mb-2">⚠️ SECURE ACCESS REQUIRED</h3>
+                    <p class="mb-0">Django Admin Panel Authentication</p>
+                </div>
+            </div>
+
+            <!-- Login Form Card -->
+            <div class="card shadow-lg border-0">
+                <div class="card-body p-5">
+                    <div class="text-center mb-4">
+                        <h4>Re-enter Your Credentials</h4>
+                        <p class="text-muted">Additional authentication required for admin panel access</p>
+                    </div>
+
+                    {% if messages %}
+                        {% for message in messages %}
+                        <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                            {{ message }}
+                            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                        </div>
+                        {% endfor %}
+                    {% endif %}
+
+                    <form method="post" id="adminAccessForm">
+                        {% csrf_token %}
+                        
+                        <div class="mb-4">
+                            <label for="username" class="form-label">
+                                <i class="bi bi-person-circle me-2"></i>Username
+                            </label>
+                            <input type="text" 
+                                   class="form-control form-control-lg" 
+                                   id="username" 
+                                   name="username" 
+                                   placeholder="Enter your username"
+                                   value="{{ user.username }}"
+                                   required
+                                   autofocus>
+                        </div>
+
+                        <div class="mb-4">
+                            <label for="password" class="form-label">
+                                <i class="bi bi-key-fill me-2"></i>Password
+                            </label>
+                            <div class="input-group">
+                                <input type="password" 
+                                       class="form-control form-control-lg" 
+                                       id="password" 
+                                       name="password" 
+                                       placeholder="Enter your password"
+                                       required>
+                                <button class="btn btn-outline-secondary" type="button" onclick="togglePassword()">
+                                    <i class="bi bi-eye" id="toggleIcon"></i>
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Security Notice -->
+                        <div class="alert alert-warning mb-4">
+                            <i class="bi bi-exclamation-triangle-fill me-2"></i>
+                            <strong>Security Notice:</strong>
+                            <ul class="mb-0 mt-2 small">
+                                <li>This login verifies your identity for admin panel access</li>
+                                <li>Your session will remain active for 15 minutes</li>
+                                <li>All admin actions are logged and auditable</li>
+                                <li>Unauthorized access attempts will be reported</li>
+                            </ul>
+                        </div>
+
+                        <div class="d-grid gap-2">
+                            <button type="submit" class="btn btn-danger btn-lg" id="submitBtn">
+                                <i class="bi bi-shield-check me-2"></i>
+                                <span id="btnText">Verify & Access Admin Panel</span>
+                                <span id="btnSpinner" class="spinner-border spinner-border-sm ms-2 d-none"></span>
+                            </button>
+                            <a href="{% url 'dashboard' %}" class="btn btn-outline-secondary">
+                                <i class="bi bi-arrow-left me-2"></i>
+                                Back to Dashboard
+                            </a>
+                        </div>
+                    </form>
+
+                    <!-- Information Box -->
+                    <div class="mt-4 p-3 bg-light rounded">
+                        <h6 class="mb-2">
+                            <i class="bi bi-info-circle me-2"></i>Why is this required?
+                        </h6>
+                        <p class="small text-muted mb-0">
+                            The Django Admin Panel provides direct access to your database. 
+                            This additional authentication layer ensures that only authorized 
+                            personnel with valid credentials can access sensitive system operations.
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Current User Info -->
+            <div class="text-center mt-3 text-muted">
+                <small>
+                    <i class="bi bi-person-badge me-1"></i>
+                    Logged in as: <strong>{{ user.username }}</strong> ({{ user.get_full_name }})
+                </small>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function togglePassword() {
+    const passwordField = document.getElementById('password');
+    const toggleIcon = document.getElementById('toggleIcon');
+    
+    if (passwordField.type === 'password') {
+        passwordField.type = 'text';
+        toggleIcon.classList.remove('bi-eye');
+        toggleIcon.classList.add('bi-eye-slash');
+    } else {
+        passwordField.type = 'password';
+        toggleIcon.classList.remove('bi-eye-slash');
+        toggleIcon.classList.add('bi-eye');
+    }
+}
+
+document.getElementById('adminAccessForm').addEventListener('submit', function() {
+    const submitBtn = document.getElementById('submitBtn');
+    const btnText = document.getElementById('btnText');
+    const btnSpinner = document.getElementById('btnSpinner');
+    
+    submitBtn.disabled = true;
+    btnText.textContent = 'Verifying...';
+    btnSpinner.classList.remove('d-none');
+});
+
+// Auto-focus username if empty, password if username filled
+document.addEventListener('DOMContentLoaded', function() {
+    const usernameField = document.getElementById('username');
+    const passwordField = document.getElementById('password');
+    
+    if (usernameField.value) {
+        passwordField.focus();
+    }
+});
+
+// Warn before leaving page if form is partially filled
+window.addEventListener('beforeunload', function (e) {
+    const passwordField = document.getElementById('password');
+    if (passwordField.value.length > 0) {
+        e.preventDefault();
+        e.returnValue = '';
+    }
+});
+</script>
+
+<style>
+.card {
+    border-radius: 15px;
+    overflow: hidden;
+}
+
+.form-control:focus,
+.input-group .btn:focus {
+    border-color: #c92a2a;
+    box-shadow: 0 0 0 0.2rem rgba(201, 42, 42, 0.25);
+}
+
+.btn-danger {
+    background: linear-gradient(135deg, #ff6b6b 0%, #c92a2a 100%);
+    border: none;
+}
+
+.btn-danger:hover {
+    background: linear-gradient(135deg, #c92a2a 0%, #9b1d1d 100%);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(201, 42, 42, 0.4);
+}
+
+.alert-warning {
+    border-left: 4px solid #ffc107;
+    background-color: #fff3cd;
+}
+
+.bg-light {
+    background-color: #f8f9fa !important;
+    border-left: 4px solid #6c757d;
+}
+
+@keyframes pulse {
+    0%, 100% {
+        opacity: 1;
+    }
+    50% {
+        opacity: 0.5;
+    }
+}
+
+.spinner-border {
+    animation: pulse 1s infinite;
+}
+</style>
+{% endblock %}

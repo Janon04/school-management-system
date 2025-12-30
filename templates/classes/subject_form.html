@@ -1,0 +1,289 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ action }} Subject - School Management System{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <!-- Page Header -->
+    <div class="page-header-modern mb-4">
+        <div class="d-flex justify-content-between align-items-center">
+            <div>
+                <h1 class="mb-2">
+                    <i class="bi bi-book me-2"></i>{{ action }} Subject
+                </h1>
+                <p class="text-white-50 mb-0">
+                    {% if subject %}Edit existing subject details{% else %}Add a new subject to the system{% endif %}
+                </p>
+            </div>
+            <div>
+                <a href="{% url 'classes:subject_list' %}" class="btn btn-gradient-light">
+                    <i class="bi bi-arrow-left me-2"></i>Back to Subjects
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Form Card -->
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="card-modern">
+                <div class="card-body">
+                    {% if messages %}
+                        {% for message in messages %}
+                        <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                            {{ message }}
+                            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                        </div>
+                        {% endfor %}
+                    {% endif %}
+
+                    <form method="post" id="subjectForm">
+                        {% csrf_token %}
+                        
+                        <div class="row">
+                            <!-- Subject Name -->
+                            <div class="col-md-8 mb-3">
+                                <label for="name" class="form-label">
+                                    <i class="bi bi-book me-1"></i>Subject Name <span class="text-danger">*</span>
+                                </label>
+                                <input type="text" 
+                                       class="form-control" 
+                                       id="name" 
+                                       name="name" 
+                                       value="{{ subject.name|default:'' }}" 
+                                       required
+                                       placeholder="e.g., Mathematics, English, Physics">
+                                <div class="form-text">Enter the full name of the subject</div>
+                            </div>
+
+                            <!-- Subject Code -->
+                            <div class="col-md-4 mb-3">
+                                <label for="code" class="form-label">
+                                    <i class="bi bi-hash me-1"></i>Subject Code <span class="text-danger">*</span>
+                                </label>
+                                <input type="text" 
+                                       class="form-control" 
+                                       id="code" 
+                                       name="code" 
+                                       value="{{ subject.code|default:'' }}" 
+                                       required
+                                       placeholder="e.g., MATH101"
+                                       {% if subject %}readonly{% endif %}>
+                                <div class="form-text">Unique identifier</div>
+                            </div>
+
+                            <!-- Category -->
+                            <div class="col-md-12 mb-3">
+                                <label for="category" class="form-label">
+                                    <i class="bi bi-tag me-1"></i>Category <span class="text-danger">*</span>
+                                </label>
+                                <select class="form-select" id="category" name="category" required>
+                                    <option value="">Select Category</option>
+                                    <option value="CORE" {% if subject.category == 'CORE' %}selected{% endif %}>
+                                        Core Subject (Required for all students)
+                                    </option>
+                                    <option value="ELECTIVE" {% if subject.category == 'ELECTIVE' %}selected{% endif %}>
+                                        Elective (Optional choice)
+                                    </option>
+                                    <option value="EXTRA" {% if subject.category == 'EXTRA' %}selected{% endif %}>
+                                        Extra Curricular
+                                    </option>
+                                </select>
+                            </div>
+
+                            <!-- Marks Configuration -->
+                            <div class="col-md-6 mb-3">
+                                <label for="total_marks" class="form-label">
+                                    <i class="bi bi-clipboard-check me-1"></i>Total Marks <span class="text-danger">*</span>
+                                </label>
+                                <input type="number" 
+                                       class="form-control" 
+                                       id="total_marks" 
+                                       name="total_marks" 
+                                       value="{{ subject.total_marks|default:'100' }}" 
+                                       min="1"
+                                       max="500"
+                                       required>
+                                <div class="form-text">Maximum marks for this subject</div>
+                            </div>
+
+                            <div class="col-md-6 mb-3">
+                                <label for="pass_mark" class="form-label">
+                                    <i class="bi bi-check-circle me-1"></i>Pass Mark <span class="text-danger">*</span>
+                                </label>
+                                <input type="number" 
+                                       class="form-control" 
+                                       id="pass_mark" 
+                                       name="pass_mark" 
+                                       value="{{ subject.pass_mark|default:'40' }}" 
+                                       min="0"
+                                       max="100"
+                                       required>
+                                <div class="form-text">Minimum marks to pass</div>
+                            </div>
+
+                            <!-- Description -->
+                            <div class="col-md-12 mb-3">
+                                <label for="description" class="form-label">
+                                    <i class="bi bi-file-text me-1"></i>Description
+                                </label>
+                                <textarea class="form-control" 
+                                          id="description" 
+                                          name="description" 
+                                          rows="4"
+                                          placeholder="Enter subject description, syllabus overview, or any additional information...">{{ subject.description|default:'' }}</textarea>
+                                <div class="form-text">Optional: Add subject details, objectives, or notes</div>
+                            </div>
+                        </div>
+
+                        <!-- Preview Section -->
+                        <div class="card bg-light mb-3">
+                            <div class="card-body">
+                                <h6 class="card-title">
+                                    <i class="bi bi-eye me-2"></i>Preview
+                                </h6>
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <small class="text-muted">Subject Name:</small>
+                                        <p id="preview-name" class="mb-2"><strong>-</strong></p>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <small class="text-muted">Category:</small>
+                                        <p id="preview-category" class="mb-2"><strong>-</strong></p>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <small class="text-muted">Grading:</small>
+                                        <p id="preview-marks" class="mb-2">
+                                            <strong>Pass: <span class="text-success" id="preview-pass">40</span> / Total: <span class="text-primary" id="preview-total">100</span></strong>
+                                        </p>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <small class="text-muted">Pass Percentage:</small>
+                                        <p id="preview-percent" class="mb-2"><strong class="text-info">40%</strong></p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Action Buttons -->
+                        <div class="d-flex justify-content-between mt-4">
+                            <a href="{% url 'classes:subject_list' %}" class="btn btn-outline-secondary">
+                                <i class="bi bi-x-circle me-2"></i>Cancel
+                            </a>
+                            <button type="submit" class="btn btn-gradient-primary">
+                                <i class="bi bi-check-circle me-2"></i>{{ action }} Subject
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Help Card -->
+            <div class="card-modern mt-4">
+                <div class="card-body">
+                    <h6 class="card-title">
+                        <i class="bi bi-info-circle me-2"></i>Guidelines
+                    </h6>
+                    <ul class="mb-0">
+                        <li><strong>Subject Code:</strong> Must be unique. Use uppercase letters and numbers (e.g., MATH101, ENG201)</li>
+                        <li><strong>Core Subjects:</strong> Required for all students in the class</li>
+                        <li><strong>Electives:</strong> Students can choose from available options</li>
+                        <li><strong>Extra Curricular:</strong> Optional activities like Sports, Arts, Music</li>
+                        <li><strong>Pass Mark:</strong> Typically 40% of total marks (40/100, 20/50, etc.)</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const form = document.getElementById('subjectForm');
+    const nameInput = document.getElementById('name');
+    const categorySelect = document.getElementById('category');
+    const totalMarksInput = document.getElementById('total_marks');
+    const passMarkInput = document.getElementById('pass_mark');
+
+    // Preview elements
+    const previewName = document.getElementById('preview-name');
+    const previewCategory = document.getElementById('preview-category');
+    const previewPass = document.getElementById('preview-pass');
+    const previewTotal = document.getElementById('preview-total');
+    const previewPercent = document.getElementById('preview-percent');
+
+    // Update preview
+    function updatePreview() {
+        previewName.textContent = nameInput.value || '-';
+        
+        const categoryText = categorySelect.options[categorySelect.selectedIndex]?.text || '-';
+        previewCategory.textContent = categoryText.split('(')[0].trim();
+        
+        const passVal = parseInt(passMarkInput.value) || 0;
+        const totalVal = parseInt(totalMarksInput.value) || 100;
+        
+        previewPass.textContent = passVal;
+        previewTotal.textContent = totalVal;
+        
+        const percentage = totalVal > 0 ? ((passVal / totalVal) * 100).toFixed(1) : 0;
+        previewPercent.textContent = percentage + '%';
+    }
+
+    // Validate pass mark doesn't exceed total marks
+    function validateMarks() {
+        const passVal = parseInt(passMarkInput.value) || 0;
+        const totalVal = parseInt(totalMarksInput.value) || 100;
+        
+        if (passVal > totalVal) {
+            passMarkInput.value = totalVal;
+            alert('Pass mark cannot exceed total marks!');
+        }
+        updatePreview();
+    }
+
+    // Event listeners
+    nameInput.addEventListener('input', updatePreview);
+    categorySelect.addEventListener('change', updatePreview);
+    totalMarksInput.addEventListener('input', validateMarks);
+    passMarkInput.addEventListener('input', validateMarks);
+
+    // Form validation
+    form.addEventListener('submit', function(e) {
+        const passVal = parseInt(passMarkInput.value) || 0;
+        const totalVal = parseInt(totalMarksInput.value) || 100;
+        
+        if (passVal > totalVal) {
+            e.preventDefault();
+            alert('Pass mark cannot exceed total marks!');
+            passMarkInput.focus();
+            return false;
+        }
+    });
+
+    // Initial preview
+    updatePreview();
+});
+</script>
+
+<style>
+.form-label {
+    font-weight: 600;
+    color: #495057;
+}
+
+.form-control:focus,
+.form-select:focus {
+    border-color: #667eea;
+    box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25);
+}
+
+#preview-marks {
+    font-size: 1.1rem;
+}
+
+.card.bg-light {
+    border-left: 4px solid #667eea;
+}
+</style>
+{% endblock %}

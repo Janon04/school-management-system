@@ -1,0 +1,405 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Payment Records - School Management System{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <!-- Page Header -->
+    <div class="page-header-modern mb-4">
+        <div class="d-flex justify-content-between align-items-center">
+            <div>
+                <h1 class="mb-2">
+                    <i class="bi bi-receipt me-2"></i>Payment Records
+                </h1>
+                <p class="text-white-50 mb-0">View and manage all student fee payments</p>
+            </div>
+            <div>
+                <button class="btn btn-gradient-light" onclick="window.print()">
+                    <i class="bi bi-printer me-2"></i>Print
+                </button>
+                {% if user.role == 'ADMIN' %}
+                <a href="{% url 'admin:fees_payment_add' %}" class="btn btn-gradient-success">
+                    <i class="bi bi-plus-circle me-2"></i>Record Payment (Use Admin)
+                </a>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    {% if payments %}
+    <!-- Statistics Cards -->
+    <div class="row mb-4">
+        <div class="col-md-3 mb-3">
+            <div class="stat-card-mini stat-card-primary">
+                <div class="stat-icon">
+                    <i class="bi bi-receipt"></i>
+                </div>
+                <div class="stat-details">
+                    <h3>{{ payments|length }}</h3>
+                    <p>Total Payments</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 mb-3">
+            <div class="stat-card-mini stat-card-success">
+                <div class="stat-icon">
+                    <i class="bi bi-currency-dollar"></i>
+                </div>
+                <div class="stat-details">
+                    {% load fee_tags %}
+                    <h3>{{ payments|sum_payment_amounts|floatformat:2 }} Frw</h3>
+                    <p>Total Amount</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 mb-3">
+            <div class="stat-card-mini stat-card-info">
+                <div class="stat-icon">
+                    <i class="bi bi-check-circle"></i>
+                </div>
+                <div class="stat-details">
+                    {% load fee_tags %}
+                    <h3>{{ payments|filter_by_status:'COMPLETED'|length }}</h3>
+                    <p>Completed</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 mb-3">
+            <div class="stat-card-mini stat-card-warning">
+                <div class="stat-icon">
+                    <i class="bi bi-clock-history"></i>
+                </div>
+                <div class="stat-details">
+                    {% load fee_tags %}
+                    <h3>{{ payments|filter_by_status:'PENDING'|length }}</h3>
+                    <p>Pending</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Payments Table -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card-modern">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h5 class="card-title mb-0">
+                            <i class="bi bi-table me-2"></i>Recent Payments
+                        </h5>
+                        <div class="d-flex gap-2">
+                            <input type="text" 
+                                   class="form-control form-control-sm search-box-modern" 
+                                   id="searchInput" 
+                                   placeholder="Search by student, receipt...">
+                            <select class="form-select form-select-sm search-box-modern" id="filterStatus" style="width: auto;">
+                                <option value="">All Status</option>
+                                <option value="COMPLETED">Completed</option>
+                                <option value="PENDING">Pending</option>
+                                <option value="FAILED">Failed</option>
+                                <option value="REFUNDED">Refunded</option>
+                            </select>
+                            <select class="form-select form-select-sm search-box-modern" id="filterMethod" style="width: auto;">
+                                <option value="">All Methods</option>
+                                <option value="CASH">Cash</option>
+                                <option value="CHEQUE">Cheque</option>
+                                <option value="CARD">Card</option>
+                                <option value="BANK_TRANSFER">Bank Transfer</option>
+                                <option value="MOBILE_MONEY">Mobile Money</option>
+                                <option value="OTHER">Other</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div class="table-responsive">
+                        <table class="table table-modern" id="paymentsTable">
+                            <thead>
+                                <tr>
+                                    <th><i class="bi bi-hash me-1"></i>Receipt</th>
+                                    <th><i class="bi bi-calendar-event me-1"></i>Date</th>
+                                    <th><i class="bi bi-person me-1"></i>Student</th>
+                                    <th><i class="bi bi-tag me-1"></i>Fee Type</th>
+                                    <th><i class="bi bi-cash me-1"></i>Amount</th>
+                                    <th><i class="bi bi-credit-card me-1"></i>Method</th>
+                                    <th><i class="bi bi-receipt me-1"></i>Transaction Ref</th>
+                                    <th><i class="bi bi-info-circle me-1"></i>Status</th>
+                                    <th><i class="bi bi-person-check me-1"></i>Received By</th>
+                                    {% if user.role == 'ADMIN' %}
+                                    <th><i class="bi bi-gear me-1"></i>Actions</th>
+                                    {% endif %}
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for payment in payments %}
+                                <tr data-status="{{ payment.status }}" data-method="{{ payment.payment_method }}">
+                                    <td>
+                                        <strong class="text-primary">
+                                            {% if payment.receipt_number %}
+                                                {{ payment.receipt_number }}
+                                            {% else %}
+                                                #{{ payment.id }}
+                                            {% endif %}
+                                        </strong>
+                                    </td>
+                                    <td>{{ payment.payment_date|date:"M d, Y" }}</td>
+                                    <td>
+                                        <div>
+                                            <strong>{{ payment.student.user.get_full_name }}</strong>
+                                            <br>
+                                            <small class="text-muted">{{ payment.student.admission_number }}</small>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        {% if payment.fee_structure %}
+                                            <span class="badge bg-primary">
+                                                {{ payment.fee_structure.get_fee_type_display }}
+                                            </span>
+                                        {% else %}
+                                            <span class="badge bg-secondary">General</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <strong class="text-success">{{ payment.amount_paid|floatformat:2 }} Frw</strong>
+                                    </td>
+                                    <td>
+                                        <span class="badge bg-info">
+                                            {{ payment.get_payment_method_display }}
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <small class="text-muted">{{ payment.transaction_reference }}</small>
+                                    </td>
+                                    <td>
+                                        {% if payment.status == 'COMPLETED' %}
+                                            <span class="badge bg-success">
+                                                <i class="bi bi-check-circle me-1"></i>Completed
+                                            </span>
+                                        {% elif payment.status == 'PENDING' %}
+                                            <span class="badge bg-warning">
+                                                <i class="bi bi-clock me-1"></i>Pending
+                                            </span>
+                                        {% elif payment.status == 'FAILED' %}
+                                            <span class="badge bg-danger">
+                                                <i class="bi bi-x-circle me-1"></i>Failed
+                                            </span>
+                                        {% elif payment.status == 'REFUNDED' %}
+                                            <span class="badge bg-secondary">
+                                                <i class="bi bi-arrow-counterclockwise me-1"></i>Refunded
+                                            </span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if payment.received_by %}
+                                            <small>{{ payment.received_by.get_full_name }}</small>
+                                        {% else %}
+                                            <small class="text-muted">N/A</small>
+                                        {% endif %}
+                                    </td>
+                                    {% if user.role == 'ADMIN' %}
+                                    <td>
+                                        <div class="btn-group btn-group-sm">
+                                            <a href="{% url 'admin:fees_payment_change' payment.pk %}" 
+                                               class="btn btn-outline-primary" 
+                                               title="Edit">
+                                                <i class="bi bi-pencil"></i>
+                                            </a>
+                                            <button class="btn btn-outline-info" 
+                                                    title="Print Receipt"
+                                                    onclick="printReceipt({{ payment.pk }})">
+                                                <i class="bi bi-printer"></i>
+                                            </button>
+                                        </div>
+                                    </td>
+                                    {% endif %}
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Payment Method Distribution -->
+    <div class="row mt-4">
+        <div class="col-md-6 mb-3">
+            <div class="card-modern">
+                <div class="card-body">
+                    <h5 class="card-title mb-4">
+                        <i class="bi bi-pie-chart me-2"></i>Payment Methods
+                    </h5>
+                    <div class="list-group list-group-flush">
+                        {% regroup payments by payment_method as method_groups %}
+                        {% for method_group in method_groups %}
+                        <div class="list-group-item d-flex justify-content-between align-items-center px-0">
+                            <span>
+                                <i class="bi bi-credit-card text-primary me-2"></i>
+                                {{ method_group.grouper|default:"Other" }}
+                            </span>
+                            <div>
+                                <span class="badge bg-primary rounded-pill me-2">{{ method_group.list|length }}</span>
+                                <strong class="text-success">
+                                    {% load fee_tags %}
+                                    {{ method_group.list|sum_payment_amounts|floatformat:2 }} Frw
+                                </strong>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-6 mb-3">
+            <div class="card-modern">
+                <div class="card-body">
+                    <h5 class="card-title mb-4">
+                        <i class="bi bi-bar-chart me-2"></i>Payment Status
+                    </h5>
+                    <div class="list-group list-group-flush">
+                        {% regroup payments by status as status_groups %}
+                        {% for status_group in status_groups %}
+                        <div class="list-group-item d-flex justify-content-between align-items-center px-0">
+                            <span>
+                                {% if status_group.grouper == 'COMPLETED' %}
+                                    <i class="bi bi-check-circle text-success me-2"></i>
+                                {% elif status_group.grouper == 'PENDING' %}
+                                    <i class="bi bi-clock text-warning me-2"></i>
+                                {% elif status_group.grouper == 'FAILED' %}
+                                    <i class="bi bi-x-circle text-danger me-2"></i>
+                                {% else %}
+                                    <i class="bi bi-arrow-counterclockwise text-secondary me-2"></i>
+                                {% endif %}
+                                {{ status_group.grouper }}
+                            </span>
+                            <div>
+                                <span class="badge bg-primary rounded-pill me-2">{{ status_group.list|length }}</span>
+                                <strong class="text-success">
+                                    {% load fee_tags %}
+                                    {{ status_group.list|sum_payment_amounts|floatformat:2 }} Frw
+                                </strong>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quick Links -->
+    <div class="row mt-4">
+        <div class="col-md-4 mb-3">
+            <div class="card-modern h-100">
+                <div class="card-body text-center">
+                    <i class="bi bi-cash-stack display-4 text-primary mb-3"></i>
+                    <h5>Fee Structures</h5>
+                    <p class="text-muted">View configured fee structures</p>
+                    <a href="{% url 'fees:fee_structure' %}" class="btn btn-gradient-primary btn-sm">
+                        View Structures
+                    </a>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4 mb-3">
+            <div class="card-modern h-100">
+                <div class="card-body text-center">
+                    <i class="bi bi-people display-4 text-success mb-3"></i>
+                    <h5>Student Fees</h5>
+                    <p class="text-muted">View individual student fee status</p>
+                    <a href="{% url 'students:student_list' %}" class="btn btn-gradient-success btn-sm">
+                        View Students
+                    </a>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4 mb-3">
+            <div class="card-modern h-100">
+                <div class="card-body text-center">
+                    <i class="bi bi-file-earmark-text display-4 text-info mb-3"></i>
+                    <h5>Fee Reports</h5>
+                    <p class="text-muted">Generate fee collection reports</p>
+                    <a href="{% url 'admin:fees_payment_changelist' %}" class="btn btn-gradient-info btn-sm">
+                        View Reports
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {% else %}
+    <!-- Empty State -->
+    <div class="empty-state-modern text-center py-5">
+        <i class="bi bi-receipt display-1 text-muted mb-4"></i>
+        <h3>No Payment Records Found</h3>
+        <p class="text-muted mb-4">There are no payment records in the system yet.</p>
+        {% if user.role == 'ADMIN' %}
+        <a href="{% url 'admin:fees_payment_add' %}" class="btn btn-gradient-primary">
+            <i class="bi bi-plus-circle me-2"></i>Record Payment
+        </a>
+        {% endif %}
+    </div>
+    {% endif %}
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const searchInput = document.getElementById('searchInput');
+    const filterStatus = document.getElementById('filterStatus');
+    const filterMethod = document.getElementById('filterMethod');
+    const table = document.getElementById('paymentsTable');
+    const rows = table ? table.querySelectorAll('tbody tr') : [];
+
+    function filterTable() {
+        const searchValue = searchInput.value.toLowerCase();
+        const statusValue = filterStatus.value;
+        const methodValue = filterMethod.value;
+
+        rows.forEach(row => {
+            const rowText = row.textContent.toLowerCase();
+            const rowStatus = row.getAttribute('data-status');
+            const rowMethod = row.getAttribute('data-method');
+
+            const searchMatch = !searchValue || rowText.includes(searchValue);
+            const statusMatch = !statusValue || rowStatus === statusValue;
+            const methodMatch = !methodValue || rowMethod === methodValue;
+
+            if (searchMatch && statusMatch && methodMatch) {
+                row.style.display = '';
+            } else {
+                row.style.display = 'none';
+            }
+        });
+    }
+
+    if (searchInput) searchInput.addEventListener('input', filterTable);
+    if (filterStatus) filterStatus.addEventListener('change', filterTable);
+    if (filterMethod) filterMethod.addEventListener('change', filterTable);
+});
+
+function printReceipt(paymentId) {
+    // You can implement a receipt printing functionality here
+    alert('Print receipt for payment #' + paymentId);
+}
+</script>
+
+<style>
+@media print {
+    .page-header-modern,
+    .stat-card-mini,
+    .btn,
+    .filters-section,
+    select,
+    input {
+        display: none !important;
+    }
+    
+    .card-modern {
+        box-shadow: none !important;
+        border: 1px solid #dee2e6 !important;
+    }
+}
+</style>
+{% endblock %}

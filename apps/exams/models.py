@@ -37,6 +37,12 @@ class Exam(models.Model):
         default=False,
         help_text='Are results published to students?'
     )
+    exam_file = models.FileField(
+        upload_to='exams/files/',
+        blank=True,
+        null=True,
+        help_text='Upload exam file (PDF or Word)'
+    )
     created_at = models.DateTimeField(auto_now_add=True)
     
     class Meta:

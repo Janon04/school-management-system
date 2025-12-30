@@ -1,0 +1,528 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Bulk Promote Students{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <!-- Page Header -->
+    <div class="page-header-modern mb-4">
+        <div class="d-flex justify-content-between align-items-center flex-wrap">
+            <div>
+                <h1 class="mb-2">
+                    <i class="bi bi-people-fill"></i>
+                    Bulk Student Promotion
+                </h1>
+                <p class="mb-0" style="opacity: 0.95;">
+                    Promote multiple students to the next class or academic year
+                </p>
+            </div>
+            <div class="mt-3 mt-md-0">
+                <a href="{% url 'promotions:promotion_list' %}" class="btn btn-light btn-lg">
+                    <i class="bi bi-arrow-left"></i> Back to List
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Form Card -->
+    <div class="row justify-content-center">
+        <div class="col-lg-10">
+            <div class="card-modern">
+                <div class="card-body">
+                    {% if messages %}
+                        {% for message in messages %}
+                        <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                            {{ message }}
+                            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                        </div>
+                        {% endfor %}
+                    {% endif %}
+
+                    <form method="post" id="bulkPromotionForm">
+                        {% csrf_token %}
+                        
+                        <!-- Class Selection for Promotion -->
+                        <div class="form-section mb-4">
+                            <h5 class="section-title">
+                                <i class="bi bi-funnel me-2"></i>Select Class to Promote
+                            </h5>
+                            
+                            <div class="row">
+                                <div class="col-md-12 mb-3">
+                                    <label for="class_filter" class="form-label">
+                                        <i class="bi bi-building me-1"></i>Class <span class="text-danger">*</span>
+                                    </label>
+                                    <select class="form-select" id="class_filter" name="class_filter" onchange="loadStudentsByClass()" required>
+                                        <option value="">-- Select Class to Load Students --</option>
+                                        {% for class in classes %}
+                                        <option value="{{ class.id }}">{{ class.name }}</option>
+                                        {% endfor %}
+                                    </select>
+                                    <small class="form-text text-muted">Select a class to see all students in that class</small>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Student Selection Section -->
+                        <div class="form-section mb-4" id="studentSection" style="display: none;">
+                            <h5 class="section-title">
+                                <i class="bi bi-person-check me-2"></i>Select Students to Promote
+                            </h5>
+                            
+                            <div class="row">
+                                <div class="col-md-12 mb-3">
+                                    <div class="d-flex justify-content-between align-items-center mb-3">
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="checkbox" id="selectAllStudents" onchange="toggleAllStudents()">
+                                            <label class="form-check-label fw-bold" for="selectAllStudents">
+                                                Select All Students
+                                            </label>
+                                        </div>
+                                        <span class="badge bg-primary" id="selectedCount">0 selected</span>
+                                    </div>
+                                    
+                                    <div id="studentsContainer" class="students-list">
+                                        <div class="text-center text-muted py-3">
+                                            <i class="bi bi-hourglass-split"></i> Loading students...
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Class & Academic Year Information Section -->
+                        <div class="form-section mb-4">
+                            <h5 class="section-title">
+                                <i class="bi bi-building me-2"></i>Class & Academic Year Details
+                            </h5>
+                            
+                            <div class="row">
+                                <!-- From Section -->
+                                <div class="col-md-6 mb-3">
+                                    <div class="sub-section">
+                                        <h6 class="text-info mb-3">
+                                            <i class="bi bi-arrow-bar-right me-1"></i>From (Current)
+                                        </h6>
+                                        
+                                        <div class="mb-3">
+                                            <label for="from_class" class="form-label">
+                                                From Class <span class="text-danger">*</span>
+                                            </label>
+                                            <select class="form-select" id="from_class" name="from_class" required>
+                                                <option value="">Select From Class</option>
+                                                {% for class in classes %}
+                                                <option value="{{ class.id }}">{{ class.name }}</option>
+                                                {% endfor %}
+                                            </select>
+                                        </div>
+                                        
+                                        <div class="mb-3">
+                                            <label for="from_academic_year" class="form-label">
+                                                From Academic Year <span class="text-danger">*</span>
+                                            </label>
+                                            <select class="form-select" id="from_academic_year" name="from_academic_year" required>
+                                                <option value="">Select From Academic Year</option>
+                                                {% for year in academic_years %}
+                                                <option value="{{ year.id }}">{{ year.name }}</option>
+                                                {% endfor %}
+                                            </select>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- To Section -->
+                                <div class="col-md-6 mb-3">
+                                    <div class="sub-section">
+                                        <h6 class="text-success mb-3">
+                                            <i class="bi bi-arrow-bar-left me-1"></i>To (New)
+                                        </h6>
+                                        
+                                        <div class="mb-3">
+                                            <label for="to_class" class="form-label">
+                                                To Class <span class="text-warning" id="toClassRequired">*</span>
+                                            </label>
+                                            <select class="form-select" id="to_class" name="to_class">
+                                                <option value="">Select To Class</option>
+                                                {% for class in classes %}
+                                                <option value="{{ class.id }}">{{ class.name }}</option>
+                                                {% endfor %}
+                                            </select>
+                                            <small class="form-text text-muted" id="toClassHelp">Leave empty if students are graduating</small>
+                                        </div>
+                                        
+                                        <div class="mb-3">
+                                            <label for="to_academic_year" class="form-label">
+                                                To Academic Year <span class="text-danger">*</span>
+                                            </label>
+                                            <select class="form-select" id="to_academic_year" name="to_academic_year" required>
+                                                <option value="">Select To Academic Year</option>
+                                                {% for year in academic_years %}
+                                                <option value="{{ year.id }}">{{ year.name }}</option>
+                                                {% endfor %}
+                                            </select>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Promotion Status Section -->
+                        <div class="form-section mb-4">
+                            <h5 class="section-title">
+                                <i class="bi bi-check-circle me-2"></i>Promotion Status
+                            </h5>
+                            
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label for="status" class="form-label">
+                                        <i class="bi bi-flag me-1"></i>Status <span class="text-danger">*</span>
+                                    </label>
+                                    <select class="form-select" id="status" name="status" required onchange="updateStatusPreview()">
+                                        <option value="">Select Status</option>
+                                        <option value="PROMOTED" selected>Promoted</option>
+                                        <option value="DETAINED">Detained/Repeated</option>
+                                        <option value="GRADUATED">Graduated</option>
+                                    </select>
+                                </div>
+
+                                <div class="col-md-6 mb-3">
+                                    <!-- Status Preview -->
+                                    <label class="form-label">Status Preview</label>
+                                    <div class="alert alert-info mb-0" id="statusPreview">
+                                        <span class="badge bg-primary" id="statusBadge">PROMOTED</span>
+                                        <small class="ms-2" id="statusDescription">Students will be moved to new class</small>
+                                    </div>
+                                </div>
+
+                                <div class="col-md-12 mb-3">
+                                    <label for="remarks" class="form-label">
+                                        <i class="bi bi-chat-left-text me-1"></i>Remarks (Optional)
+                                    </label>
+                                    <textarea class="form-control" id="remarks" name="remarks" rows="4" placeholder="Add any notes about this bulk promotion"></textarea>
+                                    <small class="form-text text-muted">This remark will be applied to all selected students</small>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Action Buttons -->
+                        <div class="d-flex justify-content-between align-items-center mt-4 pt-3 border-top">
+                            <a href="{% url 'promotions:promotion_list' %}" class="btn btn-outline-secondary">
+                                <i class="bi bi-x-circle me-2"></i>Cancel
+                            </a>
+                            <button type="submit" class="btn btn-gradient-primary btn-lg">
+                                <i class="bi bi-check-circle me-2"></i>Promote Selected Students
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// Load Students by Class
+function loadStudentsByClass() {
+    const classId = document.getElementById('class_filter').value;
+    const studentSection = document.getElementById('studentSection');
+    const studentsContainer = document.getElementById('studentsContainer');
+    
+    if (!classId) {
+        studentSection.style.display = 'none';
+        return;
+    }
+    
+    // Show loading
+    studentSection.style.display = 'block';
+    studentsContainer.innerHTML = '<div class="text-center text-muted py-3"><i class="bi bi-hourglass-split"></i> Loading students...</div>';
+    
+    // Fetch students
+    fetch(`{% url 'promotions:get_students_by_class' %}?class_id=${classId}`)
+        .then(response => response.json())
+        .then(data => {
+            if (data.error) {
+                studentsContainer.innerHTML = `<div class="alert alert-danger">${data.error}</div>`;
+                return;
+            }
+            
+            if (data.students.length === 0) {
+                studentsContainer.innerHTML = '<div class="text-center text-muted py-3"><i class="bi bi-inbox"></i> No students in this class</div>';
+                return;
+            }
+            
+            // Build student checkboxes
+            let html = '<div class="row g-3">';
+            data.students.forEach(student => {
+                html += `
+                    <div class="col-md-6">
+                        <div class="student-card">
+                            <div class="form-check">
+                                <input class="form-check-input student-checkbox" type="checkbox" 
+                                       name="student" value="${student.id}" 
+                                       id="student_${student.id}" 
+                                       onchange="updateSelectedCount()">
+                                <label class="form-check-label w-100" for="student_${student.id}">
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <div>
+                                            <strong>${student.name}</strong>
+                                            <br>
+                                            <small class="text-muted">
+                                                <i class="bi bi-hash"></i>${student.admission_number}
+                                            </small>
+                                        </div>
+                                        <i class="bi bi-check-circle-fill text-success" style="display: none;"></i>
+                                    </div>
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            });
+            html += '</div>';
+            
+            studentsContainer.innerHTML = html;
+            updateSelectedCount();
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            studentsContainer.innerHTML = '<div class="alert alert-danger">Error loading students</div>';
+        });
+}
+
+// Toggle All Students
+function toggleAllStudents() {
+    const selectAll = document.getElementById('selectAllStudents');
+    const checkboxes = document.querySelectorAll('.student-checkbox');
+    
+    checkboxes.forEach(checkbox => {
+        checkbox.checked = selectAll.checked;
+    });
+    
+    updateSelectedCount();
+}
+
+// Update Selected Count
+function updateSelectedCount() {
+    const checkboxes = document.querySelectorAll('.student-checkbox:checked');
+    const count = checkboxes.length;
+    const countBadge = document.getElementById('selectedCount');
+    
+    countBadge.textContent = `${count} selected`;
+    countBadge.className = count > 0 ? 'badge bg-success' : 'badge bg-secondary';
+    
+    // Update "Select All" checkbox state
+    const allCheckboxes = document.querySelectorAll('.student-checkbox');
+    const selectAllCheckbox = document.getElementById('selectAllStudents');
+    if (selectAllCheckbox) {
+        selectAllCheckbox.checked = allCheckboxes.length > 0 && count === allCheckboxes.length;
+    }
+}
+
+// Status Preview Update
+function updateStatusPreview() {
+    const statusSelect = document.getElementById('status');
+    const selectedValue = statusSelect.value;
+    
+    const statusBadge = document.getElementById('statusBadge');
+    const statusDescription = document.getElementById('statusDescription');
+    const toClassField = document.getElementById('to_class');
+    const toClassRequired = document.getElementById('toClassRequired');
+    const toClassHelp = document.getElementById('toClassHelp');
+    
+    statusBadge.textContent = selectedValue;
+    
+    // Update badge color and description based on status
+    statusBadge.className = 'badge';
+    switch(selectedValue) {
+        case 'PROMOTED':
+            statusBadge.classList.add('bg-success');
+            statusDescription.textContent = 'Students will be moved to new class';
+            toClassField.required = true;
+            toClassRequired.style.display = 'inline';
+            toClassHelp.textContent = 'Required for promoted students';
+            toClassField.disabled = false;
+            break;
+        case 'DETAINED':
+            statusBadge.classList.add('bg-warning');
+            statusDescription.textContent = 'Students will repeat current class';
+            toClassField.required = false;
+            toClassRequired.style.display = 'none';
+            toClassHelp.textContent = 'Optional - can be same as current class';
+            toClassField.disabled = false;
+            break;
+        case 'GRADUATED':
+            statusBadge.classList.add('bg-info');
+            statusDescription.textContent = 'Students have completed all classes';
+            toClassField.required = false;
+            toClassRequired.style.display = 'none';
+            toClassHelp.textContent = 'Leave empty for graduated students';
+            toClassField.value = '';
+            toClassField.disabled = true;
+            break;
+        default:
+            statusBadge.classList.add('bg-primary');
+            statusDescription.textContent = 'Select promotion status';
+            toClassField.disabled = false;
+    }
+}
+
+// Initialize on page load
+document.addEventListener('DOMContentLoaded', function() {
+    updateStatusPreview();
+});
+
+// Form validation
+document.getElementById('bulkPromotionForm').addEventListener('submit', function(e) {
+    const status = document.getElementById('status').value;
+    const toClass = document.getElementById('to_class').value;
+    const selectedStudents = document.querySelectorAll('.student-checkbox:checked').length;
+    
+    if (selectedStudents === 0) {
+        e.preventDefault();
+        alert('Please select at least one student to promote');
+        return false;
+    }
+    
+    if (status === 'PROMOTED' && !toClass) {
+        e.preventDefault();
+        alert('Promoted students must have a destination class');
+        return false;
+    }
+    
+    // Confirm bulk promotion
+    if (!confirm(`You are about to promote ${selectedStudents} student(s). Continue?`)) {
+        e.preventDefault();
+        return false;
+    }
+});
+</script>
+
+<style>
+.form-section {
+    background: rgba(255, 255, 255, 0.95);
+    padding: 1.5rem;
+    border-radius: 10px;
+    border: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+.section-title {
+    color: #000;
+    font-size: 1.1rem;
+    font-weight: 700;
+    margin-bottom: 1rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 2px solid rgba(0, 0, 0, 0.2);
+}
+
+.sub-section {
+    background: rgba(255, 255, 255, 0.8);
+    padding: 1rem;
+    border-radius: 8px;
+    border: 1px solid rgba(0, 0, 0, 0.15);
+    height: 100%;
+}
+
+.sub-section h6 {
+    font-weight: 700;
+    color: inherit;
+    padding-bottom: 0.5rem;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.15);
+}
+
+.form-label {
+    font-weight: 600;
+    color: #000;
+    margin-bottom: 0.5rem;
+}
+
+.form-control, .form-select {
+    background: #fff;
+    border: 1px solid rgba(0, 0, 0, 0.3);
+    color: #000;
+    padding: 0.6rem 1rem;
+    border-radius: 8px;
+}
+
+.form-control:focus, .form-select:focus {
+    background: #fff;
+    border-color: var(--gradient-end);
+    color: #000;
+    box-shadow: 0 0 0 0.2rem rgba(var(--gradient-end-rgb), 0.25);
+}
+
+.form-control::placeholder {
+    color: rgba(0, 0, 0, 0.5);
+}
+
+.form-control:disabled, .form-select:disabled {
+    background: rgba(200, 200, 200, 0.5);
+    color: #666;
+    opacity: 0.8;
+    cursor: not-allowed;
+}
+
+textarea.form-control {
+    min-height: 100px;
+}
+
+.form-text {
+    color: rgba(0, 0, 0, 0.7) !important;
+    font-weight: 500;
+}
+
+.text-danger {
+    color: #dc3545 !important;
+    font-weight: bold;
+}
+
+.text-warning {
+    color: #ffc107 !important;
+    font-weight: bold;
+}
+
+.students-list {
+    max-height: 400px;
+    overflow-y: auto;
+    padding: 1rem;
+    background: rgba(255, 255, 255, 0.5);
+    border-radius: 8px;
+    border: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+.student-card {
+    background: #fff;
+    border: 2px solid rgba(0, 0, 0, 0.1);
+    border-radius: 8px;
+    padding: 0.75rem;
+    transition: all 0.2s;
+}
+
+.student-card:hover {
+    border-color: var(--gradient-end);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.student-card .form-check-input:checked ~ label {
+    color: var(--gradient-end);
+    font-weight: 600;
+}
+
+.student-card .form-check-input:checked ~ label i.bi-check-circle-fill {
+    display: inline !important;
+}
+
+.form-check-input {
+    width: 1.5rem;
+    height: 1.5rem;
+    margin-top: 0.25rem;
+}
+
+.form-check-label {
+    margin-left: 0.5rem;
+    cursor: pointer;
+    color: #000;
+    font-weight: 600;
+}
+</style>
+{% endblock %}

@@ -1,0 +1,282 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Results Management - School Management System{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <!-- Page Header -->
+    <div class="page-header-modern mb-4">
+        <div class="d-flex justify-content-between align-items-center">
+            <div>
+                <h1 class="mb-2">
+                    <i class="bi bi-trophy me-2"></i>Results Management
+                </h1>
+                <p class="text-white-50 mb-0">View and manage all student exam results</p>
+            </div>
+            <div>
+                {% if user.role == 'TEACHER' or user.role == 'ADMIN' %}
+                <a href="{% url 'results:result_create' %}" class="btn btn-gradient-light">
+                    <i class="bi bi-plus-circle me-2"></i>Add Result
+                </a>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Statistics Cards -->
+    <div class="row mb-4">
+        <div class="col-md-3 mb-3">
+            <div class="stat-card-mini stat-card-primary">
+                <div class="stat-icon">
+                    <i class="bi bi-file-earmark-text"></i>
+                </div>
+                <div class="stat-details">
+                    <h3>{{ total_results }}</h3>
+                    <p>Total Results</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 mb-3">
+            <div class="stat-card-mini stat-card-info">
+                <div class="stat-icon">
+                    <i class="bi bi-calculator"></i>
+                </div>
+                <div class="stat-details">
+                    <h3>{{ avg_score|floatformat:1 }}</h3>
+                    <p>Average Score</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 mb-3">
+            <div class="stat-card-mini stat-card-success">
+                <div class="stat-icon">
+                    <i class="bi bi-check-circle"></i>
+                </div>
+                <div class="stat-details">
+                    <h3>{{ pass_count }}</h3>
+                    <p>Passed</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 mb-3">
+            <div class="stat-card-mini stat-card-warning">
+                <div class="stat-icon">
+                    <i class="bi bi-percent"></i>
+                </div>
+                <div class="stat-details">
+                    <h3>{{ pass_rate|floatformat:1 }}%</h3>
+                    <p>Pass Rate</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filters -->
+    <div class="card-modern mb-4">
+        <div class="card-body">
+            <form method="get" class="row g-3">
+                <div class="col-md-3">
+                    <label class="form-label">Exam</label>
+                    <select name="exam" class="form-select" onchange="this.form.submit()">
+                        <option value="">All Exams</option>
+                        {% for exam in exams %}
+                        <option value="{{ exam.id }}" {% if selected_exam == exam.id|stringformat:"s" %}selected{% endif %}>
+                            {{ exam.name }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">Class</label>
+                    <select name="class" class="form-select" onchange="this.form.submit()">
+                        <option value="">All Classes</option>
+                        {% for class in classes %}
+                        <option value="{{ class.id }}" {% if selected_class == class.id|stringformat:"s" %}selected{% endif %}>
+                            {{ class.name }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">Subject</label>
+                    <select name="subject" class="form-select" onchange="this.form.submit()">
+                        <option value="">All Subjects</option>
+                        {% for subject in subjects %}
+                        <option value="{{ subject.id }}" {% if selected_subject == subject.id|stringformat:"s" %}selected{% endif %}>
+                            {{ subject.name }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-3 d-flex align-items-end">
+                    <a href="{% url 'results:result_list' %}" class="btn btn-outline-secondary w-100">
+                        <i class="bi bi-x-circle me-2"></i>Clear Filters
+                    </a>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    {% if results %}
+    <!-- Results Table -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card-modern">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h5 class="card-title mb-0">
+                            <i class="bi bi-table me-2"></i>Results (Showing {{ results.count }})
+                        </h5>
+                        <input type="text" 
+                               class="form-control form-control-sm search-box-modern" 
+                               id="searchInput" 
+                               placeholder="Search by student name..."
+                               style="max-width: 300px;">
+                    </div>
+                    
+                    <div class="table-responsive">
+                        <table class="table table-modern" id="resultsTable">
+                            <thead>
+                                <tr>
+                                    <th><i class="bi bi-hash me-1"></i>S/N</th>
+                                    <th><i class="bi bi-person me-1"></i>Student</th>
+                                    <th><i class="bi bi-building me-1"></i>Class</th>
+                                    <th><i class="bi bi-calendar-event me-1"></i>Exam</th>
+                                    <th><i class="bi bi-book me-1"></i>Subject</th>
+                                    <th><i class="bi bi-calculator me-1"></i>Marks</th>
+                                    <th><i class="bi bi-percent me-1"></i>Percentage</th>
+                                    <th><i class="bi bi-award me-1"></i>Grade</th>
+                                    <th><i class="bi bi-check-circle me-1"></i>Status</th>
+                                    {% if user.role == 'TEACHER' or user.role == 'ADMIN' %}
+                                    <th><i class="bi bi-gear me-1"></i>Actions</th>
+                                    {% endif %}
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for result in results %}
+                                <tr>
+                                    <td>{{ forloop.counter }}</td>
+                                    <td>
+                                        <div>
+                                            <strong>{{ result.student.user.get_full_name }}</strong>
+                                            <br>
+                                            <small class="text-muted">{{ result.student.admission_number }}</small>
+                                        </div>
+                                    </td>
+                                    <td>{{ result.student.class_assigned.name }}</td>
+                                    <td>
+                                        <small>{{ result.exam.name }}</small>
+                                    </td>
+                                    <td>
+                                        <span class="badge bg-primary">
+                                            {{ result.subject.name }}
+                                        </span>
+                                    </td>
+                                    <td>
+                                        {% if result.is_absent %}
+                                            <span class="text-danger">Absent</span>
+                                        {% else %}
+                                            <strong>{{ result.marks_obtained }}/{{ result.max_marks }}</strong>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if not result.is_absent %}
+                                            <strong class="{% if result.percentage >= 80 %}text-success{% elif result.percentage >= 50 %}text-info{% else %}text-danger{% endif %}">
+                                                {{ result.percentage|floatformat:1 }}%
+                                            </strong>
+                                        {% else %}
+                                            <span class="text-muted">-</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if result.grade %}
+                                            <span class="badge 
+                                                {% if result.grade == 'A' %}bg-success
+                                                {% elif result.grade == 'B' %}bg-info
+                                                {% elif result.grade == 'C' %}bg-primary
+                                                {% elif result.grade == 'D' %}bg-warning
+                                                {% else %}bg-danger{% endif %}">
+                                                {{ result.grade }}
+                                            </span>
+                                        {% else %}
+                                            <span class="text-muted">-</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if result.is_absent %}
+                                            <span class="badge bg-secondary">
+                                                <i class="bi bi-x-circle me-1"></i>Absent
+                                            </span>
+                                        {% elif result.is_pass %}
+                                            <span class="badge bg-success">
+                                                <i class="bi bi-check-circle me-1"></i>Pass
+                                            </span>
+                                        {% else %}
+                                            <span class="badge bg-danger">
+                                                <i class="bi bi-x-circle me-1"></i>Fail
+                                            </span>
+                                        {% endif %}
+                                    </td>
+                                    {% if user.role == 'TEACHER' or user.role == 'ADMIN' %}
+                                    <td>
+                                        <div class="btn-group btn-group-sm">
+                                            <a href="{% url 'results:result_update' result.pk %}" 
+                                               class="btn btn-outline-primary" 
+                                               title="Edit">
+                                                <i class="bi bi-pencil"></i>
+                                            </a>
+                                        </div>
+                                    </td>
+                                    {% endif %}
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {% else %}
+    <!-- Empty State -->
+    <div class="empty-state-modern text-center py-5">
+        <i class="bi bi-trophy display-1 text-muted mb-4"></i>
+        <h3>No Results Found</h3>
+        <p class="text-muted mb-4">
+            {% if selected_exam or selected_class or selected_subject %}
+                No results match your filter criteria. Try adjusting your filters.
+            {% else %}
+                There are no results recorded in the system yet.
+            {% endif %}
+        </p>
+        {% if user.role == 'TEACHER' or user.role == 'ADMIN' %}
+        <a href="{% url 'results:result_create' %}" class="btn btn-gradient-primary">
+            <i class="bi bi-plus-circle me-2"></i>Add First Result
+        </a>
+        {% endif %}
+    </div>
+    {% endif %}
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const searchInput = document.getElementById('searchInput');
+    const table = document.getElementById('resultsTable');
+    
+    if (searchInput && table) {
+        const rows = table.querySelectorAll('tbody tr');
+        
+        searchInput.addEventListener('input', function() {
+            const searchValue = this.value.toLowerCase();
+            
+            rows.forEach(row => {
+                const text = row.textContent.toLowerCase();
+                row.style.display = text.includes(searchValue) ? '' : 'none';
+            });
+        });
+    }
+});
+</script>
+{% endblock %}

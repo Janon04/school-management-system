@@ -1,3 +1,58 @@
+
+from django.shortcuts import render, redirect
+from django.contrib import messages
+from django.http import HttpResponseForbidden, JsonResponse
+from django.contrib.auth.decorators import login_required
+from django.db.models import Q
+from .models import User
+
+@login_required
+def user_detail_view(request, user_id):
+    """Display a user's profile (frontend view)"""
+    user_obj = User.objects.filter(pk=user_id).first()
+    if not user_obj:
+        messages.error(request, 'User not found.')
+        return redirect('accounts:user_list')
+    return render(request, 'accounts/user_detail.html', {'user_obj': user_obj})
+
+@login_required
+def user_delete_view(request, user_id):
+    """Delete a user (frontend action, admin/staff only)"""
+    if not (request.user.is_admin or request.user.is_staff_member or request.user.is_superuser):
+        return HttpResponseForbidden("You do not have permission to delete users.")
+    user = User.objects.filter(pk=user_id).first()
+    if not user:
+        return JsonResponse({'success': False, 'error': 'User not found.'}, status=404)
+    if request.method == 'POST':
+        if user == request.user:
+            return JsonResponse({'success': False, 'error': 'You cannot delete your own account.'}, status=400)
+        user.delete()
+        return JsonResponse({'success': True})
+    return JsonResponse({'success': False, 'error': 'Invalid request.'}, status=405)
+
+@login_required
+def user_list_view(request):
+    """Frontend user list table view (only ADMIN, TEACHER, PARENT)"""
+    query = request.GET.get('q', '').strip()
+    role_filter = request.GET.get('role', '').strip()
+    allowed_roles = ['ADMIN', 'TEACHER', 'PARENT']
+    users = User.objects.filter(role__in=allowed_roles)
+    if query:
+        users = users.filter(
+            Q(username__icontains=query) |
+            Q(first_name__icontains=query) |
+            Q(last_name__icontains=query) |
+            Q(email__icontains=query)
+        )
+    if role_filter and role_filter in allowed_roles:
+        users = users.filter(role=role_filter)
+    users = users.order_by('-date_joined')
+    context = {
+        'users': users,
+        'query': query,
+        'role_filter': role_filter,
+    }
+    return render(request, 'accounts/user_list.html', context)
 """
 Views for authentication and user management
 Handles login, logout, registration, password management, and dashboard
@@ -11,6 +66,7 @@ from django.utils import timezone
 from datetime import timedelta
 from .models import User
 from .forms import UserLoginForm, UserRegistrationForm
+from apps.exams.models import ExamSchedule
 
 
 def login_view(request):
@@ -125,6 +181,10 @@ def dashboard_view(request):
         'current_date': timezone.now()
     }
     
+    # Debug output
+    print(f"DEBUG: User {user.username}, Role: {user.role if hasattr(user, 'role') else 'NO ROLE'}, Superuser: {user.is_superuser}")
+    print(f"DEBUG: is_admin={user.is_admin}, is_staff_member={user.is_staff_member}, is_superuser={user.is_superuser}")
+    
     # Admin Dashboard
     if user.is_admin or user.is_staff_member or user.is_superuser:
         from apps.students.models import Student
@@ -134,31 +194,151 @@ def dashboard_view(request):
         from apps.fees.models import Payment
         from apps.classes.models import ClassRoom
         from apps.exams.models import Exam
+        from apps.results.models import Result
+        from apps.promotions.models import Promotion
+        from apps.notifications.models import Notification
+        from django.db.models import Count, Sum, Avg
         
         today = timezone.now().date()
+        from datetime import timedelta
+        last_30_days = today - timedelta(days=30)
+        
+        # Student statistics
+        total_students = Student.objects.count()
+        active_students = Student.objects.filter(is_active=True).count()
+        male_students = Student.objects.filter(gender='M').count()
+        female_students = Student.objects.filter(gender='F').count()
+        
+        # Teacher statistics
+        total_teachers = Teacher.objects.count()
+        active_teachers = Teacher.objects.filter(user__is_active=True).count()
+        
+        # Class statistics
+        total_classes = ClassRoom.objects.count()
+        active_classes = ClassRoom.objects.filter(is_active=True).count()
+        
+        # Exam statistics
+        total_exams = Exam.objects.count()
+        upcoming_exams = Exam.objects.filter(start_date__gte=today).count()
+        completed_exams = Exam.objects.filter(end_date__lt=today).count()
+        
+        # Attendance statistics (today)
+        today_attendance = Attendance.objects.filter(date=today, status='Present').count()
+        today_absent = Attendance.objects.filter(date=today, status='Absent').count()
+        today_late = Attendance.objects.filter(date=today, status='Late').count()
+        today_excused = Attendance.objects.filter(date=today, status='Excused').count()
+        total_marked_today = Attendance.objects.filter(date=today).count()
+        
+        # Results statistics
+        total_results = Result.objects.count()
+        avg_score = Result.objects.aggregate(avg=Avg('marks_obtained'))['avg'] or 0
+        
+        # Payment statistics
+        total_revenue = Payment.objects.filter(payment_date__gte=last_30_days).aggregate(
+            total=Sum('amount_paid')
+        )['total'] or 0
+        total_payments = Payment.objects.count()
+        pending_payments = Student.objects.filter(is_active=True).count() - Payment.objects.values('student').distinct().count()
+        
+        # Recent activity
+        recent_payments = Payment.objects.select_related('student__user').order_by('-payment_date')[:5]
+        recent_results = Result.objects.select_related('student__user', 'exam', 'subject').order_by('-created_at')[:5]
+        recent_students = Student.objects.select_related('user', 'class_assigned').order_by('-created_at')[:5]
+        
+        # Promotions
+        total_promotions = Promotion.objects.count()
+        recent_promotions = Promotion.objects.select_related('student__user', 'from_class', 'to_class').order_by('-promoted_on')[:5]
+        
+        # Notifications
+        unread_notifications = Notification.objects.filter(is_read=False).count()
+        
+        # System users
+        total_parents = Parent.objects.count()
+        total_staff = User.objects.filter(role='STAFF').count()
+        total_users = User.objects.count()
+        
+        print(f"DEBUG: Fetched stats - Students: {total_students}, Teachers: {total_teachers}, Classes: {active_classes}")
         
         context.update({
-            'total_students': Student.objects.count(),
-            'total_teachers': Teacher.objects.count(),
-            'total_parents': Parent.objects.count(),
-            'total_staff': User.objects.filter(role='STAFF').count(),
-            'active_classes': ClassRoom.objects.filter(is_active=True).count(),
-            'upcoming_exams': Exam.objects.filter(start_date__gte=today).count(),
-            'today_attendance': Attendance.objects.filter(date=today, status='Present').count(),
-            'recent_payments': Payment.objects.order_by('-payment_date')[:5],
+            # Student stats
+            'total_students': total_students,
+            'active_students': active_students,
+            'male_students': male_students,
+            'female_students': female_students,
+            
+            # Teacher stats
+            'total_teachers': total_teachers,
+            'active_teachers': active_teachers,
+            
+            # Class stats
+            'total_classes': total_classes,
+            'active_classes': active_classes,
+            
+            # Exam stats
+            'total_exams': total_exams,
+            'upcoming_exams': upcoming_exams,
+            'completed_exams': completed_exams,
+            
+            # Attendance stats
+            'today_attendance': today_attendance,
+            'today_absent': today_absent,
+            'today_late': today_late,
+            'today_excused': today_excused,
+            'total_marked_today': total_marked_today,
+            
+            # Result stats
+            'total_results': total_results,
+            'avg_score': round(avg_score, 2),
+            
+            # Payment stats
+            'total_revenue_30days': total_revenue,
+            'total_payments': total_payments,
+            'pending_payments': pending_payments,
+            
+            # Recent activity
+            'recent_payments': recent_payments,
+            'recent_results': recent_results,
+            'recent_students': recent_students,
+            'recent_promotions': recent_promotions,
+            
+            # Other stats
+            'total_promotions': total_promotions,
+            'unread_notifications': unread_notifications,
+            'total_parents': total_parents,
+            'total_staff': total_staff,
+            'total_users': total_users,
         })
     
     # Teacher Dashboard
     elif user.is_teacher:
         from apps.teachers.models import Teacher
         from apps.classes.models import ClassRoom
+        from apps.students.models import Student
+        from apps.exams.models import Exam
         
         try:
             teacher = Teacher.objects.get(user=user)
+            classes_assigned = ClassRoom.objects.filter(class_teacher=teacher)
+            subjects = teacher.subjects.all()
+            
+            # Count students in teacher's classes
+            total_students_teaching = Student.objects.filter(
+                class_assigned__in=classes_assigned
+            ).count()
+            
+            # Upcoming exams - use schedules instead of direct exam filter
+            today = timezone.now().date()
+            upcoming_exams = ExamSchedule.objects.filter(
+                subject__in=subjects,
+                exam_date__gte=today
+            ).count()
+            
             context.update({
                 'teacher': teacher,
-                'subjects': teacher.subjects.all(),
-                'classes_assigned': ClassRoom.objects.filter(class_teacher=teacher),
+                'subjects': subjects,
+                'classes_assigned': classes_assigned,
+                'total_students_teaching': total_students_teaching,
+                'upcoming_exams': upcoming_exams,
             })
         except Teacher.DoesNotExist:
             messages.warning(request, 'Your teacher profile is not complete. Please contact admin.')
@@ -167,13 +347,46 @@ def dashboard_view(request):
     elif user.is_student:
         from apps.students.models import Student
         from apps.results.models import Result
+        from apps.attendance.models import Attendance
+        from django.db.models import Avg
         
         try:
             student = Student.objects.get(user=user)
+            recent_results = Result.objects.filter(student=student).select_related(
+                'exam', 'subject'
+            ).order_by('-exam__date')[:5]
+            
+            # Calculate average score
+            avg_score = Result.objects.filter(student=student).aggregate(
+                avg=Avg('marks_obtained')
+            )['avg'] or 0
+            
+            # Attendance statistics (last 30 days)
+            from datetime import timedelta
+            today = timezone.now().date()
+            last_30_days = today - timedelta(days=30)
+            
+            attendance_stats = {
+                'present': Attendance.objects.filter(
+                    student=student, date__gte=last_30_days, status='Present'
+                ).count(),
+                'absent': Attendance.objects.filter(
+                    student=student, date__gte=last_30_days, status='Absent'
+                ).count(),
+                'late': Attendance.objects.filter(
+                    student=student, date__gte=last_30_days, status='Late'
+                ).count(),
+            }
+            total_days = sum(attendance_stats.values())
+            attendance_percentage = (attendance_stats['present'] / total_days * 100) if total_days > 0 else 0
+            
             context.update({
                 'student': student,
                 'class_room': student.class_assigned,
-                'recent_results': Result.objects.filter(student=student).order_by('-exam__date')[:5],
+                'recent_results': recent_results,
+                'avg_score': round(avg_score, 2),
+                'attendance_stats': attendance_stats,
+                'attendance_percentage': round(attendance_percentage, 1),
             })
         except Student.DoesNotExist:
             messages.warning(request, 'Your student profile is not complete. Please contact admin.')
@@ -182,13 +395,40 @@ def dashboard_view(request):
     elif user.is_parent:
         from apps.parents.models import Parent
         from apps.students.models import Student
+        from apps.results.models import Result
+        from apps.attendance.models import Attendance
+        from datetime import timedelta
         
         try:
             parent = Parent.objects.get(user=user)
-            children = Student.objects.filter(parent=parent)
+            children = Student.objects.filter(parent=parent).select_related('class_assigned')
+            
+            # Get recent results for all children
+            recent_results = Result.objects.filter(
+                student__in=children
+            ).select_related('student__user', 'exam', 'subject').order_by('-exam__date')[:10]
+            
+            # Get attendance summary for all children (last 7 days)
+            today = timezone.now().date()
+            last_7_days = today - timedelta(days=7)
+            attendance_summary = {}
+            
+            for child in children:
+                attendance_summary[child.id] = {
+                    'child': child,
+                    'present': Attendance.objects.filter(
+                        student=child, date__gte=last_7_days, status='Present'
+                    ).count(),
+                    'total': Attendance.objects.filter(
+                        student=child, date__gte=last_7_days
+                    ).count(),
+                }
+            
             context.update({
                 'parent': parent,
                 'children': children,
+                'recent_results': recent_results,
+                'attendance_summary': attendance_summary,
             })
         except Parent.DoesNotExist:
             messages.warning(request, 'Your parent profile is not complete. Please contact admin.')
@@ -217,3 +457,30 @@ def profile_update_view(request):
         form = UserProfileUpdateForm(instance=request.user)
     
     return render(request, 'auth/profile_update.html', {'user': request.user, 'form': form})
+
+
+@login_required
+def admin_access_view(request):
+    """Verify credentials before allowing admin panel access"""
+    # Check if user is eligible for admin access
+    if not (request.user.role == 'ADMIN' and request.user.is_superuser):
+        messages.error(request, 'You do not have permission to access the admin panel.')
+        return redirect('dashboard')
+    
+    if request.method == 'POST':
+        username = request.POST.get('username')
+        password = request.POST.get('password')
+        
+        # Verify credentials
+        user = authenticate(request, username=username, password=password)
+        
+        if user is not None and user.is_superuser:
+            # Store admin verification in session (expires after 15 minutes)
+            request.session['admin_verified'] = True
+            request.session['admin_verified_time'] = timezone.now().timestamp()
+            messages.success(request, 'Admin access granted!')
+            return redirect('/admin/')
+        else:
+            messages.error(request, 'Invalid credentials or insufficient permissions!')
+    
+    return render(request, 'auth/admin_access.html')

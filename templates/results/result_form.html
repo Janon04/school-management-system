@@ -1,0 +1,332 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ action }} Result - School Management System{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <!-- Page Header -->
+    <div class="page-header-modern mb-4">
+        <div class="d-flex justify-content-between align-items-center">
+            <div>
+                <h1 class="mb-2">
+                    <i class="bi bi-trophy me-2"></i>{{ action }} Result
+                </h1>
+                <p class="text-white-50 mb-0">
+                    {% if result %}Edit existing result entry{% else %}Add a new exam result{% endif %}
+                </p>
+            </div>
+            <div>
+                <a href="{% url 'results:result_list' %}" class="btn btn-gradient-light">
+                    <i class="bi bi-arrow-left me-2"></i>Back to Results
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Form Card -->
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="card-modern">
+                <div class="card-body">
+                    {% if messages %}
+                        {% for message in messages %}
+                        <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                            {{ message }}
+                            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                        </div>
+                        {% endfor %}
+                    {% endif %}
+
+                    <form method="post" id="resultForm">
+                        {% csrf_token %}
+                        
+                        {% if result %}
+                        <!-- Display Only (when editing) -->
+                        <div class="row mb-4">
+                            <div class="col-md-12">
+                                <div class="alert alert-info">
+                                    <strong>Student:</strong> {{ result.student.user.get_full_name }} ({{ result.student.admission_number }})<br>
+                                    <strong>Exam:</strong> {{ result.exam.name }}<br>
+                                    <strong>Subject:</strong> {{ result.subject.name }}
+                                </div>
+                            </div>
+                        </div>
+                        {% else %}
+                        <!-- Selection Fields (when creating) -->
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="exam" class="form-label">
+                                    <i class="bi bi-calendar-event me-1"></i>Exam <span class="text-danger">*</span>
+                                </label>
+                                <select class="form-select" id="exam" name="exam" required>
+                                    <option value="">Select Exam</option>
+                                    {% for exam in exams %}
+                                    <option value="{{ exam.id }}">{{ exam.name }} - {{ exam.term }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+
+                            <div class="col-md-6 mb-3">
+                                <label for="class" class="form-label">
+                                    <i class="bi bi-building me-1"></i>Class <span class="text-danger">*</span>
+                                </label>
+                                <select class="form-select" id="class" name="class" required onchange="loadStudents()">
+                                    <option value="">Select Class</option>
+                                    {% for class in classes %}
+                                    <option value="{{ class.id }}">{{ class.name }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+
+                            <div class="col-md-6 mb-3">
+                                <label for="student" class="form-label">
+                                    <i class="bi bi-person me-1"></i>Student <span class="text-danger">*</span>
+                                </label>
+                                <select class="form-select" id="student" name="student" required disabled>
+                                    <option value="">Select class first</option>
+                                </select>
+                            </div>
+
+                            <div class="col-md-6 mb-3">
+                                <label for="subject" class="form-label">
+                                    <i class="bi bi-book me-1"></i>Subject <span class="text-danger">*</span>
+                                </label>
+                                <select class="form-select" id="subject" name="subject" required>
+                                    <option value="">Select Subject</option>
+                                    {% for subject in subjects %}
+                                    <option value="{{ subject.id }}" data-pass="{{ subject.pass_mark }}" data-total="{{ subject.total_marks }}">
+                                        {{ subject.name }} (Pass: {{ subject.pass_mark }}/{{ subject.total_marks }})
+                                    </option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                        </div>
+                        {% endif %}
+
+                        <!-- Marks Section -->
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="max_marks" class="form-label">
+                                    <i class="bi bi-clipboard-check me-1"></i>Total Marks <span class="text-danger">*</span>
+                                </label>
+                                <input type="number" 
+                                       class="form-control" 
+                                       id="max_marks" 
+                                       name="max_marks" 
+                                       value="{% if result %}{{ result.max_marks }}{% else %}100{% endif %}"
+                                       min="1"
+                                       required
+                                       onchange="calculatePercentage()">
+                            </div>
+
+                            <div class="col-md-6 mb-3">
+                                <label for="marks_obtained" class="form-label">
+                                    <i class="bi bi-check-circle me-1"></i>Marks Obtained <span class="text-danger">*</span>
+                                </label>
+                                <input type="number" 
+                                       class="form-control" 
+                                       id="marks_obtained" 
+                                       name="marks_obtained" 
+                                       value="{% if result %}{{ result.marks_obtained }}{% endif %}"
+                                       min="0"
+                                       step="0.01"
+                                       required
+                                       onchange="calculatePercentage()">
+                            </div>
+
+                            <div class="col-md-12 mb-3">
+                                <div class="form-check">
+                                    <input class="form-check-input" 
+                                           type="checkbox" 
+                                           id="is_absent" 
+                                           name="is_absent"
+                                           {% if result and result.is_absent %}checked{% endif %}
+                                           onchange="toggleAbsent()">
+                                    <label class="form-check-label" for="is_absent">
+                                        Student was absent for this exam
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Remarks -->
+                        <div class="row">
+                            <div class="col-md-12 mb-3">
+                                <label for="remarks" class="form-label">
+                                    <i class="bi bi-chat-left-text me-1"></i>Remarks
+                                </label>
+                                <textarea class="form-control" 
+                                          id="remarks" 
+                                          name="remarks" 
+                                          rows="3"
+                                          placeholder="Optional: Add any remarks or comments...">{% if result %}{{ result.remarks }}{% endif %}</textarea>
+                            </div>
+                        </div>
+
+                        <!-- Preview Section -->
+                        <div class="card bg-light mb-3">
+                            <div class="card-body">
+                                <h6 class="card-title">
+                                    <i class="bi bi-eye me-2"></i>Preview
+                                </h6>
+                                <div class="row">
+                                    <div class="col-md-4">
+                                        <small class="text-muted">Percentage:</small>
+                                        <p id="preview-percentage" class="mb-2"><strong class="text-primary">0%</strong></p>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <small class="text-muted">Estimated Grade:</small>
+                                        <p id="preview-grade" class="mb-2"><strong class="text-info">-</strong></p>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <small class="text-muted">Status:</small>
+                                        <p id="preview-status" class="mb-2"><strong>-</strong></p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Action Buttons -->
+                        <div class="d-flex justify-content-between mt-4">
+                            <a href="{% url 'results:result_list' %}" class="btn btn-outline-secondary">
+                                <i class="bi bi-x-circle me-2"></i>Cancel
+                            </a>
+                            <button type="submit" class="btn btn-gradient-primary">
+                                <i class="bi bi-check-circle me-2"></i>{{ action }} Result
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function calculatePercentage() {
+    const marksObtained = parseFloat(document.getElementById('marks_obtained').value) || 0;
+    const maxMarks = parseFloat(document.getElementById('max_marks').value) || 100;
+    const isAbsent = document.getElementById('is_absent').checked;
+    
+    if (isAbsent) {
+        document.getElementById('preview-percentage').innerHTML = '<strong class="text-muted">Absent</strong>';
+        document.getElementById('preview-grade').innerHTML = '<strong class="text-muted">-</strong>';
+        document.getElementById('preview-status').innerHTML = '<strong class="text-muted">Absent</strong>';
+        return;
+    }
+    
+    const percentage = (marksObtained / maxMarks) * 100;
+    document.getElementById('preview-percentage').innerHTML = `<strong class="text-primary">${percentage.toFixed(1)}%</strong>`;
+    
+    // Calculate grade
+    let grade, gradeColor;
+    if (percentage >= 80) {
+        grade = 'A';
+        gradeColor = 'success';
+    } else if (percentage >= 70) {
+        grade = 'B';
+        gradeColor = 'info';
+    } else if (percentage >= 60) {
+        grade = 'C';
+        gradeColor = 'primary';
+    } else if (percentage >= 50) {
+        grade = 'D';
+        gradeColor = 'warning';
+    } else if (percentage >= 40) {
+        grade = 'E';
+        gradeColor = 'warning';
+    } else {
+        grade = 'F';
+        gradeColor = 'danger';
+    }
+    
+    document.getElementById('preview-grade').innerHTML = `<strong class="text-${gradeColor}">${grade}</strong>`;
+    
+    // Get pass mark from subject dropdown
+    const subjectSelect = document.getElementById('subject');
+    const selectedOption = subjectSelect.options[subjectSelect.selectedIndex];
+    const passMark = parseFloat(selectedOption?.dataset?.pass || 40);
+    
+    const isPassing = marksObtained >= passMark;
+    document.getElementById('preview-status').innerHTML = isPassing 
+        ? '<strong class="text-success">Pass</strong>' 
+        : '<strong class="text-danger">Fail</strong>';
+}
+
+function toggleAbsent() {
+    const isAbsent = document.getElementById('is_absent').checked;
+    const marksInput = document.getElementById('marks_obtained');
+    
+    if (isAbsent) {
+        marksInput.value = 0;
+        marksInput.disabled = true;
+    } else {
+        marksInput.disabled = false;
+    }
+    
+    calculatePercentage();
+}
+
+function loadStudents() {
+    const classId = document.getElementById('class').value;
+    const studentSelect = document.getElementById('student');
+    
+    if (!classId) {
+        studentSelect.disabled = true;
+        studentSelect.innerHTML = '<option value="">Select class first</option>';
+        return;
+    }
+    
+    // Show loading state
+    studentSelect.disabled = false;
+    studentSelect.innerHTML = '<option value="">Loading students...</option>';
+    
+    // Fetch students via AJAX
+    fetch(`{% url 'results:get_students_by_class' %}?class_id=${classId}`)
+        .then(response => response.json())
+        .then(data => {
+            if (data.error) {
+                studentSelect.innerHTML = '<option value="">Error loading students</option>';
+                console.error('Error:', data.error);
+                return;
+            }
+            
+            if (data.students.length === 0) {
+                studentSelect.innerHTML = '<option value="">No students in this class</option>';
+                return;
+            }
+            
+            // Populate dropdown with students
+            studentSelect.innerHTML = '<option value="">Select Student</option>';
+            data.students.forEach(student => {
+                const option = document.createElement('option');
+                option.value = student.id;
+                option.textContent = student.name;
+                studentSelect.appendChild(option);
+            });
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            studentSelect.innerHTML = '<option value="">Error loading students</option>';
+        });
+}
+
+// Initialize on page load
+document.addEventListener('DOMContentLoaded', function() {
+    calculatePercentage();
+    toggleAbsent();
+});
+</script>
+
+<style>
+.form-label {
+    font-weight: 600;
+    color: #495057;
+}
+
+.card.bg-light {
+    border-left: 4px solid #667eea;
+}
+</style>
+{% endblock %}

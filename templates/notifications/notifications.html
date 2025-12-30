@@ -11,6 +11,13 @@
         <span class="badge bg-danger">{{ unread_count }}</span>
         {% endif %}
     </h1>
+    {% if user.is_admin or user.is_staff %}
+    <div class="btn-toolbar mb-2 mb-md-0">
+        <a href="{% url 'notifications:notification_create' %}" class="btn btn-primary">
+            <i class="bi bi-plus-circle"></i> Send Notification
+        </a>
+    </div>
+    {% endif %}
 </div>
 
 <!-- Notifications List -->
@@ -38,7 +45,7 @@
                         </div>
                         {% if not notification.is_read %}
                         <div class="ms-3">
-                            <form method="post" action="{% url 'notifications:mark_notification_read' notification.pk %}" class="d-inline">
+                            <form method="post" action="{% url 'notifications:mark_read' notification.pk %}" class="d-inline">
                                 {% csrf_token %}
                                 <button type="submit" class="btn btn-sm btn-outline-success" title="Mark as read">
                                     <i class="bi bi-check"></i> Mark Read

@@ -1,0 +1,339 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load fee_tags %}
+
+{% block title %}Fee Structure - School Management System{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <!-- Page Header -->
+    <div class="page-header-modern mb-4">
+        <div class="d-flex justify-content-between align-items-center">
+            <div>
+                <h1 class="mb-2">
+                    <i class="bi bi-cash-stack me-2"></i>Fee Structure
+                </h1>
+                <p class="text-white-50 mb-0">View and manage fee structures for all classes</p>
+            </div>
+            {% if user.role == 'ADMIN' %}
+            <div>
+                <a href="{% url 'admin:fees_feestructure_add' %}" class="btn btn-gradient-light">
+                    <i class="bi bi-plus-circle me-2"></i>Add Fee (Use Admin)
+                </a>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Statistics Cards -->
+    <div class="row mb-4">
+        <div class="col-md-3 mb-3">
+            <div class="stat-card-mini stat-card-primary">
+                <div class="stat-icon">
+                    <i class="bi bi-list-ul"></i>
+                </div>
+                <div class="stat-details">
+                    <h3>{{ fee_structures.count }}</h3>
+                    <p>Total Structures</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 mb-3">
+            <div class="stat-card-mini stat-card-success">
+                <div class="stat-icon">
+                    <i class="bi bi-building"></i>
+                </div>
+                <div class="stat-details">
+                    <h3>{{ unique_classes }}</h3>
+                    <p>Classes Covered</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 mb-3">
+            <div class="stat-card-mini stat-card-info">
+                <div class="stat-icon">
+                    <i class="bi bi-calendar-check"></i>
+                </div>
+                <div class="stat-details">
+                    <h3>{{ unique_years }}</h3>
+                    <p>Academic Years</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 mb-3">
+            <div class="stat-card-mini stat-card-warning">
+                <div class="stat-icon">
+                    <i class="bi bi-tags"></i>
+                </div>
+                <div class="stat-details">
+                    <h3>{{ unique_types }}</h3>
+                    <p>Fee Types</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {% if fee_structures %}
+    <!-- Fee Structures List -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card-modern">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h5 class="card-title mb-0">
+                            <i class="bi bi-table me-2"></i>Fee Structures
+                        </h5>
+                        <div class="d-flex gap-2">
+                            <button class="btn btn-sm btn-outline-primary" onclick="window.print()">
+                                <i class="bi bi-printer me-1"></i>Print
+                            </button>
+                            <select class="form-select form-select-sm search-box-modern" id="filterClass" style="width: auto;">
+                                <option value="">All Classes</option>
+                                {% for structure in fee_structures %}
+                                    <option value="{{ structure.class_room.name }}">{{ structure.class_room.name }}</option>
+                                {% endfor %}
+                            </select>
+                            <select class="form-select form-select-sm search-box-modern" id="filterType" style="width: auto;">
+                                <option value="">All Types</option>
+                                <option value="TUITION">Tuition Fee</option>
+                                <option value="ADMISSION">Admission Fee</option>
+                                <option value="EXAM">Examination Fee</option>
+                                <option value="LIBRARY">Library Fee</option>
+                                <option value="LAB">Laboratory Fee</option>
+                                <option value="TRANSPORT">Transport Fee</option>
+                                <option value="SPORTS">Sports Fee</option>
+                                <option value="OTHER">Other Fee</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div class="table-responsive">
+                        <table class="table table-modern" id="feeTable">
+                            <thead>
+                                <tr>
+                                    <th><i class="bi bi-hash me-1"></i>S/N</th>
+                                    <th><i class="bi bi-building me-1"></i>Class</th>
+                                    <th><i class="bi bi-calendar-event me-1"></i>Academic Year</th>
+                                    <th><i class="bi bi-tag me-1"></i>Fee Type</th>
+                                    <th><i class="bi bi-cash me-1"></i>Amount</th>
+                                    <th><i class="bi bi-arrow-repeat me-1"></i>Frequency</th>
+                                    <th><i class="bi bi-calendar-range me-1"></i>Due Date</th>
+                                    <th><i class="bi bi-info-circle me-1"></i>Status</th>
+                                    {% if user.role == 'ADMIN' %}
+                                    <th><i class="bi bi-gear me-1"></i>Actions</th>
+                                    {% endif %}
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for structure in fee_structures %}
+                                <tr data-class="{{ structure.class_room.name }}" data-type="{{ structure.fee_type }}">
+                                    <td>{{ forloop.counter }}</td>
+                                    <td>
+                                        <strong>{{ structure.class_room.name }}</strong>
+                                    </td>
+                                    <td>{{ structure.academic_year.year }}</td>
+                                    <td>
+                                        <span class="badge bg-primary">
+                                            {{ structure.get_fee_type_display }}
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <strong class="text-success">{{ structure.amount|floatformat:2 }} Frw</strong>
+                                    </td>
+                                    <td>
+                                        <span class="badge bg-info">
+                                            {{ structure.get_frequency_display }}
+                                        </span>
+                                    </td>
+                                    <td>
+                                        {% if structure.due_date %}
+                                            {{ structure.due_date|date:"M d, Y" }}
+                                        {% else %}
+                                            <span class="text-muted">N/A</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if structure.is_active %}
+                                            <span class="badge bg-success">
+                                                <i class="bi bi-check-circle me-1"></i>Active
+                                            </span>
+                                        {% else %}
+                                            <span class="badge bg-secondary">
+                                                <i class="bi bi-x-circle me-1"></i>Inactive
+                                            </span>
+                                        {% endif %}
+                                    </td>
+                                    {% if user.role == 'ADMIN' %}
+                                    <td>
+                                        <div class="btn-group btn-group-sm">
+                                            <a href="{% url 'admin:fees_feestructure_change' structure.pk %}" 
+                                               class="btn btn-outline-primary" 
+                                               title="Edit">
+                                                <i class="bi bi-pencil"></i>
+                                            </a>
+                                        </div>
+                                    </td>
+                                    {% endif %}
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                            <tfoot>
+                                <tr class="table-light">
+                                    <td colspan="4" class="text-end"><strong>Total Amount:</strong></td>
+                                    <td colspan="{% if user.role == 'ADMIN' %}5{% else %}4{% endif %}">
+                                        <strong class="text-success fs-5">
+                                            {{ total_amount|floatformat:2 }} Frw
+                                        </strong>
+                                    </td>
+                                </tr>
+                            </tfoot>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Fee Structure Summary by Class -->
+    <div class="row mt-4">
+        <div class="col-12">
+            <div class="card-modern">
+                <div class="card-body">
+                    <h5 class="card-title mb-4">
+                        <i class="bi bi-pie-chart me-2"></i>Fee Summary by Class
+                    </h5>
+                    <div class="row">
+                        {% regroup fee_structures by class_room as class_groups %}
+                        {% for class_group in class_groups %}
+                        <div class="col-md-4 mb-3">
+                            <div class="border rounded p-3 h-100" style="background: linear-gradient(135deg, #f8f9fa 0%, #ffffff 100%);">
+                                <h6 class="text-primary mb-3">
+                                    <i class="bi bi-building me-2"></i>{{ class_group.grouper.name }}
+                                </h6>
+                                <ul class="list-unstyled mb-0">
+                                    {% for structure in class_group.list %}
+                                    <li class="mb-2 d-flex justify-content-between">
+                                        <span>{{ structure.get_fee_type_display }}:</span>
+                                        <strong class="text-success">{{ structure.amount|floatformat:2 }} Frw</strong>
+                                    </li>
+                                    {% endfor %}
+                                </ul>
+                                <hr>
+                                <div class="d-flex justify-content-between">
+                                    <strong>Total:</strong>
+                                    <strong class="text-success">
+                                        {{ class_group.list|sum_amounts|floatformat:2 }} Frw
+                                    </strong>
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quick Links -->
+    <div class="row mt-4">
+        <div class="col-md-4 mb-3">
+            <div class="card-modern h-100">
+                <div class="card-body text-center">
+                    <i class="bi bi-receipt display-4 text-primary mb-3"></i>
+                    <h5>Payment Records</h5>
+                    <p class="text-muted">View all payment transactions</p>
+                    <a href="{% url 'fees:payment_list' %}" class="btn btn-gradient-primary btn-sm">
+                        View Payments
+                    </a>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4 mb-3">
+            <div class="card-modern h-100">
+                <div class="card-body text-center">
+                    <i class="bi bi-people display-4 text-success mb-3"></i>
+                    <h5>Student Fees</h5>
+                    <p class="text-muted">Check individual student fee status</p>
+                    <a href="{% url 'students:student_list' %}" class="btn btn-gradient-success btn-sm">
+                        View Students
+                    </a>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4 mb-3">
+            <div class="card-modern h-100">
+                <div class="card-body text-center">
+                    <i class="bi bi-graph-up display-4 text-info mb-3"></i>
+                    <h5>Reports</h5>
+                    <p class="text-muted">Generate fee collection reports</p>
+                    <a href="{% url 'admin:fees_payment_changelist' %}" class="btn btn-gradient-info btn-sm">
+                        View Reports
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {% else %}
+    <!-- Empty State -->
+    <div class="empty-state-modern text-center py-5">
+        <i class="bi bi-cash-stack display-1 text-muted mb-4"></i>
+        <h3>No Fee Structures Found</h3>
+        <p class="text-muted mb-4">There are no active fee structures configured yet.</p>
+        {% if user.role == 'ADMIN' %}
+        <a href="{% url 'admin:fees_feestructure_add' %}" class="btn btn-gradient-primary">
+            <i class="bi bi-plus-circle me-2"></i>Create Fee Structure
+        </a>
+        {% endif %}
+    </div>
+    {% endif %}
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const filterClass = document.getElementById('filterClass');
+    const filterType = document.getElementById('filterType');
+    const table = document.getElementById('feeTable');
+    const rows = table.querySelectorAll('tbody tr');
+
+    function filterTable() {
+        const classValue = filterClass.value.toLowerCase();
+        const typeValue = filterType.value;
+
+        rows.forEach(row => {
+            const rowClass = row.getAttribute('data-class').toLowerCase();
+            const rowType = row.getAttribute('data-type');
+
+            const classMatch = !classValue || rowClass.includes(classValue);
+            const typeMatch = !typeValue || rowType === typeValue;
+
+            if (classMatch && typeMatch) {
+                row.style.display = '';
+            } else {
+                row.style.display = 'none';
+            }
+        });
+    }
+
+    filterClass.addEventListener('change', filterTable);
+    filterType.addEventListener('change', filterTable);
+});
+</script>
+
+<style>
+@media print {
+    .page-header-modern,
+    .stat-card-mini,
+    .btn,
+    .filters-section,
+    select {
+        display: none !important;
+    }
+    
+    .card-modern {
+        box-shadow: none !important;
+        border: 1px solid #dee2e6 !important;
+    }
+}
+</style>
+{% endblock %}

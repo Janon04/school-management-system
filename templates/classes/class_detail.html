@@ -91,6 +91,11 @@
                         </div>
                     </div>
                 </div>
+                {% if user.is_teacher or user.is_admin %}
+                <a href="{% url 'attendance:mark_attendance' class_room.pk %}" class="btn btn-success w-100 mt-2">
+                    <i class="bi bi-calendar-check"></i> Mark Attendance
+                </a>
+                {% endif %}
             </div>
         </div>
     </div>

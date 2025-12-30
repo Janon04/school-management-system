@@ -18,9 +18,11 @@ class PromotionAdmin(admin.ModelAdmin):
             'fields': ('from_class', 'from_academic_year', 'to_class', 'to_academic_year'),
         }),
         ('✅ Promotion Details', {
-            'fields': ('status', 'promoted_on', 'promoted_by', 'remarks'),
+            'fields': ('status', 'promoted_by', 'remarks'),
         }),
     )
+    
+    readonly_fields = ['promoted_on']
     
     def get_student_name(self, obj):
         return obj.student.user.get_full_name() or obj.student.admission_number

@@ -1,0 +1,245 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Attendance Report{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <!-- Page Header -->
+    <div class="page-header-modern mb-4">
+        <div class="d-flex justify-content-between align-items-center flex-wrap">
+            <div>
+                <h1 class="mb-2">
+                    <i class="bi bi-graph-up-arrow"></i>
+                    Attendance Report
+                </h1>
+                <p class="mb-0" style="opacity: 0.95;">
+                    {% if student %}
+                        {{ student.user.get_full_name }} - {{ student.class_assigned.name }}
+                    {% else %}
+                        Overall Attendance Analysis
+                    {% endif %}
+                </p>
+            </div>
+            <div class="mt-3 mt-md-0">
+                <button onclick="window.print()" class="btn btn-light btn-lg">
+                    <i class="bi bi-printer-fill"></i> Print Report
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Statistics Cards -->
+    <div class="row g-4 mb-4">
+        <div class="col-md-3">
+            <div class="stat-card-mini stat-primary">
+                <div class="d-flex align-items-center">
+                    <div class="stat-icon">
+                        <i class="bi bi-calendar3"></i>
+                    </div>
+                    <div class="flex-grow-1">
+                        <div class="stat-label">Total Days</div>
+                        <div class="stat-value">{{ total_days }}</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="stat-card-mini stat-success">
+                <div class="d-flex align-items-center">
+                    <div class="stat-icon">
+                        <i class="bi bi-check-circle-fill"></i>
+                    </div>
+                    <div class="flex-grow-1">
+                        <div class="stat-label">Present</div>
+                        <div class="stat-value text-success">{{ present_count }}</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="stat-card-mini stat-danger">
+                <div class="d-flex align-items-center">
+                    <div class="stat-icon">
+                        <i class="bi bi-x-circle-fill"></i>
+                    </div>
+                    <div class="flex-grow-1">
+                        <div class="stat-label">Absent</div>
+                        <div class="stat-value text-danger">{{ absent_count }}</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="stat-card-mini stat-info">
+                <div class="d-flex align-items-center">
+                    <div class="stat-icon">
+                        <i class="bi bi-percent"></i>
+                    </div>
+                    <div class="flex-grow-1">
+                        <div class="stat-label">Attendance Rate</div>
+                        <div class="stat-value text-info">{{ attendance_percentage|floatformat:1 }}%</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filters -->
+    <div class="card-modern mb-4">
+        <div class="card-body">
+            <form method="get" class="row g-3">
+                <div class="col-md-3">
+                    <label class="form-label fw-bold">Start Date</label>
+                    <input type="date" name="start_date" class="form-control" 
+                           value="{{ start_date|date:'Y-m-d' }}" max="{{ today|date:'Y-m-d' }}">
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label fw-bold">End Date</label>
+                    <input type="date" name="end_date" class="form-control" 
+                           value="{{ end_date|date:'Y-m-d' }}" max="{{ today|date:'Y-m-d' }}">
+                </div>
+                {% if not student %}
+                <div class="col-md-3">
+                    <label class="form-label fw-bold">Class</label>
+                    <select name="class" class="form-select">
+                        <option value="">All Classes</option>
+                        {% for class in classes %}
+                        <option value="{{ class.id }}" {% if selected_class == class.id|stringformat:"s" %}selected{% endif %}>
+                            {{ class.name }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                {% endif %}
+                <div class="col-md-3">
+                    <label class="form-label">&nbsp;</label>
+                    <button type="submit" class="btn btn-gradient-primary w-100">
+                        <i class="bi bi-funnel-fill me-2"></i>Apply Filters
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Attendance Records -->
+    <div class="card-modern">
+        <div class="card-header">
+            <h5 class="mb-0">
+                <i class="bi bi-table me-2"></i>
+                Attendance Records
+            </h5>
+        </div>
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-modern mb-0">
+                    <thead>
+                        <tr>
+                            <th>Date</th>
+                            {% if not student %}
+                            <th>Student</th>
+                            <th>Class</th>
+                            {% endif %}
+                            <th>Status</th>
+                            <th>Remarks</th>
+                            <th>Marked By</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for record in attendance_records %}
+                        <tr>
+                            <td>
+                                <i class="bi bi-calendar3 text-muted me-2"></i>
+                                {{ record.date|date:"M d, Y" }}
+                            </td>
+                            {% if not student %}
+                            <td>
+                                <div class="fw-semibold">{{ record.student.user.get_full_name }}</div>
+                                <small class="text-muted">{{ record.student.admission_number }}</small>
+                            </td>
+                            <td>{{ record.student.class_assigned.name }}</td>
+                            {% endif %}
+                            <td>
+                                {% if record.status == 'Present' %}
+                                <span class="badge" style="background: linear-gradient(135deg, #56ab2f 0%, #a8e063 100%); padding: 0.5rem 1rem; border-radius: 50px;">
+                                    <i class="bi bi-check-circle-fill me-1"></i>Present
+                                </span>
+                                {% elif record.status == 'Absent' %}
+                                <span class="badge" style="background: linear-gradient(135deg, #ff6a00 0%, #ee0979 100%); padding: 0.5rem 1rem; border-radius: 50px;">
+                                    <i class="bi bi-x-circle-fill me-1"></i>Absent
+                                </span>
+                                {% elif record.status == 'Late' %}
+                                <span class="badge" style="background: linear-gradient(135deg, #fa709a 0%, #fee140 100%); padding: 0.5rem 1rem; border-radius: 50px;">
+                                    <i class="bi bi-clock-fill me-1"></i>Late
+                                </span>
+                                {% elif record.status == 'Excused' %}
+                                <span class="badge" style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); padding: 0.5rem 1rem; border-radius: 50px;">
+                                    <i class="bi bi-file-earmark-check-fill me-1"></i>Excused
+                                </span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if record.remarks %}
+                                <i class="bi bi-chat-left-text text-info me-1"></i>
+                                {{ record.remarks }}
+                                {% else %}
+                                <span class="text-muted">-</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <div class="fw-semibold">{{ record.marked_by.get_full_name }}</div>
+                                <small class="text-muted">{{ record.marked_at|date:"h:i A" }}</small>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="{% if student %}4{% else %}6{% endif %}" class="text-center py-5">
+                                <div class="empty-state-modern">
+                                    <i class="bi bi-inbox"></i>
+                                    <p>No attendance records found for the selected period</p>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Monthly Calendar View (Optional) -->
+    {% if student and monthly_data %}
+    <div class="card-modern mt-4">
+        <div class="card-header">
+            <h5 class="mb-0">
+                <i class="bi bi-calendar-week me-2"></i>
+                Monthly Calendar
+            </h5>
+        </div>
+        <div class="card-body">
+            <div class="row g-2">
+                {% for day, status in monthly_data.items %}
+                <div class="col-auto">
+                    <div class="p-3 text-center rounded" style="min-width: 60px; 
+                        {% if status == 'Present' %}background: #d4edda; border: 2px solid #56ab2f;
+                        {% elif status == 'Absent' %}background: #f8d7da; border: 2px solid #ff6a00;
+                        {% elif status == 'Late' %}background: #fff3cd; border: 2px solid #fa709a;
+                        {% elif status == 'Excused' %}background: #d1ecf1; border: 2px solid #4facfe;
+                        {% else %}background: #f8f9fa; border: 2px solid #e9ecef;{% endif %}">
+                        <div class="fw-bold" style="font-size: 1.25rem;">{{ day|date:"d" }}</div>
+                        <div style="font-size: 0.75rem;">{{ day|date:"D" }}</div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+    {% endif %}
+</div>
+
+<style>
+    @media print {
+        .btn, .filters { display: none; }
+    }
+</style>
+{% endblock %}

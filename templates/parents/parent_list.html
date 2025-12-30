@@ -10,7 +10,7 @@
     </h1>
     <div class="btn-toolbar mb-2 mb-md-0">
         {% if user.is_admin or user.is_staff %}
-        <a href="{% url 'admin:parents_parent_add' %}" class="btn btn-primary">
+        <a href="{% url 'parents:parent_create' %}" class="btn btn-primary">
             <i class="bi bi-plus-circle"></i> Add Parent
         </a>
         {% endif %}
@@ -78,7 +78,7 @@
                                     <i class="bi bi-eye"></i>
                                 </a>
                                 {% if user.is_admin or user.is_staff %}
-                                <a href="{% url 'admin:parents_parent_change' parent.pk %}" class="btn btn-outline-secondary" title="Edit">
+                                <a href="{% url 'parents:parent_update' parent.pk %}" class="btn btn-outline-secondary" title="Edit">
                                     <i class="bi bi-pencil"></i>
                                 </a>
                                 {% endif %}
@@ -99,7 +99,7 @@
             <i class="bi bi-inbox display-1 text-muted"></i>
             <p class="text-muted mt-3">No parents found</p>
             {% if user.is_admin or user.is_staff %}
-            <a href="{% url 'admin:parents_parent_add' %}" class="btn btn-primary">
+            <a href="{% url 'parents:parent_create' %}" class="btn btn-primary">
                 <i class="bi bi-plus-circle"></i> Add First Parent
             </a>
             {% endif %}

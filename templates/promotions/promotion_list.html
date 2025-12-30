@@ -1,0 +1,283 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Student Promotions{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <!-- Page Header -->
+    <div class="page-header-modern mb-4">
+        <div class="d-flex justify-content-between align-items-center flex-wrap">
+            <div>
+                <h1 class="mb-2">
+                    <i class="bi bi-arrow-up-circle-fill"></i>
+                    Student Promotions
+                </h1>
+                <p class="mb-0" style="opacity: 0.95;">
+                    Manage student class promotions and academic year transitions
+                </p>
+            </div>
+            <div class="mt-3 mt-md-0">
+                <a href="{% url 'promotions:promotion_create' %}" class="btn btn-gradient-primary btn-lg me-2">
+                    <i class="bi bi-plus-circle"></i> Add Promotion
+                </a>
+                <a href="{% url 'promotions:promote_students' %}" class="btn btn-light btn-lg">
+                    <i class="bi bi-people-fill"></i> Bulk Promote Students
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Statistics Cards -->
+    <div class="row g-4 mb-4">
+        <div class="col-md-3">
+            <div class="stat-card-mini stat-primary">
+                <div class="d-flex align-items-center">
+                    <div class="stat-icon">
+                        <i class="bi bi-list-check"></i>
+                    </div>
+                    <div class="flex-grow-1">
+                        <div class="stat-label">Total Records</div>
+                        <div class="stat-value">{{ promotions.count }}</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="stat-card-mini stat-success">
+                <div class="d-flex align-items-center">
+                    <div class="stat-icon">
+                        <i class="bi bi-arrow-up-circle-fill"></i>
+                    </div>
+                    <div class="flex-grow-1">
+                        <div class="stat-label">Promoted</div>
+                        <div class="stat-value text-success">
+                            {{ promotions|length|add:"-0" }}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="stat-card-mini stat-warning">
+                <div class="d-flex align-items-center">
+                    <div class="stat-icon">
+                        <i class="bi bi-arrow-repeat"></i>
+                    </div>
+                    <div class="flex-grow-1">
+                        <div class="stat-label">Detained</div>
+                        <div class="stat-value text-warning">0</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="stat-card-mini stat-info">
+                <div class="d-flex align-items-center">
+                    <div class="stat-icon">
+                        <i class="bi bi-mortarboard-fill"></i>
+                    </div>
+                    <div class="flex-grow-1">
+                        <div class="stat-label">Graduated</div>
+                        <div class="stat-value text-info">0</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filters -->
+    <div class="card-modern mb-4">
+        <div class="card-body">
+            <form method="get" class="row g-3">
+                <div class="col-md-3">
+                    <label class="form-label fw-bold">Academic Year</label>
+                    <select name="academic_year" class="form-select">
+                        <option value="">All Years</option>
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label fw-bold">Status</label>
+                    <select name="status" class="form-select">
+                        <option value="">All Status</option>
+                        <option value="PROMOTED">Promoted</option>
+                        <option value="DETAINED">Detained</option>
+                        <option value="GRADUATED">Graduated</option>
+                    </select>
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label fw-bold">Search Student</label>
+                    <input type="text" name="search" class="form-control" placeholder="Name or admission number...">
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label">&nbsp;</label>
+                    <button type="submit" class="btn btn-gradient-primary w-100">
+                        <i class="bi bi-funnel-fill me-2"></i>Filter
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Promotions Table -->
+    <div class="card-modern">
+        <div class="card-header">
+            <h5 class="mb-0">
+                <i class="bi bi-table me-2"></i>
+                Promotion Records
+            </h5>
+        </div>
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-modern mb-0">
+                    <thead>
+                        <tr>
+                            <th>Date</th>
+                            <th>Student</th>
+                            <th>From</th>
+                            <th>To</th>
+                            <th>Status</th>
+                            <th>Promoted By</th>
+                            <th>Remarks</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for promotion in promotions %}
+                        <tr>
+                            <td>
+                                <i class="bi bi-calendar3 text-muted me-2"></i>
+                                {{ promotion.promoted_on|date:"M d, Y" }}
+                            </td>
+                            <td>
+                                <div class="fw-semibold">{{ promotion.student.user.get_full_name }}</div>
+                                <small class="text-muted">
+                                    <i class="bi bi-hash"></i>{{ promotion.student.admission_number }}
+                                </small>
+                            </td>
+                            <td>
+                                <div class="fw-semibold">{{ promotion.from_class.name }}</div>
+                                <small class="text-muted">{{ promotion.from_academic_year.name }}</small>
+                            </td>
+                            <td>
+                                {% if promotion.to_class %}
+                                <div class="fw-semibold text-success">
+                                    <i class="bi bi-arrow-right me-1"></i>{{ promotion.to_class.name }}
+                                </div>
+                                <small class="text-muted">{{ promotion.to_academic_year.name }}</small>
+                                {% else %}
+                                <span class="text-muted">-</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if promotion.status == 'PROMOTED' %}
+                                <span class="badge" style="background: linear-gradient(135deg, #56ab2f 0%, #a8e063 100%); padding: 0.5rem 1rem; border-radius: 50px;">
+                                    <i class="bi bi-arrow-up-circle-fill me-1"></i>Promoted
+                                </span>
+                                {% elif promotion.status == 'DETAINED' %}
+                                <span class="badge" style="background: linear-gradient(135deg, #fa709a 0%, #fee140 100%); padding: 0.5rem 1rem; border-radius: 50px;">
+                                    <i class="bi bi-arrow-repeat me-1"></i>Detained
+                                </span>
+                                {% elif promotion.status == 'GRADUATED' %}
+                                <span class="badge" style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); padding: 0.5rem 1rem; border-radius: 50px;">
+                                    <i class="bi bi-mortarboard-fill me-1"></i>Graduated
+                                </span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if promotion.promoted_by %}
+                                <div class="fw-semibold">{{ promotion.promoted_by.get_full_name }}</div>
+                                {% else %}
+                                <span class="text-muted">System</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if promotion.remarks %}
+                                <i class="bi bi-chat-left-text text-info me-1"></i>
+                                {{ promotion.remarks|truncatewords:10 }}
+                                {% else %}
+                                <span class="text-muted">-</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <div class="btn-group btn-group-sm">
+                                    <a href="{% url 'promotions:promotion_update' promotion.pk %}" 
+                                       class="btn btn-outline-primary" 
+                                       title="Edit">
+                                        <i class="bi bi-pencil"></i>
+                                    </a>
+                                    <a href="{% url 'promotions:promotion_delete' promotion.pk %}" 
+                                       class="btn btn-outline-danger" 
+                                       title="Delete">
+                                        <i class="bi bi-trash"></i>
+                                    </a>
+                                </div>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="8" class="text-center py-5">
+                                <div class="empty-state-modern">
+                                    <i class="bi bi-inbox"></i>
+                                    <p>No promotion records found</p>
+                                    <a href="{% url 'promotions:promotion_create' %}" class="btn btn-gradient-primary mt-3">
+                                        <i class="bi bi-plus-circle me-2"></i>Add First Promotion
+                                    </a>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Info Cards -->
+    <div class="row g-4 mt-4">
+        <div class="col-md-6">
+            <div class="card-modern">
+                <div class="card-body">
+                    <h6 class="fw-bold mb-3">
+                        <i class="bi bi-info-circle-fill text-info me-2"></i>
+                        About Promotions
+                    </h6>
+                    <p class="text-muted mb-2">
+                        <i class="bi bi-check-circle text-success me-2"></i>
+                        Student promotions are automatically recorded when students advance to the next class
+                    </p>
+                    <p class="text-muted mb-2">
+                        <i class="bi bi-check-circle text-success me-2"></i>
+                        The system updates student records to reflect their new class assignment
+                    </p>
+                    <p class="text-muted mb-0">
+                        <i class="bi bi-check-circle text-success me-2"></i>
+                        Historical promotion data is maintained for academic records
+                    </p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="card-modern">
+                <div class="card-body">
+                    <h6 class="fw-bold mb-3">
+                        <i class="bi bi-lightning-charge-fill text-warning me-2"></i>
+                        Quick Actions
+                    </h6>
+                    <div class="d-grid gap-2">
+                        <a href="{% url 'promotions:promote_students' %}" class="btn btn-gradient-success">
+                            <i class="bi bi-people-fill me-2"></i>Bulk Promote Students
+                        </a>
+                        <a href="{% url 'students:student_list' %}" class="btn btn-gradient-info">
+                            <i class="bi bi-list-ul me-2"></i>View All Students
+                        </a>
+                        <a href="{% url 'classes:class_list' %}" class="btn btn-gradient-primary">
+                            <i class="bi bi-door-open me-2"></i>Manage Classes
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -11,8 +11,22 @@ from apps.students.models import Student
 @login_required
 def fee_structure_view(request):
     """View fee structures"""
-    fee_structures = FeeStructure.objects.filter(is_active=True)
-    return render(request, 'fees/fee_structure.html', {'fee_structures': fee_structures})
+    fee_structures = FeeStructure.objects.filter(is_active=True).select_related('class_room', 'academic_year')
+    
+    # Calculate statistics
+    unique_classes = fee_structures.values('class_room').distinct().count()
+    unique_years = fee_structures.values('academic_year').distinct().count()
+    unique_types = fee_structures.values('fee_type').distinct().count()
+    total_amount = sum([fs.amount for fs in fee_structures])
+    
+    context = {
+        'fee_structures': fee_structures,
+        'unique_classes': unique_classes,
+        'unique_years': unique_years,
+        'unique_types': unique_types,
+        'total_amount': total_amount,
+    }
+    return render(request, 'fees/fee_structure.html', context)
 
 
 @login_required

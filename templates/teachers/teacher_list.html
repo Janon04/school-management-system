@@ -10,7 +10,7 @@
     </h1>
     <div class="btn-toolbar mb-2 mb-md-0">
         {% if user.is_admin or user.is_staff %}
-        <a href="{% url 'admin:teachers_teacher_add' %}" class="btn btn-primary">
+        <a href="{% url 'teachers:teacher_create' %}" class="btn btn-primary">
             <i class="bi bi-plus-circle"></i> Add Teacher
         </a>
         {% endif %}
@@ -103,7 +103,7 @@
                                     <i class="bi bi-eye"></i>
                                 </a>
                                 {% if user.is_admin or user.is_staff %}
-                                <a href="{% url 'admin:teachers_teacher_change' teacher.pk %}" class="btn btn-outline-secondary" title="Edit">
+                                <a href="{% url 'teachers:teacher_edit' teacher.pk %}" class="btn btn-outline-secondary" title="Edit">
                                     <i class="bi bi-pencil"></i>
                                 </a>
                                 {% endif %}
@@ -124,7 +124,7 @@
             <i class="bi bi-inbox display-1 text-muted"></i>
             <p class="text-muted mt-3">No teachers found</p>
             {% if user.is_admin or user.is_staff %}
-            <a href="{% url 'admin:teachers_teacher_add' %}" class="btn btn-primary">
+            <a href="{% url 'teachers:teacher_create' %}" class="btn btn-primary">
                 <i class="bi bi-plus-circle"></i> Add First Teacher
             </a>
             {% endif %}

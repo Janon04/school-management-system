@@ -31,6 +31,11 @@
                     <i class="bi bi-person-workspace"></i> Staff
                 </a>
             </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="/admin/accounts/user/">
+                        <i class="bi bi-people"></i> Users
+                    </a>
+                </li>
         {% endif %}
         
         <li class="nav-item">
@@ -47,7 +52,7 @@
         
         {% if user.is_teacher or user.is_admin %}
             <li class="nav-item">
-                <a class="nav-link" href="#">
+                <a class="nav-link" href="{% url 'attendance:attendance_home' %}">
                     <i class="bi bi-calendar-check"></i> Attendance
                 </a>
             </li>
@@ -56,6 +61,12 @@
         <li class="nav-item">
             <a class="nav-link" href="{% url 'exams:exam_list' %}">
                 <i class="bi bi-clipboard-data"></i> Exams
+            </a>
+        </li>
+        
+        <li class="nav-item">
+            <a class="nav-link" href="{% url 'exams:exam_create' %}">
+                <i class="bi bi-plus-circle"></i> Add Exam
             </a>
         </li>
         

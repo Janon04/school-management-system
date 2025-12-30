@@ -1,0 +1,157 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Delete Promotion - School Management System{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <!-- Page Header -->
+    <div class="page-header-modern mb-4">
+        <div class="d-flex justify-content-between align-items-center">
+            <div>
+                <h1 class="mb-2">
+                    <i class="bi bi-trash me-2"></i>Delete Promotion
+                </h1>
+                <p class="text-white-50 mb-0">
+                    Confirm deletion of promotion record
+                </p>
+            </div>
+            <div>
+                <a href="{% url 'promotions:promotion_list' %}" class="btn btn-gradient-light">
+                    <i class="bi bi-arrow-left me-2"></i>Back to Promotions
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Confirmation Card -->
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="card-modern">
+                <div class="card-body">
+                    <div class="alert alert-danger">
+                        <i class="bi bi-exclamation-triangle me-2"></i>
+                        <strong>Warning!</strong> This action cannot be undone. Deleting this promotion record will not affect the student's current class assignment.
+                    </div>
+
+                    <div class="promotion-details mb-4">
+                        <h5 class="mb-3">Promotion Record Details:</h5>
+                        <table class="table table-bordered">
+                            <tr>
+                                <th width="30%">Student:</th>
+                                <td>
+                                    {{ promotion.student.user.get_full_name }} 
+                                    <small class="text-muted">({{ promotion.student.admission_number }})</small>
+                                </td>
+                            </tr>
+                            <tr>
+                                <th>From Class:</th>
+                                <td>{{ promotion.from_class.name }}</td>
+                            </tr>
+                            <tr>
+                                <th>To Class:</th>
+                                <td>
+                                    {% if promotion.to_class %}
+                                        {{ promotion.to_class.name }}
+                                    {% else %}
+                                        <span class="text-muted">N/A (Graduated)</span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            <tr>
+                                <th>From Academic Year:</th>
+                                <td>{{ promotion.from_academic_year.name }}</td>
+                            </tr>
+                            <tr>
+                                <th>To Academic Year:</th>
+                                <td>{{ promotion.to_academic_year.name }}</td>
+                            </tr>
+                            <tr>
+                                <th>Status:</th>
+                                <td>
+                                    <span class="badge 
+                                        {% if promotion.status == 'PROMOTED' %}bg-success
+                                        {% elif promotion.status == 'DETAINED' %}bg-warning
+                                        {% elif promotion.status == 'GRADUATED' %}bg-info
+                                        {% endif %}">
+                                        {{ promotion.get_status_display }}
+                                    </span>
+                                </td>
+                            </tr>
+                            <tr>
+                                <th>Promoted On:</th>
+                                <td>{{ promotion.promoted_on|date:"F d, Y" }}</td>
+                            </tr>
+                            <tr>
+                                <th>Promoted By:</th>
+                                <td>{{ promotion.promoted_by.get_full_name }}</td>
+                            </tr>
+                            {% if promotion.remarks %}
+                            <tr>
+                                <th>Remarks:</th>
+                                <td>{{ promotion.remarks }}</td>
+                            </tr>
+                            {% endif %}
+                        </table>
+                    </div>
+
+                    <p class="text-center text-muted mb-4">
+                        Are you sure you want to delete this promotion record?
+                    </p>
+
+                    <form method="post">
+                        {% csrf_token %}
+                        <div class="d-flex justify-content-between">
+                            <a href="{% url 'promotions:promotion_list' %}" class="btn btn-secondary">
+                                <i class="bi bi-x-circle me-2"></i>Cancel
+                            </a>
+                            <button type="submit" class="btn btn-danger">
+                                <i class="bi bi-trash me-2"></i>Yes, Delete Promotion
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.promotion-details {
+    background: rgba(255, 255, 255, 0.03);
+    padding: 1.5rem;
+    border-radius: 10px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.promotion-details h5 {
+    color: white;
+    border-bottom: 2px solid rgba(255, 255, 255, 0.1);
+    padding-bottom: 0.5rem;
+}
+
+.table {
+    color: rgba(255, 255, 255, 0.9);
+    background: transparent;
+}
+
+.table th {
+    background: rgba(255, 255, 255, 0.05);
+    font-weight: 600;
+    color: #e0e0e0;
+}
+
+.table td {
+    background: rgba(255, 255, 255, 0.02);
+}
+
+.table-bordered {
+    border-color: rgba(255, 255, 255, 0.1);
+}
+
+.table-bordered th,
+.table-bordered td {
+    border-color: rgba(255, 255, 255, 0.1);
+}
+</style>
+{% endblock %}

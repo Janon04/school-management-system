@@ -3,89 +3,379 @@
 
 {% block title %}Report Processing - {{ exam.name }}{% endblock %}
 
+{% block extra_css %}
+<style>
+    .processing-header {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 2rem;
+        border-radius: 15px;
+        margin-bottom: 2rem;
+        box-shadow: 0 10px 30px rgba(102, 126, 234, 0.3);
+    }
+    
+    .processing-header h2 {
+        margin: 0;
+        font-weight: 700;
+        display: flex;
+        align-items: center;
+        gap: 15px;
+    }
+    
+    .info-card {
+        background: white;
+        border-radius: 15px;
+        padding: 1.5rem;
+        box-shadow: 0 5px 20px rgba(0,0,0,0.08);
+        margin-bottom: 2rem;
+        border: none;
+    }
+    
+    .info-card .card-header {
+        background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+        border-bottom: 3px solid #667eea;
+        padding: 1rem 1.5rem;
+        font-weight: 700;
+        color: #2d3748;
+        border-radius: 10px 10px 0 0;
+    }
+    
+    .info-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 1.5rem;
+        padding: 1.5rem;
+    }
+    
+    .info-item {
+        text-align: center;
+        padding: 1rem;
+        background: #f8f9fa;
+        border-radius: 10px;
+    }
+    
+    .info-label {
+        font-size: 0.85rem;
+        color: #6c757d;
+        font-weight: 600;
+        text-transform: uppercase;
+        margin-bottom: 0.5rem;
+    }
+    
+    .info-value {
+        font-size: 1.1rem;
+        font-weight: 700;
+        color: #2d3748;
+    }
+    
+    .class-card {
+        background: white;
+        border-radius: 15px;
+        padding: 1.5rem;
+        box-shadow: 0 5px 20px rgba(0,0,0,0.08);
+        border: none;
+        transition: all 0.3s ease;
+        height: 100%;
+        position: relative;
+        overflow: hidden;
+    }
+    
+    .class-card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 4px;
+        background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+    }
+    
+    .class-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+    }
+    
+    .class-title {
+        font-size: 1.25rem;
+        font-weight: 700;
+        color: #2d3748;
+        margin-bottom: 0.5rem;
+    }
+    
+    .class-meta {
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 1rem;
+        padding-bottom: 1rem;
+        border-bottom: 2px solid #f1f3f5;
+    }
+    
+    .meta-item {
+        display: flex;
+        align-items: center;
+        gap: 5px;
+        font-size: 0.9rem;
+        color: #6c757d;
+    }
+    
+    .progress-section {
+        margin-bottom: 1.5rem;
+    }
+    
+    .progress-label {
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 0.5rem;
+        font-size: 0.9rem;
+        font-weight: 600;
+    }
+    
+    .progress-modern {
+        height: 25px;
+        border-radius: 50px;
+        background: #e9ecef;
+        overflow: hidden;
+        box-shadow: inset 0 2px 4px rgba(0,0,0,0.1);
+    }
+    
+    .progress-bar-modern {
+        height: 100%;
+        border-radius: 50px;
+        background: linear-gradient(90deg, #56ab2f 0%, #a8e063 100%);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-weight: 700;
+        font-size: 0.85rem;
+        transition: width 0.6s ease;
+    }
+    
+    .action-buttons {
+        display: grid;
+        grid-template-columns: 1fr 1fr 1fr;
+        gap: 0.5rem;
+    }
+    
+    .action-btn {
+        padding: 0.75rem 1rem;
+        border-radius: 10px;
+        font-weight: 600;
+        font-size: 0.85rem;
+        border: none;
+        transition: all 0.3s ease;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 5px;
+        text-decoration: none;
+        color: white;
+    }
+    
+    .action-btn i {
+        font-size: 1.2rem;
+    }
+    
+    .action-btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        color: white;
+    }
+    
+    .btn-enter {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    }
+    
+    .btn-generate {
+        background: linear-gradient(135deg, #56ab2f 0%, #a8e063 100%);
+    }
+    
+    .btn-print {
+        background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);
+    }
+    
+    .stat-card-modern {
+        background: white;
+        border-radius: 15px;
+        padding: 1.5rem;
+        box-shadow: 0 5px 20px rgba(0,0,0,0.08);
+        text-align: center;
+        position: relative;
+        overflow: hidden;
+    }
+    
+    .stat-card-modern::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 4px;
+    }
+    
+    .stat-card-modern.primary::before { background: linear-gradient(90deg, #667eea 0%, #764ba2 100%); }
+    .stat-card-modern.success::before { background: linear-gradient(90deg, #56ab2f 0%, #a8e063 100%); }
+    .stat-card-modern.warning::before { background: linear-gradient(90deg, #fa709a 0%, #fee140 100%); }
+    .stat-card-modern.info::before { background: linear-gradient(90deg, #4facfe 0%, #00f2fe 100%); }
+    
+    .stat-number {
+        font-size: 2.5rem;
+        font-weight: 700;
+        margin-bottom: 0.5rem;
+    }
+    
+    .stat-card-modern.primary .stat-number { color: #667eea; }
+    .stat-card-modern.success .stat-number { color: #56ab2f; }
+    .stat-card-modern.warning .stat-number { color: #fa709a; }
+    .stat-card-modern.info .stat-number { color: #4facfe; }
+    
+    .stat-label-modern {
+        font-size: 0.9rem;
+        color: #6c757d;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+    
+    .empty-state {
+        text-align: center;
+        padding: 3rem 2rem;
+        background: #f8f9fa;
+        border-radius: 15px;
+        border: 2px dashed #dee2e6;
+    }
+    
+    .empty-state i {
+        font-size: 4rem;
+        color: #dee2e6;
+        margin-bottom: 1rem;
+    }
+    
+    @media (max-width: 768px) {
+        .action-buttons {
+            grid-template-columns: 1fr;
+        }
+        .stat-number {
+            font-size: 2rem;
+        }
+    }
+</style>
+{% endblock %}
+
 {% block content %}
 <div class="container-fluid py-4">
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <h2><i class="bi bi-file-earmark-text"></i> Report Processing - {{ exam.name }}</h2>
-        <a href="{% url 'exams:exam_list' %}" class="btn btn-outline-secondary">
-            <i class="bi bi-arrow-left"></i> Back to Exams
-        </a>
+    <!-- Header -->
+    <div class="processing-header">
+        <div class="d-flex justify-content-between align-items-center flex-wrap">
+            <div>
+                <h2>
+                    <i class="bi bi-file-earmark-text-fill"></i>
+                    Report Processing
+                </h2>
+                <p class="mb-0 mt-2" style="opacity: 0.95;">{{ exam.name }} - {{ exam.academic_year.name }}</p>
+            </div>
+            <div class="mt-3 mt-md-0">
+                <a href="{% url 'exams:exam_list' %}" class="btn btn-light btn-lg">
+                    <i class="bi bi-arrow-left"></i> Back to Exams
+                </a>
+            </div>
+        </div>
     </div>
 
     <!-- Exam Information -->
-    <div class="card mb-4">
-        <div class="card-header bg-primary text-white">
-            <h5 class="mb-0"><i class="bi bi-info-circle"></i> Exam Information</h5>
+    <div class="info-card">
+        <div class="card-header">
+            <i class="bi bi-info-circle-fill me-2"></i>
+            Exam Information
         </div>
-        <div class="card-body">
-            <div class="row">
-                <div class="col-md-3">
-                    <strong>Exam Type:</strong><br>
-                    <span class="badge bg-info">{{ exam.get_exam_type_display }}</span>
+        <div class="info-grid">
+            <div class="info-item">
+                <div class="info-label">Exam Type</div>
+                <div class="info-value">
+                    <span class="badge bg-primary fs-6">{{ exam.get_exam_type_display }}</span>
                 </div>
-                <div class="col-md-3">
-                    <strong>Term:</strong><br>
-                    {{ exam.term }}
-                </div>
-                <div class="col-md-3">
-                    <strong>Academic Year:</strong><br>
-                    {{ exam.academic_year.name }}
-                </div>
-                <div class="col-md-3">
-                    <strong>Duration:</strong><br>
-                    {{ exam.start_date }} to {{ exam.end_date }}
+            </div>
+            <div class="info-item">
+                <div class="info-label">Term</div>
+                <div class="info-value">{{ exam.term }}</div>
+            </div>
+            <div class="info-item">
+                <div class="info-label">Academic Year</div>
+                <div class="info-value">{{ exam.academic_year.name }}</div>
+            </div>
+            <div class="info-item">
+                <div class="info-label">Duration</div>
+                <div class="info-value">
+                    <small>{{ exam.start_date|date:"M d" }} - {{ exam.end_date|date:"M d, Y" }}</small>
                 </div>
             </div>
         </div>
     </div>
 
     <!-- Class Selection -->
-    <div class="card mb-4">
+    <div class="info-card">
         <div class="card-header">
-            <h5 class="mb-0"><i class="bi bi-door-open"></i> Select Class for Report Processing</h5>
+            <i class="bi bi-door-open-fill me-2"></i>
+            Classes & Report Processing
         </div>
-        <div class="card-body">
-            <div class="row">
+        <div class="p-4">
+            <div class="row g-4">
                 {% for schedule in schedules %}
-                    <div class="col-md-6 col-lg-4 mb-3">
-                        <div class="card border h-100">
-                            <div class="card-body">
-                                <h6 class="card-title">{{ schedule.class_room.name }}</h6>
-                                <p class="text-muted mb-2">{{ schedule.class_room.academic_year.name }}</p>
-                                
-                                <div class="d-flex justify-content-between align-items-center mb-3">
-                                    <small class="text-muted">
-                                        <i class="bi bi-people"></i> {{ schedule.class_room.students.count }} Students
-                                    </small>
-                                    <small class="text-muted">
-                                        <i class="bi bi-book"></i> {{ schedule.subjects.count }} Subjects
-                                    </small>
+                    <div class="col-md-6 col-xl-4">
+                        <div class="class-card">
+                            <h3 class="class-title">{{ schedule.class_room.name }}</h3>
+                            
+                            <div class="class-meta">
+                                <div class="meta-item">
+                                    <i class="bi bi-people-fill"></i>
+                                    <span>{{ schedule.class_room.students.count }} Students</span>
                                 </div>
+                                <div class="meta-item">
+                                    <i class="bi bi-book-fill"></i>
+                                    <span>{{ schedule.subjects.count }} Subjects</span>
+                                </div>
+                            </div>
 
-                                <div class="progress mb-3" style="height: 20px;">
-                                    <div class="progress-bar bg-success" role="progressbar" 
-                                         style="width: {{ schedule.completion_percentage }}%">
-                                        {{ schedule.completion_percentage|floatformat:0 }}% Complete
+                            <div class="progress-section">
+                                <div class="progress-label">
+                                    <span>Completion Status</span>
+                                    <span class="text-success fw-bold">{{ schedule.completion_percentage|floatformat:0 }}%</span>
+                                </div>
+                                <div class="progress-modern">
+                                    <div class="progress-bar-modern" style="width: {{ schedule.completion_percentage }}%">
+                                        {% if schedule.completion_percentage >= 50 %}
+                                            {{ schedule.completion_percentage|floatformat:0 }}%
+                                        {% endif %}
                                     </div>
                                 </div>
+                            </div>
 
-                                <div class="btn-group w-100" role="group">
-                                    <a href="{% url 'results:enter_results' exam.pk schedule.class_room.pk %}" 
-                                       class="btn btn-sm btn-primary">
-                                        <i class="bi bi-pencil"></i> Enter Results
-                                    </a>
-                                    <a href="{% url 'results:generate_reports' exam.pk schedule.class_room.pk %}" 
-                                       class="btn btn-sm btn-success">
-                                        <i class="bi bi-file-earmark-pdf"></i> Generate Reports
-                                    </a>
-                                </div>
+                            <div class="action-buttons">
+                                <a href="{% url 'results:enter_results' exam.pk schedule.class_room.pk %}" 
+                                   class="action-btn btn-enter">
+                                    <i class="bi bi-pencil-square"></i>
+                                    <span>Enter Results</span>
+                                </a>
+                                <a href="{% url 'results:generate_reports' exam.pk schedule.class_room.pk %}" 
+                                   class="action-btn btn-generate">
+                                    <i class="bi bi-file-earmark-check"></i>
+                                    <span>Generate</span>
+                                </a>
+                                <a href="{% url 'results:bulk_print' exam.pk schedule.class_room.pk %}" 
+                                   class="action-btn btn-print"
+                                   target="_blank">
+                                    <i class="bi bi-printer-fill"></i>
+                                    <span>Print All</span>
+                                </a>
                             </div>
                         </div>
                     </div>
                 {% empty %}
                     <div class="col-12">
-                        <div class="alert alert-info">
-                            <i class="bi bi-info-circle"></i> No exam schedules found. Please create exam schedules first.
+                        <div class="empty-state">
+                            <i class="bi bi-inbox"></i>
+                            <h4 class="text-muted">No Exam Schedules Found</h4>
+                            <p class="text-muted mb-0">Please create exam schedules before processing reports.</p>
                         </div>
                     </div>
                 {% endfor %}
@@ -94,34 +384,35 @@
     </div>
 
     <!-- Overall Statistics -->
-    <div class="card">
+    <div class="info-card">
         <div class="card-header">
-            <h5 class="mb-0"><i class="bi bi-graph-up"></i> Overall Statistics</h5>
+            <i class="bi bi-graph-up-arrow me-2"></i>
+            Overall Statistics
         </div>
-        <div class="card-body">
-            <div class="row text-center">
+        <div class="p-4">
+            <div class="row g-4">
                 <div class="col-md-3">
-                    <div class="p-3 bg-light rounded">
-                        <h3 class="mb-0 text-primary">{{ total_classes }}</h3>
-                        <small class="text-muted">Total Classes</small>
+                    <div class="stat-card-modern primary">
+                        <div class="stat-number">{{ total_classes }}</div>
+                        <div class="stat-label-modern">Total Classes</div>
                     </div>
                 </div>
                 <div class="col-md-3">
-                    <div class="p-3 bg-light rounded">
-                        <h3 class="mb-0 text-success">{{ results_entered }}</h3>
-                        <small class="text-muted">Results Entered</small>
+                    <div class="stat-card-modern success">
+                        <div class="stat-number">{{ results_entered }}</div>
+                        <div class="stat-label-modern">Results Entered</div>
                     </div>
                 </div>
                 <div class="col-md-3">
-                    <div class="p-3 bg-light rounded">
-                        <h3 class="mb-0 text-warning">{{ results_pending }}</h3>
-                        <small class="text-muted">Pending</small>
+                    <div class="stat-card-modern warning">
+                        <div class="stat-number">{{ results_pending }}</div>
+                        <div class="stat-label-modern">Pending Results</div>
                     </div>
                 </div>
                 <div class="col-md-3">
-                    <div class="p-3 bg-light rounded">
-                        <h3 class="mb-0 text-info">{{ reports_generated }}</h3>
-                        <small class="text-muted">Reports Generated</small>
+                    <div class="stat-card-modern info">
+                        <div class="stat-number">{{ reports_generated }}</div>
+                        <div class="stat-label-modern">Reports Generated</div>
                     </div>
                 </div>
             </div>

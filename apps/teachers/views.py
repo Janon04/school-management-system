@@ -1,10 +1,12 @@
 """
 Views for Teacher Management
 """
-from django.shortcuts import render, get_object_or_404
+from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib.auth.decorators import login_required
+from django.contrib import messages
 from apps.accounts.decorators import admin_required
 from .models import Teacher
+from .forms import TeacherForm
 
 
 @login_required
@@ -27,3 +29,54 @@ def teacher_detail_view(request, pk):
         'subjects': subjects,
     }
     return render(request, 'teachers/teacher_detail.html', context)
+
+
+@login_required
+@admin_required
+def teacher_create_view(request):
+    """Create a new teacher"""
+    if request.method == 'POST':
+        form = TeacherForm(request.POST, request.FILES)
+        if form.is_valid():
+            teacher = form.save()
+            messages.success(request, f'Teacher {teacher.user.get_full_name()} created successfully!')
+            return redirect('teachers:teacher_detail', pk=teacher.pk)
+        else:
+            messages.error(request, 'Please correct the errors below.')
+    else:
+        form = TeacherForm()
+    
+    context = {
+        'form': form,
+        'title': 'Add New Teacher',
+        'button_text': 'Create Teacher',
+        'is_create': True
+    }
+    return render(request, 'teachers/teacher_form.html', context)
+
+
+@login_required
+@admin_required
+def teacher_update_view(request, pk):
+    """Update an existing teacher"""
+    teacher = get_object_or_404(Teacher, pk=pk)
+    
+    if request.method == 'POST':
+        form = TeacherForm(request.POST, request.FILES, instance=teacher)
+        if form.is_valid():
+            teacher = form.save()
+            messages.success(request, f'Teacher {teacher.user.get_full_name()} updated successfully!')
+            return redirect('teachers:teacher_detail', pk=teacher.pk)
+        else:
+            messages.error(request, 'Please correct the errors below.')
+    else:
+        form = TeacherForm(instance=teacher)
+    
+    context = {
+        'form': form,
+        'teacher': teacher,
+        'title': f'Edit Teacher: {teacher.user.get_full_name()}',
+        'button_text': 'Update Teacher',
+        'is_create': False
+    }
+    return render(request, 'teachers/teacher_form.html', context)

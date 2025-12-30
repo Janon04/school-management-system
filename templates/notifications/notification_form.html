@@ -1,0 +1,335 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ action }} Notification - SMS{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Page Header -->
+    <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+        <h1 class="h2">
+            <i class="bi bi-bell-fill"></i> {{ action }} Notification
+        </h1>
+        <div class="btn-toolbar mb-2 mb-md-0">
+            <a href="{% url 'notifications:notifications' %}" class="btn btn-outline-secondary">
+                <i class="bi bi-arrow-left"></i> Back
+            </a>
+        </div>
+    </div>
+
+    <!-- Form -->
+    <div class="row justify-content-center">
+        <div class="col-lg-10">
+            <div class="card">
+                <div class="card-body p-4">
+                    <form method="post" id="notificationForm">
+                        {% csrf_token %}
+                        
+                        <!-- Recipient Selection -->
+                        <div class="form-section mb-4">
+                            <h5 class="section-title">
+                                <i class="bi bi-people-fill"></i> Select Recipients
+                            </h5>
+                            
+                            <div class="row">
+                                <div class="col-md-12 mb-3">
+                                    <label for="{{ form.recipient_type.id_for_label }}" class="form-label">
+                                        Send To <span class="text-danger">*</span>
+                                    </label>
+                                    {{ form.recipient_type }}
+                                    <div class="form-text">
+                                        <i class="bi bi-info-circle"></i> Choose who should receive this notification
+                                    </div>
+                                    {% if form.recipient_type.errors %}
+                                        <div class="invalid-feedback d-block">{{ form.recipient_type.errors }}</div>
+                                    {% endif %}
+                                </div>
+                                
+                                <!-- Preview Card -->
+                                <div class="col-md-12 mb-3">
+                                    <div id="recipientPreview" class="alert alert-info" style="display: none;">
+                                        <i class="bi bi-info-circle-fill"></i>
+                                        <strong>Recipients:</strong> <span id="previewText"></span>
+                                    </div>
+                                </div>
+                                
+                                <!-- Custom Users Selection (hidden by default) -->
+                                <div class="col-md-12 mb-3" id="customUsersSection" style="display: none;">
+                                    <label for="{{ form.users.id_for_label }}" class="form-label">
+                                        Select Specific Users <span class="text-danger">*</span>
+                                    </label>
+                                    {{ form.users }}
+                                    <div class="form-text">
+                                        <i class="bi bi-info-circle"></i> Hold Ctrl (Windows) or Cmd (Mac) to select multiple users
+                                    </div>
+                                    {% if form.users.errors %}
+                                        <div class="invalid-feedback d-block">{{ form.users.errors }}</div>
+                                    {% endif %}
+                                    
+                                    <!-- Quick Selection Buttons for Custom -->
+                                    <div class="mt-2">
+                                        <div class="btn-group btn-group-sm" role="group">
+                                            <button type="button" class="btn btn-outline-primary" onclick="filterUsersByRole('STUDENT')">
+                                                <i class="bi bi-mortarboard"></i> Students
+                                            </button>
+                                            <button type="button" class="btn btn-outline-success" onclick="filterUsersByRole('TEACHER')">
+                                                <i class="bi bi-person-workspace"></i> Teachers
+                                            </button>
+                                            <button type="button" class="btn btn-outline-info" onclick="filterUsersByRole('PARENT')">
+                                                <i class="bi bi-people"></i> Parents
+                                            </button>
+                                            <button type="button" class="btn btn-outline-warning" onclick="filterUsersByRole('ADMIN')">
+                                                <i class="bi bi-shield-fill"></i> Admins
+                                            </button>
+                                            <button type="button" class="btn btn-outline-secondary" onclick="selectAllCustomUsers()">
+                                                <i class="bi bi-check-all"></i> All
+                                            </button>
+                                            <button type="button" class="btn btn-outline-danger" onclick="clearCustomSelection()">
+                                                <i class="bi bi-x-circle"></i> Clear
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <hr class="my-4">
+
+                        <!-- Notification Details -->
+                        <div class="form-section mb-4">
+                            <h5 class="section-title">
+                                <i class="bi bi-pencil-fill"></i> Notification Details
+                            </h5>
+                            
+                            <div class="row">
+                                <div class="col-md-12 mb-3">
+                                    <label for="{{ form.title.id_for_label }}" class="form-label">
+                                        Title <span class="text-danger">*</span>
+                                    </label>
+                                    {{ form.title }}
+                                    {% if form.title.errors %}
+                                        <div class="invalid-feedback d-block">{{ form.title.errors }}</div>
+                                    {% endif %}
+                                </div>
+                                
+                                <div class="col-md-12 mb-3">
+                                    <label for="{{ form.message.id_for_label }}" class="form-label">
+                                        Message <span class="text-danger">*</span>
+                                    </label>
+                                    {{ form.message }}
+                                    {% if form.message.errors %}
+                                        <div class="invalid-feedback d-block">{{ form.message.errors }}</div>
+                                    {% endif %}
+                                </div>
+                                
+                                <div class="col-md-6 mb-3">
+                                    <label for="{{ form.notification_type.id_for_label }}" class="form-label">
+                                        Type <span class="text-danger">*</span>
+                                    </label>
+                                    {{ form.notification_type }}
+                                    <div class="form-text">
+                                        <i class="bi bi-tag"></i> Choose the notification type
+                                    </div>
+                                    {% if form.notification_type.errors %}
+                                        <div class="invalid-feedback d-block">{{ form.notification_type.errors }}</div>
+                                    {% endif %}
+                                </div>
+                                
+                                <div class="col-md-6 mb-3">
+                                    <label for="{{ form.link.id_for_label }}" class="form-label">
+                                        Link (Optional)
+                                    </label>
+                                    {{ form.link }}
+                                    <div class="form-text">
+                                        <i class="bi bi-link-45deg"></i> URL to redirect when clicked
+                                    </div>
+                                    {% if form.link.errors %}
+                                        <div class="invalid-feedback d-block">{{ form.link.errors }}</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Action Buttons -->
+                        <div class="d-flex justify-content-end gap-2 mt-4 pt-3 border-top">
+                            <a href="{% url 'notifications:notifications' %}" class="btn btn-secondary">
+                                <i class="bi bi-x-circle"></i> Cancel
+                            </a>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="bi bi-send-fill"></i> {{ submit_text }}
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// Handle recipient type change
+function handleRecipientTypeChange() {
+    const recipientType = document.getElementById('{{ form.recipient_type.id_for_label }}').value;
+    const customSection = document.getElementById('customUsersSection');
+    const previewCard = document.getElementById('recipientPreview');
+    const previewText = document.getElementById('previewText');
+    
+    // Show/hide custom users section
+    if (recipientType === 'CUSTOM') {
+        customSection.style.display = 'block';
+        previewCard.style.display = 'none';
+    } else if (recipientType === '') {
+        customSection.style.display = 'none';
+        previewCard.style.display = 'none';
+    } else {
+        customSection.style.display = 'none';
+        previewCard.style.display = 'block';
+        
+        // Update preview text
+        const previewTexts = {
+            'ALL': 'All users in the system will receive this notification',
+            'ADMIN': 'All administrators will receive this notification',
+            'TEACHER': 'All teachers will receive this notification',
+            'STUDENT': 'All students will receive this notification',
+            'PARENT': 'All parents will receive this notification',
+            'STAFF': 'All staff members will receive this notification'
+        };
+        previewText.textContent = previewTexts[recipientType] || '';
+    }
+}
+
+// Filter custom users by role
+function filterUsersByRole(role) {
+    const select = document.getElementById('customUsersSelect');
+    for (let option of select.options) {
+        if (option.text.includes(`(${role})`)) {
+            option.selected = true;
+        }
+    }
+}
+
+// Select all custom users
+function selectAllCustomUsers() {
+    const select = document.getElementById('customUsersSelect');
+    for (let option of select.options) {
+        option.selected = true;
+    }
+}
+
+// Clear custom selection
+function clearCustomSelection() {
+    const select = document.getElementById('customUsersSelect');
+    for (let option of select.options) {
+        option.selected = false;
+    }
+}
+
+// Form validation
+document.getElementById('notificationForm').addEventListener('submit', function(e) {
+    const recipientType = document.getElementById('{{ form.recipient_type.id_for_label }}').value;
+    
+    if (!recipientType) {
+        e.preventDefault();
+        alert('Please select who should receive this notification');
+        return false;
+    }
+    
+    if (recipientType === 'CUSTOM') {
+        const usersSelect = document.getElementById('customUsersSelect');
+        const selectedUsers = Array.from(usersSelect.selectedOptions).length;
+        
+        if (selectedUsers === 0) {
+            e.preventDefault();
+            alert('Please select at least one user for custom selection');
+            return false;
+        }
+        
+        if (!confirm(`Send this notification to ${selectedUsers} selected user(s)?`)) {
+            e.preventDefault();
+            return false;
+        }
+    } else {
+        const confirmTexts = {
+            'ALL': 'all users',
+            'ADMIN': 'all administrators',
+            'TEACHER': 'all teachers',
+            'STUDENT': 'all students',
+            'PARENT': 'all parents',
+            'STAFF': 'all staff members'
+        };
+        
+        if (!confirm(`Send this notification to ${confirmTexts[recipientType]}?`)) {
+            e.preventDefault();
+            return false;
+        }
+    }
+});
+
+// Initialize on page load
+document.addEventListener('DOMContentLoaded', function() {
+    handleRecipientTypeChange();
+});
+</script>
+
+<style>
+.form-section {
+    background: rgba(255, 255, 255, 0.95);
+    padding: 1.5rem;
+    border-radius: 10px;
+    border: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+.section-title {
+    color: #000;
+    font-size: 1.1rem;
+    font-weight: 700;
+    margin-bottom: 1rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 2px solid rgba(0, 0, 0, 0.2);
+}
+
+.form-label {
+    font-weight: 600;
+    color: #000;
+    margin-bottom: 0.5rem;
+}
+
+.form-control, .form-select {
+    background: #fff;
+    border: 1px solid rgba(0, 0, 0, 0.3);
+    color: #000;
+    padding: 0.6rem 1rem;
+    border-radius: 8px;
+}
+
+.form-control:focus, .form-select:focus {
+    background: #fff;
+    border-color: var(--gradient-end);
+    color: #000;
+    box-shadow: 0 0 0 0.2rem rgba(var(--gradient-end-rgb), 0.25);
+}
+
+.form-control::placeholder {
+    color: rgba(0, 0, 0, 0.5);
+}
+
+textarea.form-control {
+    min-height: 120px;
+}
+
+.form-text {
+    color: rgba(0, 0, 0, 0.7) !important;
+    font-weight: 500;
+    font-size: 0.875rem;
+}
+
+.text-danger {
+    color: #dc3545 !important;
+    font-weight: bold;
+}
+
+.btn-group .btn {
+    margin: 2px;
+}
+</style>
+{% endblock %}

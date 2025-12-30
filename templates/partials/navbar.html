@@ -13,7 +13,7 @@
             <ul class="navbar-nav ms-auto">
                 {% if user.is_teacher or user.is_admin or user.is_staff %}
                 <li class="nav-item">
-                    <a class="nav-link" href="/admin/results/result/" style="background: rgba(255,255,255,0.15); border-radius: 5px; padding: 8px 15px; margin-right: 8px;">
+                    <a class="nav-link" href="{% url 'results:result_list' %}" style="background: rgba(255,255,255,0.15); border-radius: 5px; padding: 8px 15px; margin-right: 8px;">
                         <i class="bi bi-table"></i> <strong>View Results</strong>
                     </a>
                 </li>
@@ -26,14 +26,17 @@
                 
                 <li class="nav-item">
                     <a class="nav-link" href="{% url 'notifications:notice_board' %}">
-                        <i class="bi bi-megaphone"></i> Notices
+                        <i class="bi bi-megaphone-fill"></i> Announcements
                     </a>
                 </li>
                 
+                {# Dynamic unread alert count for My Alerts #}
                 <li class="nav-item">
                     <a class="nav-link" href="{% url 'notifications:notifications' %}">
-                        <i class="bi bi-bell"></i> Notifications
-                        <span class="badge bg-danger">3</span>
+                        <i class="bi bi-bell-fill"></i> My Alerts
+                        {% if unread_count is not None and unread_count > 0 %}
+                        <span class="badge bg-danger">{{ unread_count }}</span>
+                        {% endif %}
                     </a>
                 </li>
                 

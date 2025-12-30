@@ -1,0 +1,344 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Print All Reports - {{ class_room.name }}</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.8.1/font/bootstrap-icons.css">
+    <style>
+        /* Print optimized styles */
+        @page {
+            size: A4;
+            margin: 15mm;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: white;
+            margin: 0;
+            padding: 0;
+        }
+        
+        .report-card {
+            page-break-after: always;
+            margin-bottom: 20mm;
+            padding: 20px;
+            background: white;
+        }
+        
+        .report-card:last-child {
+            page-break-after: auto;
+        }
+        
+        /* Primary School Theme - Green */
+        .report-header {
+            background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+        
+        .school-name {
+            font-size: 28px;
+            font-weight: bold;
+            margin: 0;
+        }
+        
+        .report-title {
+            font-size: 20px;
+            margin: 10px 0 0 0;
+        }
+        
+        .student-info {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+        
+        .info-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 8px;
+        }
+        
+        .info-label {
+            font-weight: bold;
+            color: #28a745;
+        }
+        
+        .results-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 20px;
+        }
+        
+        .results-table th {
+            background: #28a745;
+            color: white;
+            padding: 12px;
+            text-align: left;
+            font-weight: 600;
+        }
+        
+        .results-table td {
+            padding: 10px 12px;
+            border-bottom: 1px solid #dee2e6;
+        }
+        
+        .results-table tbody tr:nth-child(even) {
+            background: #f8f9fa;
+        }
+        
+        .grade-a { color: #28a745; font-weight: bold; }
+        .grade-b { color: #20c997; font-weight: bold; }
+        .grade-c { color: #ffc107; font-weight: bold; }
+        .grade-d { color: #fd7e14; font-weight: bold; }
+        .grade-f { color: #dc3545; font-weight: bold; }
+        
+        .summary-section {
+            background: #e7f5ea;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            border-left: 4px solid #28a745;
+        }
+        
+        .summary-item {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 8px;
+            font-size: 16px;
+        }
+        
+        .summary-label {
+            font-weight: 600;
+            color: #495057;
+        }
+        
+        .summary-value {
+            font-weight: bold;
+            color: #28a745;
+        }
+        
+        .comments-section {
+            margin-top: 20px;
+        }
+        
+        .comment-box {
+            background: #f8f9fa;
+            padding: 12px;
+            border-radius: 6px;
+            margin-bottom: 12px;
+            border-left: 3px solid #28a745;
+        }
+        
+        .comment-label {
+            font-weight: bold;
+            color: #28a745;
+            margin-bottom: 5px;
+        }
+        
+        .comment-text {
+            color: #495057;
+            line-height: 1.5;
+        }
+        
+        .signatures {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 30px;
+            padding-top: 20px;
+            border-top: 2px solid #dee2e6;
+        }
+        
+        .signature-box {
+            text-align: center;
+            flex: 1;
+        }
+        
+        .signature-line {
+            border-top: 2px solid #495057;
+            margin-top: 40px;
+            padding-top: 8px;
+            font-weight: 600;
+        }
+        
+        .no-print {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 1000;
+        }
+        
+        @media print {
+            .no-print {
+                display: none !important;
+            }
+            
+            body {
+                margin: 0;
+                padding: 0;
+            }
+            
+            .report-card {
+                margin-bottom: 0;
+                padding: 0;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Print Button -->
+    <div class="no-print">
+        <button onclick="window.print()" class="btn btn-success btn-lg shadow">
+            <i class="bi bi-printer"></i> Print All Reports
+        </button>
+        <a href="{% url 'results:report_processing' exam.id %}" class="btn btn-secondary btn-lg shadow ms-2">
+            <i class="bi bi-arrow-left"></i> Back
+        </a>
+    </div>
+
+    <!-- Loop through all students -->
+    {% for item in student_reports %}
+    <div class="report-card">
+        <!-- Header -->
+        <div class="report-header">
+            <h1 class="school-name">PRIMARY SCHOOL REPORT CARD</h1>
+            <p class="report-title">{{ exam.name }} - {{ exam.academic_year }}</p>
+        </div>
+
+        <!-- Student Information -->
+        <div class="student-info">
+            <div class="info-row">
+                <div>
+                    <span class="info-label">Student Name:</span>
+                    {{ item.student.user.get_full_name }}
+                </div>
+                <div>
+                    <span class="info-label">Admission No:</span>
+                    {{ item.student.admission_number }}
+                </div>
+            </div>
+            <div class="info-row">
+                <div>
+                    <span class="info-label">Class:</span>
+                    {{ item.student.class_assigned.name }}
+                </div>
+                <div>
+                    <span class="info-label">Roll No:</span>
+                    {{ item.student.roll_number|default:"N/A" }}
+                </div>
+            </div>
+            <div class="info-row">
+                <div>
+                    <span class="info-label">Date of Birth:</span>
+                    {{ item.student.date_of_birth|date:"d-M-Y" }}
+                </div>
+                <div>
+                    <span class="info-label">Gender:</span>
+                    {{ item.student.get_gender_display }}
+                </div>
+            </div>
+        </div>
+
+        <!-- Results Table -->
+        <table class="results-table">
+            <thead>
+                <tr>
+                    <th style="width: 10%;">S/N</th>
+                    <th style="width: 40%;">Subject</th>
+                    <th style="width: 15%;">Marks</th>
+                    <th style="width: 15%;">Grade</th>
+                    <th style="width: 20%;">Status</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for result in item.results %}
+                <tr>
+                    <td>{{ forloop.counter }}</td>
+                    <td>{{ result.subject.name }}</td>
+                    <td><strong>{{ result.marks }}/{{ result.subject.pass_mark|default:100 }}</strong></td>
+                    <td class="grade-{{ result.grade|lower }}">{{ result.grade }}</td>
+                    <td>
+                        {% if result.is_absent %}
+                            <span style="color: #dc3545;">Absent</span>
+                        {% elif result.passed %}
+                            <span style="color: #28a745;">Pass</span>
+                        {% else %}
+                            <span style="color: #dc3545;">Fail</span>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="5" style="text-align: center; color: #6c757d;">No results available</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+
+        <!-- Summary -->
+        <div class="summary-section">
+            <div class="summary-item">
+                <span class="summary-label">Total Marks:</span>
+                <span class="summary-value">{{ item.report_card.total_marks }}</span>
+            </div>
+            <div class="summary-item">
+                <span class="summary-label">Overall Percentage:</span>
+                <span class="summary-value">{{ item.report_card.percentage|floatformat:1 }}%</span>
+            </div>
+            <div class="summary-item">
+                <span class="summary-label">Overall Grade:</span>
+                <span class="summary-value grade-{{ item.report_card.grade|lower }}">{{ item.report_card.grade }}</span>
+            </div>
+            <div class="summary-item">
+                <span class="summary-label">Class Position:</span>
+                <span class="summary-value">{{ item.report_card.class_position|default:"N/A" }}</span>
+            </div>
+            <div class="summary-item">
+                <span class="summary-label">Attendance:</span>
+                <span class="summary-value">
+                    {{ item.report_card.attendance_days|default:0 }}/{{ item.report_card.total_school_days|default:90 }} days
+                </span>
+            </div>
+        </div>
+
+        <!-- Comments -->
+        <div class="comments-section">
+            {% if item.report_card.teacher_comment %}
+            <div class="comment-box">
+                <div class="comment-label">Class Teacher's Comment:</div>
+                <div class="comment-text">{{ item.report_card.teacher_comment }}</div>
+            </div>
+            {% endif %}
+            
+            {% if item.report_card.principal_comment %}
+            <div class="comment-box">
+                <div class="comment-label">Principal's Comment:</div>
+                <div class="comment-text">{{ item.report_card.principal_comment }}</div>
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- Signatures -->
+        <div class="signatures">
+            <div class="signature-box">
+                <div class="signature-line">Class Teacher</div>
+            </div>
+            <div class="signature-box">
+                <div class="signature-line">Principal</div>
+            </div>
+            <div class="signature-box">
+                <div class="signature-line">Parent/Guardian</div>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

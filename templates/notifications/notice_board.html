@@ -10,7 +10,7 @@
     </h1>
     <div class="btn-toolbar mb-2 mb-md-0">
         {% if user.is_admin or user.is_staff %}
-        <a href="{% url 'admin:notifications_notice_add' %}" class="btn btn-primary">
+        <a href="{% url 'notifications:notice_create' %}" class="btn btn-primary">
             <i class="bi bi-plus-circle"></i> Add Notice
         </a>
         {% endif %}
@@ -46,7 +46,9 @@
                                 {% if notice.is_urgent %}
                                 <i class="bi bi-exclamation-triangle-fill text-danger"></i>
                                 {% endif %}
-                                {{ notice.title }}
+                                <a href="{% url 'notifications:notice_detail' notice.pk %}" class="text-decoration-none text-dark">
+                                    {{ notice.title }}
+                                </a>
                                 {% if notice.is_urgent %}
                                 <span class="badge bg-danger ms-2">URGENT</span>
                                 {% endif %}
@@ -59,7 +61,12 @@
                                 <i class="bi bi-clock"></i> {{ notice.created_at|time:"h:i A" }}
                             </p>
                             <div class="card-text">
-                                {{ notice.content|linebreaks }}
+                                {{ notice.message|truncatewords:30|linebreaks }}
+                            </div>
+                            <div class="mt-2">
+                                <a href="{% url 'notifications:notice_detail' notice.pk %}" class="btn btn-sm btn-outline-primary">
+                                    <i class="bi bi-eye"></i> View Details
+                                </a>
                             </div>
                             {% if notice.attachment %}
                             <div class="mt-3">
@@ -79,8 +86,11 @@
                         {% if user.is_admin or user.is_staff %}
                         <div class="ms-3">
                             <div class="btn-group-vertical btn-group-sm">
-                                <a href="{% url 'admin:notifications_notice_change' notice.pk %}" class="btn btn-outline-secondary" title="Edit">
+                                <a href="{% url 'notifications:notice_update' notice.pk %}" class="btn btn-outline-secondary" title="Edit">
                                     <i class="bi bi-pencil"></i>
+                                </a>
+                                <a href="{% url 'notifications:notice_delete' notice.pk %}" class="btn btn-outline-danger" title="Delete">
+                                    <i class="bi bi-trash"></i>
                                 </a>
                             </div>
                         </div>
@@ -102,7 +112,7 @@
                 <i class="bi bi-inbox display-1 text-muted"></i>
                 <p class="text-muted mt-3">No notices available</p>
                 {% if user.is_admin or user.is_staff %}
-                <a href="{% url 'admin:notifications_notice_add' %}" class="btn btn-primary">
+                <a href="{% url 'notifications:notice_create' %}" class="btn btn-primary">
                     <i class="bi bi-plus-circle"></i> Post First Notice
                 </a>
                 {% endif %}

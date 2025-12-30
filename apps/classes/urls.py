@@ -11,5 +11,7 @@ urlpatterns = [
     path('<int:pk>/', views.class_detail_view, name='class_detail'),
     path('<int:class_id>/timetable/', views.timetable_view, name='timetable'),
     path('subjects/', views.subject_list_view, name='subject_list'),
+    path('subjects/create/', views.subject_create_view, name='subject_create'),
     path('subjects/<int:pk>/', views.subject_detail_view, name='subject_detail'),
+    path('subjects/<int:pk>/edit/', views.subject_update_view, name='subject_update'),
 ]

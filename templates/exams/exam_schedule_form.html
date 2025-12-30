@@ -1,0 +1,92 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Add Exam Schedule - SMS{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <h2 class="mb-4">Add Exam Schedule</h2>
+    <form method="post" class="needs-validation" novalidate>
+        {% csrf_token %}
+        {% if form.non_field_errors %}
+        <div class="alert alert-danger">{{ form.non_field_errors }}</div>
+        {% endif %}
+        {% if messages %}
+        <div class="mt-2">
+            {% for message in messages %}
+            <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                {{ message }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+        <div class="row g-3">
+            <div class="col-md-6">
+                <label class="form-label">Class</label>
+                {{ form.class_room }}
+                {% if form.class_room.errors %}
+                <div class="invalid-feedback d-block">{{ form.class_room.errors.0 }}</div>
+                {% endif %}
+            </div>
+            <div class="col-md-6">
+                <label class="form-label">Subject</label>
+                {{ form.subject }}
+                {% if form.subject.errors %}
+                <div class="invalid-feedback d-block">{{ form.subject.errors.0 }}</div>
+                {% endif %}
+            </div>
+        </div>
+        <div class="row g-3 mt-2">
+            <div class="col-md-4">
+                <label class="form-label">Exam Date</label>
+                {{ form.exam_date }}
+                {% if form.exam_date.errors %}
+                <div class="invalid-feedback d-block">{{ form.exam_date.errors.0 }}</div>
+                {% endif %}
+            </div>
+            <div class="col-md-4">
+                <label class="form-label">Start Time</label>
+                {{ form.start_time }}
+                {% if form.start_time.errors %}
+                <div class="invalid-feedback d-block">{{ form.start_time.errors.0 }}</div>
+                {% endif %}
+            </div>
+            <div class="col-md-4">
+                <label class="form-label">End Time</label>
+                {{ form.end_time }}
+                {% if form.end_time.errors %}
+                <div class="invalid-feedback d-block">{{ form.end_time.errors.0 }}</div>
+                {% endif %}
+            </div>
+        </div>
+        <div class="row g-3 mt-2">
+            <div class="col-md-6">
+                <label class="form-label">Room Number</label>
+                {{ form.room_number }}
+                {% if form.room_number.errors %}
+                <div class="invalid-feedback d-block">{{ form.room_number.errors.0 }}</div>
+                {% endif %}
+            </div>
+            <div class="col-md-3">
+                <label class="form-label">Max Marks</label>
+                {{ form.max_marks }}
+                {% if form.max_marks.errors %}
+                <div class="invalid-feedback d-block">{{ form.max_marks.errors.0 }}</div>
+                {% endif %}
+            </div>
+            <div class="col-md-3">
+                <label class="form-label">Pass Marks</label>
+                {{ form.pass_marks }}
+                {% if form.pass_marks.errors %}
+                <div class="invalid-feedback d-block">{{ form.pass_marks.errors.0 }}</div>
+                {% endif %}
+            </div>
+        </div>
+        <div class="mt-4">
+            <button type="submit" class="btn btn-primary btn-lg">Add Schedule</button>
+            <a href="{% url 'exams:exam_detail' exam.id %}" class="btn btn-secondary btn-lg">Cancel</a>
+        </div>
+    </form>
+</div>
+{% endblock %}

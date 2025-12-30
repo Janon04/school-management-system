@@ -1,0 +1,406 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load attendance_tags %}
+
+{% block title %}Mark Attendance - {{ class_room.name }}{% endblock %}
+
+{% block extra_css %}
+<style>
+    .attendance-header {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 2rem;
+        border-radius: 15px;
+        margin-bottom: 2rem;
+        box-shadow: 0 10px 30px rgba(102, 126, 234, 0.3);
+    }
+    
+    .attendance-card {
+        background: white;
+        border-radius: 15px;
+        box-shadow: 0 5px 20px rgba(0,0,0,0.08);
+        overflow: hidden;
+    }
+    
+    .student-row {
+        padding: 1rem 1.5rem;
+        border-bottom: 1px solid #e9ecef;
+        transition: all 0.3s ease;
+    }
+    
+    .student-row:hover {
+        background: #f8f9fa;
+    }
+    
+    .student-info {
+        display: flex;
+        align-items: center;
+        gap: 15px;
+        flex: 1;
+    }
+    
+    .student-avatar {
+        width: 50px;
+        height: 50px;
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        font-weight: 700;
+        font-size: 1.2rem;
+    }
+    
+    .student-details {
+        flex: 1;
+    }
+    
+    .student-name {
+        font-weight: 600;
+        color: #2d3748;
+        margin-bottom: 0.25rem;
+    }
+    
+    .student-admission {
+        font-size: 0.85rem;
+        color: #6c757d;
+    }
+    
+    .attendance-controls {
+        display: flex;
+        gap: 0.5rem;
+        flex-wrap: wrap;
+    }
+    
+    .status-btn {
+        padding: 0.5rem 1.5rem;
+        border-radius: 50px;
+        border: 2px solid #e9ecef;
+        background: white;
+        font-weight: 600;
+        transition: all 0.3s ease;
+        cursor: pointer;
+        font-size: 0.9rem;
+    }
+    
+    .status-btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 5px 10px rgba(0,0,0,0.1);
+    }
+    
+    .status-btn.active.present {
+        background: linear-gradient(135deg, #56ab2f 0%, #a8e063 100%);
+        color: white;
+        border-color: #56ab2f;
+    }
+    
+    .status-btn.active.absent {
+        background: linear-gradient(135deg, #ff6a00 0%, #ee0979 100%);
+        color: white;
+        border-color: #ff6a00;
+    }
+    
+    .status-btn.active.late {
+        background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);
+        color: white;
+        border-color: #fa709a;
+    }
+    
+    .status-btn.active.excused {
+        background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+        color: white;
+        border-color: #4facfe;
+    }
+    
+    .quick-actions {
+        display: flex;
+        gap: 1rem;
+        margin-bottom: 1.5rem;
+        flex-wrap: wrap;
+    }
+    
+    .quick-btn {
+        padding: 0.75rem 1.5rem;
+        border-radius: 10px;
+        font-weight: 600;
+        border: none;
+        transition: all 0.3s ease;
+        cursor: pointer;
+    }
+    
+    .quick-btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 5px 15px rgba(0,0,0,0.15);
+    }
+    
+    .btn-all-present {
+        background: linear-gradient(135deg, #56ab2f 0%, #a8e063 100%);
+        color: white;
+    }
+    
+    .btn-all-absent {
+        background: linear-gradient(135deg, #ff6a00 0%, #ee0979 100%);
+        color: white;
+    }
+    
+    .btn-clear-all {
+        background: linear-gradient(135deg, #6c757d 0%, #495057 100%);
+        color: white;
+    }
+    
+    .summary-cards {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+        gap: 1rem;
+        margin-bottom: 2rem;
+    }
+    
+    .summary-card {
+        background: white;
+        border-radius: 12px;
+        padding: 1rem;
+        text-align: center;
+        box-shadow: 0 3px 10px rgba(0,0,0,0.08);
+    }
+    
+    .summary-icon {
+        font-size: 2rem;
+        margin-bottom: 0.5rem;
+    }
+    
+    .summary-value {
+        font-size: 1.75rem;
+        font-weight: 700;
+        margin-bottom: 0.25rem;
+    }
+    
+    .summary-label {
+        font-size: 0.85rem;
+        color: #6c757d;
+        font-weight: 600;
+    }
+    
+    @media (max-width: 768px) {
+        .student-row {
+            flex-direction: column;
+            gap: 1rem;
+        }
+        .attendance-controls {
+            width: 100%;
+        }
+        .status-btn {
+            flex: 1;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <!-- Header -->
+    <div class="attendance-header">
+        <div class="d-flex justify-content-between align-items-center flex-wrap">
+            <div>
+                <h1 class="mb-2">
+                    <i class="bi bi-calendar-check-fill"></i>
+                    Mark Attendance
+                </h1>
+                <p class="mb-0" style="opacity: 0.95;">
+                    {{ class_room.name }} - {{ today|date:"l, F d, Y" }}
+                </p>
+            </div>
+            <div class="mt-3 mt-md-0">
+                <a href="{% url 'classes:class_detail' class_room.pk %}" class="btn btn-light btn-lg">
+                    <i class="bi bi-arrow-left"></i> Back to Class
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <form method="post" id="attendanceForm">
+        {% csrf_token %}
+        
+        <!-- Summary Cards -->
+        <div class="summary-cards">
+            <div class="summary-card" style="border-top: 4px solid #667eea;">
+                <div class="summary-icon">👥</div>
+                <div class="summary-value" id="totalCount">{{ students.count }}</div>
+                <div class="summary-label">Total Students</div>
+            </div>
+            <div class="summary-card" style="border-top: 4px solid #56ab2f;">
+                <div class="summary-icon">✅</div>
+                <div class="summary-value text-success" id="presentCount">0</div>
+                <div class="summary-label">Present</div>
+            </div>
+            <div class="summary-card" style="border-top: 4px solid #ff6a00;">
+                <div class="summary-icon">❌</div>
+                <div class="summary-value text-danger" id="absentCount">0</div>
+                <div class="summary-label">Absent</div>
+            </div>
+            <div class="summary-card" style="border-top: 4px solid #fa709a;">
+                <div class="summary-icon">⏰</div>
+                <div class="summary-value text-warning" id="lateCount">0</div>
+                <div class="summary-label">Late</div>
+            </div>
+            <div class="summary-card" style="border-top: 4px solid #4facfe;">
+                <div class="summary-icon">📝</div>
+                <div class="summary-value text-info" id="excusedCount">0</div>
+                <div class="summary-label">Excused</div>
+            </div>
+        </div>
+
+        <!-- Quick Actions -->
+        <div class="quick-actions">
+            <button type="button" class="quick-btn btn-all-present" onclick="markAll('Present')">
+                <i class="bi bi-check-circle-fill me-2"></i>Mark All Present
+            </button>
+            <button type="button" class="quick-btn btn-all-absent" onclick="markAll('Absent')">
+                <i class="bi bi-x-circle-fill me-2"></i>Mark All Absent
+            </button>
+            <button type="button" class="quick-btn btn-clear-all" onclick="clearAll()">
+                <i class="bi bi-arrow-counterclockwise me-2"></i>Clear All
+            </button>
+        </div>
+
+        <!-- Students List -->
+        <div class="attendance-card">
+            <div class="card-header" style="background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%); border-bottom: 3px solid #667eea; padding: 1.25rem 1.5rem; font-weight: 700; color: #2d3748; font-size: 1.1rem;">
+                <i class="bi bi-list-check me-2"></i>
+                Students Attendance
+            </div>
+            
+            {% for student in students %}
+            <div class="student-row d-flex align-items-center">
+                <div class="student-info">
+                    <div class="student-avatar">
+                        {{ student.user.first_name.0 }}{{ student.user.last_name.0 }}
+                    </div>
+                    <div class="student-details">
+                        <div class="student-name">{{ student.user.get_full_name }}</div>
+                        <div class="student-admission">
+                            <i class="bi bi-hash"></i>{{ student.admission_number }}
+                            {% if student.roll_number %}
+                            | Roll: {{ student.roll_number }}
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="attendance-controls">
+                    <input type="radio" class="btn-check" name="status_{{ student.id }}" 
+                           id="present_{{ student.id }}" value="Present" 
+                           {% if existing_attendance|get_item:student.id == 'Present' %}checked{% endif %}>
+                    <label class="status-btn present {% if existing_attendance|get_item:student.id == 'Present' %}active{% endif %}" 
+                           for="present_{{ student.id }}">
+                        <i class="bi bi-check-circle-fill me-1"></i>Present
+                    </label>
+                    
+                    <input type="radio" class="btn-check" name="status_{{ student.id }}" 
+                           id="absent_{{ student.id }}" value="Absent"
+                           {% if existing_attendance|get_item:student.id == 'Absent' %}checked{% endif %}>
+                    <label class="status-btn absent {% if existing_attendance|get_item:student.id == 'Absent' %}active{% endif %}" 
+                           for="absent_{{ student.id }}">
+                        <i class="bi bi-x-circle-fill me-1"></i>Absent
+                    </label>
+                    
+                    <input type="radio" class="btn-check" name="status_{{ student.id }}" 
+                           id="late_{{ student.id }}" value="Late"
+                           {% if existing_attendance|get_item:student.id == 'Late' %}checked{% endif %}>
+                    <label class="status-btn late {% if existing_attendance|get_item:student.id == 'Late' %}active{% endif %}" 
+                           for="late_{{ student.id }}">
+                        <i class="bi bi-clock-fill me-1"></i>Late
+                    </label>
+                    
+                    <input type="radio" class="btn-check" name="status_{{ student.id }}" 
+                           id="excused_{{ student.id }}" value="Excused"
+                           {% if existing_attendance|get_item:student.id == 'Excused' %}checked{% endif %}>
+                    <label class="status-btn excused {% if existing_attendance|get_item:student.id == 'Excused' %}active{% endif %}" 
+                           for="excused_{{ student.id }}">
+                        <i class="bi bi-file-earmark-check-fill me-1"></i>Excused
+                    </label>
+                </div>
+            </div>
+            {% empty %}
+            <div class="p-5 text-center text-muted">
+                <i class="bi bi-inbox fs-1"></i>
+                <p class="mt-3">No students found in this class</p>
+            </div>
+            {% endfor %}
+        </div>
+
+        <!-- Submit Button -->
+        {% if students %}
+        <div class="mt-4 text-center">
+            <button type="submit" class="btn btn-lg btn-gradient-primary" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 1rem 3rem; border-radius: 50px; font-weight: 700;">
+                <i class="bi bi-save-fill me-2"></i>Save Attendance
+            </button>
+        </div>
+        {% endif %}
+    </form>
+</div>
+
+<script>
+    // Update counts when status changes
+    document.querySelectorAll('.btn-check').forEach(input => {
+        input.addEventListener('change', updateCounts);
+    });
+    
+    // Add active class on label click
+    document.querySelectorAll('.status-btn').forEach(label => {
+        label.addEventListener('click', function() {
+            const input = document.getElementById(this.getAttribute('for'));
+            const studentId = input.name.split('_')[1];
+            
+            // Remove active class from all buttons for this student
+            document.querySelectorAll(`[for^="present_${studentId}"], [for^="absent_${studentId}"], [for^="late_${studentId}"], [for^="excused_${studentId}"]`).forEach(btn => {
+                btn.classList.remove('active');
+            });
+            
+            // Add active class to clicked button
+            this.classList.add('active');
+            updateCounts();
+        });
+    });
+    
+    function updateCounts() {
+        const present = document.querySelectorAll('input[value="Present"]:checked').length;
+        const absent = document.querySelectorAll('input[value="Absent"]:checked').length;
+        const late = document.querySelectorAll('input[value="Late"]:checked').length;
+        const excused = document.querySelectorAll('input[value="Excused"]:checked').length;
+        
+        document.getElementById('presentCount').textContent = present;
+        document.getElementById('absentCount').textContent = absent;
+        document.getElementById('lateCount').textContent = late;
+        document.getElementById('excusedCount').textContent = excused;
+    }
+    
+    function markAll(status) {
+        document.querySelectorAll(`.status-btn`).forEach(btn => {
+            btn.classList.remove('active');
+        });
+        
+        document.querySelectorAll(`input[value="${status}"]`).forEach(input => {
+            input.checked = true;
+            const label = document.querySelector(`label[for="${input.id}"]`);
+            if (label) {
+                label.classList.add('active');
+            }
+        });
+        updateCounts();
+    }
+    
+    function clearAll() {
+        document.querySelectorAll('.btn-check').forEach(input => {
+            input.checked = false;
+        });
+        document.querySelectorAll('.status-btn').forEach(btn => {
+            btn.classList.remove('active');
+        });
+        updateCounts();
+    }
+    
+    // Initial count
+    updateCounts();
+</script>
+{% endblock %}

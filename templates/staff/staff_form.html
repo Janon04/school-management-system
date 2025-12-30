@@ -1,0 +1,332 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ title }} - SMS{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <!-- Page Header -->
+    <div class="page-header-modern">
+        <div class="d-flex justify-content-between align-items-center flex-wrap">
+            <div>
+                <h1>
+                    <i class="bi bi-person-badge-fill"></i>
+                    {{ title }}
+                </h1>
+                <p>Fill in the form below to {{ button_text|lower }}</p>
+            </div>
+            <div class="mt-3 mt-md-0">
+                <a href="{% url 'staff:staff_list' %}" class="btn btn-light btn-lg">
+                    <i class="bi bi-arrow-left"></i> Back to List
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-lg-12">
+            <div class="card-modern">
+                <div class="card-body">
+                    <form method="post" enctype="multipart/form-data" class="needs-validation" novalidate>
+                        {% csrf_token %}
+                        
+                        {% if form.non_field_errors %}
+                        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                            <i class="bi bi-exclamation-triangle-fill me-2"></i>
+                            {% for error in form.non_field_errors %}
+                                {{ error }}
+                            {% endfor %}
+                            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                        </div>
+                        {% endif %}
+
+                        <!-- Personal Information Section -->
+                        <div class="form-section">
+                            <h5 class="section-title">
+                                <i class="bi bi-person-circle me-2"></i>
+                                Personal Information
+                            </h5>
+                            <div class="row g-3">
+                                <div class="col-md-4">
+                                    <label class="form-label">First Name <span class="text-danger">*</span></label>
+                                    {{ form.first_name }}
+                                    {% if form.first_name.errors %}
+                                        <div class="invalid-feedback d-block">{{ form.first_name.errors.0 }}</div>
+                                    {% endif %}
+                                </div>
+                                <div class="col-md-4">
+                                    <label class="form-label">Last Name <span class="text-danger">*</span></label>
+                                    {{ form.last_name }}
+                                    {% if form.last_name.errors %}
+                                        <div class="invalid-feedback d-block">{{ form.last_name.errors.0 }}</div>
+                                    {% endif %}
+                                </div>
+                                <div class="col-md-4">
+                                    <label class="form-label">Employee ID <span class="text-danger">*</span></label>
+                                    {{ form.employee_id }}
+                                    {% if form.employee_id.errors %}
+                                        <div class="invalid-feedback d-block">{{ form.employee_id.errors.0 }}</div>
+                                    {% endif %}
+                                    {% if staff %}
+                                    <small class="form-text text-muted">Employee ID cannot be changed</small>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Contact Information Section -->
+                        <div class="form-section">
+                            <h5 class="section-title">
+                                <i class="bi bi-telephone-fill me-2"></i>
+                                Contact Information
+                            </h5>
+                            <div class="row g-3">
+                                <div class="col-md-4">
+                                    <label class="form-label">Email <span class="text-danger">*</span></label>
+                                    {{ form.email }}
+                                    {% if form.email.errors %}
+                                        <div class="invalid-feedback d-block">{{ form.email.errors.0 }}</div>
+                                    {% endif %}
+                                </div>
+                                <div class="col-md-4">
+                                    <label class="form-label">Phone Number</label>
+                                    {{ form.phone_number }}
+                                    {% if form.phone_number.errors %}
+                                        <div class="invalid-feedback d-block">{{ form.phone_number.errors.0 }}</div>
+                                    {% endif %}
+                                </div>
+                                <div class="col-md-4">
+                                    <label class="form-label">Residential Address</label>
+                                    {{ form.address }}
+                                    {% if form.address.errors %}
+                                        <div class="invalid-feedback d-block">{{ form.address.errors.0 }}</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Employment Information Section -->
+                        <div class="form-section">
+                            <h5 class="section-title">
+                                <i class="bi bi-building-fill me-2"></i>
+                                Employment Information
+                            </h5>
+                            <div class="row g-3">
+                                <div class="col-md-4">
+                                    <label class="form-label">Department <span class="text-danger">*</span></label>
+                                    {{ form.department }}
+                                    {% if form.department.errors %}
+                                        <div class="invalid-feedback d-block">{{ form.department.errors.0 }}</div>
+                                    {% endif %}
+                                </div>
+                                <div class="col-md-4">
+                                    <label class="form-label">Designation <span class="text-danger">*</span></label>
+                                    {{ form.designation }}
+                                    {% if form.designation.errors %}
+                                        <div class="invalid-feedback d-block">{{ form.designation.errors.0 }}</div>
+                                    {% endif %}
+                                </div>
+                                <div class="col-md-4">
+                                    <label class="form-label">Joining Date <span class="text-danger">*</span></label>
+                                    {{ form.joining_date }}
+                                    {% if form.joining_date.errors %}
+                                        <div class="invalid-feedback d-block">{{ form.joining_date.errors.0 }}</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+
+                            <div class="row g-3 mt-2">
+                                <div class="col-md-6">
+                                    <label class="form-label">Monthly Salary (Optional)</label>
+                                    {{ form.salary }}
+                                    {% if form.salary.errors %}
+                                        <div class="invalid-feedback d-block">{{ form.salary.errors.0 }}</div>
+                                    {% endif %}
+                                    <small class="form-text text-muted">Enter salary amount (confidential)</small>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Profile Picture Section -->
+                        <div class="form-section">
+                            <h5 class="section-title">
+                                <i class="bi bi-file-earmark-image-fill me-2"></i>
+                                Profile Picture
+                            </h5>
+                            <div class="row g-3">
+                                <div class="col-md-12">
+                                    <label class="form-label">Profile Picture</label>
+                                    {{ form.profile_picture }}
+                                    {% if form.profile_picture.errors %}
+                                        <div class="invalid-feedback d-block">{{ form.profile_picture.errors.0 }}</div>
+                                    {% endif %}
+                                    <small class="form-text text-muted">Upload profile picture (optional)</small>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Account Settings Section -->
+                        <div class="form-section">
+                            <h5 class="section-title">
+                                <i class="bi bi-shield-lock-fill me-2"></i>
+                                Account Settings
+                            </h5>
+                            <div class="row g-3">
+                                <div class="col-md-6">
+                                    <label class="form-label">
+                                        Password 
+                                        {% if not staff %}<span class="text-danger">*</span>{% endif %}
+                                    </label>
+                                    {{ form.password }}
+                                    {% if form.password.errors %}
+                                        <div class="invalid-feedback d-block">{{ form.password.errors.0 }}</div>
+                                    {% endif %}
+                                    <small class="form-text text-muted">
+                                        {% if staff %}Leave blank to keep current password{% else %}Enter a strong password{% endif %}
+                                    </small>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label">
+                                        Confirm Password 
+                                        {% if not staff %}<span class="text-danger">*</span>{% endif %}
+                                    </label>
+                                    {{ form.password_confirm }}
+                                    {% if form.password_confirm.errors %}
+                                        <div class="invalid-feedback d-block">{{ form.password_confirm.errors.0 }}</div>
+                                    {% endif %}
+                                    <small class="form-text text-muted">Re-enter the password</small>
+                                </div>
+                            </div>
+
+                            <div class="row g-3 mt-2">
+                                <div class="col-md-12">
+                                    <div class="form-check">
+                                        {{ form.is_active }}
+                                        <label class="form-check-label" for="{{ form.is_active.id_for_label }}">
+                                            Active Staff Member
+                                        </label>
+                                    </div>
+                                    <small class="form-text text-muted">Uncheck to deactivate staff account</small>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Form Actions -->
+                        <div class="form-actions">
+                            <button type="submit" class="btn-gradient-primary btn-lg">
+                                <i class="bi bi-check-circle-fill me-2"></i>
+                                {{ button_text }}
+                            </button>
+                            <a href="{% url 'staff:staff_list' %}" class="btn btn-light btn-lg">
+                                <i class="bi bi-x-circle me-2"></i>
+                                Cancel
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .form-section {
+        padding: 1.5rem;
+        background: linear-gradient(135deg, rgba(102, 126, 234, 0.05) 0%, rgba(118, 75, 162, 0.05) 100%);
+        border-radius: 12px;
+        margin-bottom: 1.5rem;
+        border: 1px solid rgba(102, 126, 234, 0.1);
+    }
+
+    .section-title {
+        color: #667eea;
+        font-weight: 600;
+        margin-bottom: 1.5rem;
+        padding-bottom: 0.75rem;
+        border-bottom: 2px solid rgba(102, 126, 234, 0.2);
+    }
+
+    .form-label {
+        font-weight: 600;
+        color: #333;
+        margin-bottom: 0.5rem;
+    }
+
+    .form-control, .form-select {
+        border: 1px solid #ddd;
+        border-radius: 8px;
+        padding: 0.75rem 1rem;
+        transition: all 0.3s ease;
+    }
+
+    .form-control:focus, .form-select:focus {
+        border-color: #667eea;
+        box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25);
+    }
+
+    .invalid-feedback {
+        color: #dc3545;
+        font-size: 0.875rem;
+        margin-top: 0.25rem;
+    }
+
+    .form-text {
+        display: block;
+        margin-top: 0.25rem;
+        font-size: 0.875rem;
+    }
+
+    .form-actions {
+        display: flex;
+        gap: 1rem;
+        padding: 1.5rem;
+        background: #f8f9fa;
+        border-radius: 12px;
+        margin-top: 2rem;
+        justify-content: center;
+    }
+
+    .form-check-input:checked {
+        background-color: #667eea;
+        border-color: #667eea;
+    }
+
+    .alert {
+        border-radius: 12px;
+        margin-bottom: 1.5rem;
+    }
+
+    .btn-gradient-primary {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        border: none;
+        color: white;
+        padding: 0.75rem 2rem;
+        border-radius: 10px;
+        font-weight: 600;
+        transition: all 0.3s ease;
+    }
+
+    .btn-gradient-primary:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 10px 20px rgba(102, 126, 234, 0.3);
+        color: white;
+    }
+</style>
+
+<script>
+    // Form validation
+    (function() {
+        'use strict';
+        var forms = document.querySelectorAll('.needs-validation');
+        Array.prototype.slice.call(forms).forEach(function(form) {
+            form.addEventListener('submit', function(event) {
+                if (!form.checkValidity()) {
+                    event.preventDefault();
+                    event.stopPropagation();
+                }
+                form.classList.add('was-validated');
+            }, false);
+        });
+    })();
+</script>
+{% endblock %}

@@ -1,0 +1,148 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Users List - SMS{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+    <h1 class="h2">
+        <i class="bi bi-people"></i> Users Management
+    </h1>
+    <div class="btn-toolbar mb-2 mb-md-0">
+        {% if user.is_admin %}
+        <a href="/admin/accounts/user/add/" class="btn btn-primary">
+            <i class="bi bi-plus-circle"></i> Add User
+        </a>
+        {% endif %}
+    </div>
+</div>
+
+<div class="card mb-4">
+    <div class="card-body">
+        <form method="get" class="row g-3">
+            <div class="col-md-8">
+                <input type="text" name="q" class="form-control" placeholder="Search by username, name, or email" value="{{ query }}">
+            </div>
+            <div class="col-md-2">
+                <select name="role" class="form-select">
+                    <option value="">All Roles</option>
+                    <option value="ADMIN" {% if role_filter == 'ADMIN' %}selected{% endif %}>Admin</option>
+                    <option value="TEACHER" {% if role_filter == 'TEACHER' %}selected{% endif %}>Teacher</option>
+                    <option value="STUDENT" {% if role_filter == 'STUDENT' %}selected{% endif %}>Student</option>
+                    <option value="PARENT" {% if role_filter == 'PARENT' %}selected{% endif %}>Parent</option>
+                    <option value="STAFF" {% if role_filter == 'STAFF' %}selected{% endif %}>Staff</option>
+                </select>
+            </div>
+            <div class="col-md-2">
+                <button type="submit" class="btn btn-primary w-100">
+                    <i class="bi bi-search"></i> Search
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-body">
+        {% if users %}
+        <div class="table-responsive">
+            <table class="table table-hover">
+                <thead>
+                    <tr>
+                        <th>Username</th>
+                        <th>Full Name</th>
+                        <th>Email</th>
+                        <th>Role</th>
+                        <th>Status</th>
+                        <th>Date Joined</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for u in users %}
+                    <tr>
+                        <td>{{ u.username }}</td>
+                        <td>{{ u.get_full_name }}</td>
+                        <td>{{ u.email }}</td>
+                        <td>{{ u.get_role_display }}</td>
+                        <td>
+                            {% if u.is_active %}
+                                <span class="badge bg-success">Active</span>
+                            {% else %}
+                                <span class="badge bg-danger">Inactive</span>
+                            {% endif %}
+                        </td>
+                        <td>{{ u.date_joined|date:"M d, Y" }}</td>
+                        <td>
+                            <a href="{% url 'accounts:user_detail' u.pk %}" class="btn btn-sm btn-outline-info" title="View">
+                                <i class="bi bi-person"></i>
+                            </a>
+                            {% if user.is_admin or user.is_staff_member or user.is_superuser %}
+                                <a href="{% url 'accounts:profile_update' %}?user_id={{ u.pk }}" class="btn btn-sm btn-outline-primary" title="Edit">
+                                    <i class="bi bi-pencil"></i>
+                                </a>
+                                <button class="btn btn-sm btn-outline-danger delete-user-btn" data-user-id="{{ u.pk }}" data-username="{{ u.username }}" title="Delete">
+                                    <i class="bi bi-trash"></i>
+                                </button>
+                            {% endif %}
+                        </td>
+                    {% block extra_js %}
+                    <script>
+                    document.addEventListener('DOMContentLoaded', function() {
+                        document.querySelectorAll('.delete-user-btn').forEach(function(btn) {
+                            btn.addEventListener('click', function(e) {
+                                e.preventDefault();
+                                const userId = btn.getAttribute('data-user-id');
+                                const username = btn.getAttribute('data-username');
+                                if (confirm(`Are you sure you want to delete user '${username}'? This action cannot be undone.`)) {
+                                    fetch(`/accounts/users/${userId}/delete/`, {
+                                        method: 'POST',
+                                        headers: {
+                                            'X-CSRFToken': getCookie('csrftoken'),
+                                            'Accept': 'application/json',
+                                        },
+                                    })
+                                    .then(response => response.json())
+                                    .then(data => {
+                                        if (data.success) {
+                                            location.reload();
+                                        } else {
+                                            alert(data.error || 'Failed to delete user.');
+                                        }
+                                    })
+                                    .catch(() => alert('Failed to delete user.'));
+                                }
+                            });
+                        });
+
+                        function getCookie(name) {
+                            let cookieValue = null;
+                            if (document.cookie && document.cookie !== '') {
+                                const cookies = document.cookie.split(';');
+                                for (let i = 0; i < cookies.length; i++) {
+                                    const cookie = cookies[i].trim();
+                                    if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                                        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                                        break;
+                                    }
+                                }
+                            }
+                            return cookieValue;
+                        }
+                    });
+                    </script>
+                    {% endblock %}
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="text-center py-5">
+            <i class="bi bi-inbox display-1 text-muted"></i>
+            <p class="text-muted mt-3">No users found</p>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

@@ -137,8 +137,14 @@ class ReportCard(models.Model):
     marks_obtained = models.DecimalField(max_digits=7, decimal_places=2, default=0)
     percentage = models.DecimalField(max_digits=5, decimal_places=2, default=0)
     overall_grade = models.CharField(max_length=1, blank=True)
+    gpa = models.DecimalField(max_digits=3, decimal_places=2, null=True, blank=True, help_text='For university level')
     rank = models.IntegerField(null=True, blank=True)
+    class_position = models.IntegerField(null=True, blank=True, help_text='Position in class')
     remarks = models.TextField(blank=True)
+    teacher_comment = models.TextField(blank=True, help_text='Class teacher comment')
+    principal_comment = models.TextField(blank=True, help_text='Principal/Head comment')
+    attendance_days = models.IntegerField(null=True, blank=True, help_text='Days attended')
+    total_school_days = models.IntegerField(null=True, blank=True, help_text='Total school days')
     generated_at = models.DateTimeField(auto_now=True)
     
     class Meta:
@@ -157,4 +163,41 @@ class ReportCard(models.Model):
         self.marks_obtained = sum([r.marks_obtained for r in results])
         if self.total_marks > 0:
             self.percentage = (float(self.marks_obtained) / float(self.total_marks)) * 100
+        
+        # Calculate GPA for university level (4.0 scale)
+        if self.student.class_assigned and self.student.class_assigned.level == 'UNIVERSITY':
+            self.gpa = self.calculate_gpa(results)
+        
         self.save()
+    
+    def calculate_gpa(self, results):
+        """Calculate GPA on a 4.0 scale for university level"""
+        if not results:
+            return 0.0
+        
+        total_credit_points = 0
+        total_credits = 0
+        
+        for result in results:
+            # Assume each subject has equal credits (can be customized)
+            credits = 3  # Default credit hours
+            percentage = result.percentage
+            
+            # Convert percentage to grade points (4.0 scale)
+            if percentage >= 80:
+                grade_point = 4.0
+            elif percentage >= 70:
+                grade_point = 3.5
+            elif percentage >= 60:
+                grade_point = 3.0
+            elif percentage >= 50:
+                grade_point = 2.5
+            elif percentage >= 40:
+                grade_point = 2.0
+            else:
+                grade_point = 0.0
+            
+            total_credit_points += (grade_point * credits)
+            total_credits += credits
+        
+        return round(total_credit_points / total_credits, 2) if total_credits > 0 else 0.0

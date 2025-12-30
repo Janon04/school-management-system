@@ -1,0 +1,288 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ title }} - SMS{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <!-- Page Header -->
+    <div class="page-header-modern">
+        <div class="d-flex justify-content-between align-items-center flex-wrap">
+            <div>
+                <h1>
+                    <i class="bi bi-journal-text"></i>
+                    {{ title }}
+                </h1>
+                <p>Fill in the form below to {{ button_text|lower }}</p>
+            </div>
+            <div class="mt-3 mt-md-0">
+                <a href="{% url 'exams:exam_list' %}" class="btn btn-light btn-lg">
+                    <i class="bi bi-arrow-left"></i> Back to List
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-lg-12">
+            <div class="card-modern">
+                <div class="card-body">
+                    <form method="post" enctype="multipart/form-data" class="needs-validation" novalidate>
+                        {% csrf_token %}
+                        <input type="hidden" name="MAX_FILE_SIZE" value="10485760" />
+                        {% if form.non_field_errors %}
+                        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                            <i class="bi bi-exclamation-triangle-fill me-2"></i>
+                            {% for error in form.non_field_errors %}
+                                {{ error }}
+                            {% endfor %}
+                            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                        </div>
+                        {% endif %}
+
+                        <!-- Basic Information Section -->
+                        <div class="form-section">
+                            <h5 class="section-title">
+                                <i class="bi bi-info-circle-fill me-2"></i>
+                                Basic Information
+                            </h5>
+                            <div class="row g-3">
+                                <div class="col-md-6">
+                                    <label class="form-label">Exam Name <span class="text-danger">*</span></label>
+                                    {{ form.name }}
+                                    {% if form.name.errors %}
+                                        <div class="invalid-feedback d-block">{{ form.name.errors.0 }}</div>
+                                    {% endif %}
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label">Exam Type <span class="text-danger">*</span></label>
+                                    {{ form.exam_type }}
+                                    {% if form.exam_type.errors %}
+                                        <div class="invalid-feedback d-block">{{ form.exam_type.errors.0 }}</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Academic Information Section -->
+                        <div class="form-section">
+                            <h5 class="section-title">
+                                <i class="bi bi-calendar-event-fill me-2"></i>
+                                Academic Information
+                            </h5>
+                            <div class="row g-3">
+                                <div class="col-md-6">
+                                    <label class="form-label">Academic Year <span class="text-danger">*</span></label>
+                                    {{ form.academic_year }}
+                                    {% if form.academic_year.errors %}
+                                        <div class="invalid-feedback d-block">{{ form.academic_year.errors.0 }}</div>
+                                    {% endif %}
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label">Term/Semester <span class="text-danger">*</span></label>
+                                    {{ form.term }}
+                                    {% if form.term.errors %}
+                                        <div class="invalid-feedback d-block">{{ form.term.errors.0 }}</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Schedule Section -->
+                        <div class="form-section">
+                            <h5 class="section-title">
+                                <i class="bi bi-clock-fill me-2"></i>
+                                Exam Schedule
+                            </h5>
+                            <div class="row g-3">
+                                <div class="col-md-6">
+                                    <label class="form-label">Start Date <span class="text-danger">*</span></label>
+                                    {{ form.start_date }}
+                                    {% if form.start_date.errors %}
+                                        <div class="invalid-feedback d-block">{{ form.start_date.errors.0 }}</div>
+                                    {% endif %}
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label">End Date <span class="text-danger">*</span></label>
+                                    {{ form.end_date }}
+                                    {% if form.end_date.errors %}
+                                        <div class="invalid-feedback d-block">{{ form.end_date.errors.0 }}</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Exam File Upload Section -->
+                        <div class="form-section">
+                            <h5 class="section-title">
+                                <i class="bi bi-file-earmark-arrow-up-fill me-2"></i>
+                                Exam File (PDF or Word)
+                            </h5>
+                            <div class="row g-3">
+                                <div class="col-md-12">
+                                    <label class="form-label">Upload Exam File</label>
+                                    {{ form.exam_file }}
+                                    {% if form.exam_file.errors %}
+                                        <div class="invalid-feedback d-block">{{ form.exam_file.errors.0 }}</div>
+                                    {% endif %}
+                                    <small class="form-text text-muted">Accepted formats: PDF, DOC, DOCX. Max size: 10MB.</small>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Description Section -->
+                        <div class="form-section">
+                            <h5 class="section-title">
+                                <i class="bi bi-text-paragraph me-2"></i>
+                                Additional Details
+                            </h5>
+                            <div class="row g-3">
+                                <div class="col-md-12">
+                                    <label class="form-label">Description</label>
+                                    {{ form.description }}
+                                    {% if form.description.errors %}
+                                        <div class="invalid-feedback d-block">{{ form.description.errors.0 }}</div>
+                                    {% endif %}
+                                    <small class="form-text text-muted">Brief description or instructions for the exam</small>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Publishing Section -->
+                        <div class="form-section">
+                            <h5 class="section-title">
+                                <i class="bi bi-eye-fill me-2"></i>
+                                Publishing Settings
+                            </h5>
+                            <div class="row g-3">
+                                <div class="col-md-12">
+                                    <div class="form-check">
+                                        {{ form.is_published }}
+                                        <label class="form-check-label" for="{{ form.is_published.id_for_label }}">
+                                            Publish Results to Students
+                                        </label>
+                                    </div>
+                                    <small class="form-text text-muted">Check this to make results visible to students and parents</small>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Form Actions -->
+                        <div class="form-actions">
+                            <button type="submit" class="btn-gradient-primary btn-lg">
+                                <i class="bi bi-check-circle-fill me-2"></i>
+                                {{ button_text }}
+                            </button>
+                            <a href="{% url 'exams:exam_list' %}" class="btn btn-light btn-lg">
+                                <i class="bi bi-x-circle me-2"></i>
+                                Cancel
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .form-section {
+        padding: 1.5rem;
+        background: linear-gradient(135deg, rgba(102, 126, 234, 0.05) 0%, rgba(118, 75, 162, 0.05) 100%);
+        border-radius: 12px;
+        margin-bottom: 1.5rem;
+        border: 1px solid rgba(102, 126, 234, 0.1);
+    }
+
+    .section-title {
+        color: #667eea;
+        font-weight: 600;
+        margin-bottom: 1.5rem;
+        padding-bottom: 0.75rem;
+        border-bottom: 2px solid rgba(102, 126, 234, 0.2);
+    }
+
+    .form-label {
+        font-weight: 600;
+        color: #333;
+        margin-bottom: 0.5rem;
+    }
+
+    .form-control, .form-select {
+        border: 1px solid #ddd;
+        border-radius: 8px;
+        padding: 0.75rem 1rem;
+        transition: all 0.3s ease;
+    }
+
+    .form-control:focus, .form-select:focus {
+        border-color: #667eea;
+        box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25);
+    }
+
+    .invalid-feedback {
+        color: #dc3545;
+        font-size: 0.875rem;
+        margin-top: 0.25rem;
+    }
+
+    .form-text {
+        display: block;
+        margin-top: 0.25rem;
+        font-size: 0.875rem;
+    }
+
+    .form-actions {
+        display: flex;
+        gap: 1rem;
+        padding: 1.5rem;
+        background: #f8f9fa;
+        border-radius: 12px;
+        margin-top: 2rem;
+        justify-content: center;
+    }
+
+    .form-check-input:checked {
+        background-color: #667eea;
+        border-color: #667eea;
+    }
+
+    .alert {
+        border-radius: 12px;
+        margin-bottom: 1.5rem;
+    }
+
+    .btn-gradient-primary {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        border: none;
+        color: white;
+        padding: 0.75rem 2rem;
+        border-radius: 10px;
+        font-weight: 600;
+        transition: all 0.3s ease;
+    }
+
+    .btn-gradient-primary:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 10px 20px rgba(102, 126, 234, 0.3);
+        color: white;
+    }
+</style>
+
+<script>
+    // Form validation
+    (function() {
+        'use strict';
+        var forms = document.querySelectorAll('.needs-validation');
+        Array.prototype.slice.call(forms).forEach(function(form) {
+            form.addEventListener('submit', function(event) {
+                if (!form.checkValidity()) {
+                    event.preventDefault();
+                    event.stopPropagation();
+                }
+                form.classList.add('was-validated');
+            }, false);
+        });
+    })();
+</script>
+{% endblock %}

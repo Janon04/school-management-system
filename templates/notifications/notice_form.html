@@ -1,0 +1,330 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ action }} Notice - School Management System{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <!-- Page Header -->
+    <div class="page-header-modern mb-4">
+        <div class="d-flex justify-content-between align-items-center">
+            <div>
+                <h1 class="mb-2">
+                    <i class="bi bi-megaphone me-2"></i>{{ action }} Notice
+                </h1>
+                <p class="text-white-50 mb-0">
+                    {% if notice %}Edit existing notice{% else %}Post a new notice to the notice board{% endif %}
+                </p>
+            </div>
+            <div>
+                <a href="{% url 'notifications:notice_board' %}" class="btn btn-gradient-light">
+                    <i class="bi bi-arrow-left me-2"></i>Back to Notice Board
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Form Card -->
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="card-modern">
+                <div class="card-body">
+                    {% if messages %}
+                        {% for message in messages %}
+                        <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                            {{ message }}
+                            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                        </div>
+                        {% endfor %}
+                    {% endif %}
+
+                    <form method="post" enctype="multipart/form-data" id="noticeForm">
+                        {% csrf_token %}
+                        
+                        <!-- Basic Information Section -->
+                        <div class="form-section mb-4">
+                            <h5 class="section-title">
+                                <i class="bi bi-info-circle me-2"></i>Basic Information
+                            </h5>
+                            
+                            <div class="row">
+                                <div class="col-md-12 mb-3">
+                                    <label for="{{ form.title.id_for_label }}" class="form-label">
+                                        <i class="bi bi-card-heading me-1"></i>{{ form.title.label }} <span class="text-danger">*</span>
+                                    </label>
+                                    {{ form.title }}
+                                    {% if form.title.errors %}
+                                        <div class="text-danger small mt-1">{{ form.title.errors.0 }}</div>
+                                    {% endif %}
+                                </div>
+
+                                <div class="col-md-12 mb-3">
+                                    <label for="{{ form.message.id_for_label }}" class="form-label">
+                                        <i class="bi bi-file-text me-1"></i>{{ form.message.label }} <span class="text-danger">*</span>
+                                    </label>
+                                    {{ form.message }}
+                                    {% if form.message.errors %}
+                                        <div class="text-danger small mt-1">{{ form.message.errors.0 }}</div>
+                                    {% endif %}
+                                    <small class="form-text text-muted">Provide detailed information for the notice</small>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Targeting & Priority Section -->
+                        <div class="form-section mb-4">
+                            <h5 class="section-title">
+                                <i class="bi bi-people me-2"></i>Targeting & Priority
+                            </h5>
+                            
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label for="{{ form.target_audience.id_for_label }}" class="form-label">
+                                        <i class="bi bi-bullseye me-1"></i>{{ form.target_audience.label }} <span class="text-danger">*</span>
+                                    </label>
+                                    {{ form.target_audience }}
+                                    {% if form.target_audience.errors %}
+                                        <div class="text-danger small mt-1">{{ form.target_audience.errors.0 }}</div>
+                                    {% endif %}
+                                    <small class="form-text text-muted">Who should see this notice?</small>
+                                </div>
+
+                                <div class="col-md-6 mb-3">
+                                    <label for="{{ form.priority.id_for_label }}" class="form-label">
+                                        <i class="bi bi-exclamation-triangle me-1"></i>{{ form.priority.label }} <span class="text-danger">*</span>
+                                    </label>
+                                    {{ form.priority }}
+                                    {% if form.priority.errors %}
+                                        <div class="text-danger small mt-1">{{ form.priority.errors.0 }}</div>
+                                    {% endif %}
+                                    <small class="form-text text-muted">Set the urgency level</small>
+                                </div>
+                            </div>
+
+                            <!-- Priority Preview -->
+                            <div class="alert alert-info" id="priorityPreview">
+                                <strong>Priority Preview:</strong> <span id="priorityText">Medium</span>
+                                <span class="badge bg-warning" id="priorityBadge">MEDIUM</span>
+                            </div>
+                        </div>
+
+                        <!-- Attachment Section -->
+                        <div class="form-section mb-4">
+                            <h5 class="section-title">
+                                <i class="bi bi-paperclip me-2"></i>Attachment (Optional)
+                            </h5>
+                            
+                            <div class="row">
+                                <div class="col-md-12 mb-3">
+                                    <label for="{{ form.attachment.id_for_label }}" class="form-label">
+                                        <i class="bi bi-file-earmark me-1"></i>{{ form.attachment.label }}
+                                    </label>
+                                    {{ form.attachment }}
+                                    {% if form.attachment.errors %}
+                                        <div class="text-danger small mt-1">{{ form.attachment.errors.0 }}</div>
+                                    {% endif %}
+                                    <small class="form-text text-muted">Attach documents, images, or PDFs (Max 10MB)</small>
+                                    
+                                    {% if notice and notice.attachment %}
+                                    <div class="mt-2">
+                                        <small class="text-success">
+                                            <i class="bi bi-check-circle me-1"></i>
+                                            Current file: <a href="{{ notice.attachment.url }}" target="_blank">{{ notice.attachment.name }}</a>
+                                        </small>
+                                    </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Status Section -->
+                        <div class="form-section mb-4">
+                            <h5 class="section-title">
+                                <i class="bi bi-toggles me-2"></i>Status
+                            </h5>
+                            
+                            <div class="row">
+                                <div class="col-md-12 mb-3">
+                                    <div class="form-check form-switch">
+                                        {{ form.is_active }}
+                                        <label class="form-check-label" for="{{ form.is_active.id_for_label }}">
+                                            {{ form.is_active.label }}
+                                        </label>
+                                        {% if form.is_active.errors %}
+                                            <div class="text-danger small mt-1">{{ form.is_active.errors.0 }}</div>
+                                        {% endif %}
+                                    </div>
+                                    <small class="form-text text-muted">Inactive notices won't be visible to users</small>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Action Buttons -->
+                        <div class="d-flex justify-content-between align-items-center mt-4 pt-3 border-top">
+                            <a href="{% url 'notifications:notice_board' %}" class="btn btn-outline-secondary">
+                                <i class="bi bi-x-circle me-2"></i>Cancel
+                            </a>
+                            <button type="submit" class="btn btn-gradient-primary">
+                                <i class="bi bi-check-circle me-2"></i>{{ submit_text }}
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// Priority Preview
+function updatePriorityPreview() {
+    const prioritySelect = document.getElementById('{{ form.priority.id_for_label }}');
+    const selectedValue = prioritySelect.value;
+    const selectedText = prioritySelect.options[prioritySelect.selectedIndex].text;
+    
+    const priorityText = document.getElementById('priorityText');
+    const priorityBadge = document.getElementById('priorityBadge');
+    const priorityPreview = document.getElementById('priorityPreview');
+    
+    priorityText.textContent = selectedText;
+    priorityBadge.textContent = selectedValue;
+    
+    // Update badge color
+    priorityBadge.className = 'badge';
+    priorityPreview.className = 'alert';
+    
+    switch(selectedValue) {
+        case 'LOW':
+            priorityBadge.classList.add('bg-secondary');
+            priorityPreview.classList.add('alert-secondary');
+            break;
+        case 'MEDIUM':
+            priorityBadge.classList.add('bg-info');
+            priorityPreview.classList.add('alert-info');
+            break;
+        case 'HIGH':
+            priorityBadge.classList.add('bg-warning');
+            priorityPreview.classList.add('alert-warning');
+            break;
+        case 'URGENT':
+            priorityBadge.classList.add('bg-danger');
+            priorityPreview.classList.add('alert-danger');
+            break;
+        default:
+            priorityBadge.classList.add('bg-info');
+            priorityPreview.classList.add('alert-info');
+    }
+}
+
+// Initialize on page load
+document.addEventListener('DOMContentLoaded', function() {
+    updatePriorityPreview();
+    
+    // Listen for priority changes
+    const prioritySelect = document.getElementById('{{ form.priority.id_for_label }}');
+    if (prioritySelect) {
+        prioritySelect.addEventListener('change', updatePriorityPreview);
+    }
+});
+
+// Form validation
+document.getElementById('noticeForm').addEventListener('submit', function(e) {
+    const title = document.getElementById('{{ form.title.id_for_label }}').value.trim();
+    const message = document.getElementById('{{ form.message.id_for_label }}').value.trim();
+    
+    if (!title) {
+        e.preventDefault();
+        alert('Please enter a notice title');
+        return false;
+    }
+    
+    if (!message) {
+        e.preventDefault();
+        alert('Please enter a notice message');
+        return false;
+    }
+});
+</script>
+
+<style>
+.form-section {
+    background: rgba(255, 255, 255, 0.95);
+    padding: 1.5rem;
+    border-radius: 10px;
+    border: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+.section-title {
+    color: #000;
+    font-size: 1.1rem;
+    font-weight: 700;
+    margin-bottom: 1rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 2px solid rgba(0, 0, 0, 0.2);
+}
+
+.form-label {
+    font-weight: 600;
+    color: #000;
+    margin-bottom: 0.5rem;
+}
+
+.form-control, .form-select {
+    background: #fff;
+    border: 1px solid rgba(0, 0, 0, 0.3);
+    color: #000;
+    padding: 0.6rem 1rem;
+    border-radius: 8px;
+}
+
+.form-control:focus, .form-select:focus {
+    background: #fff;
+    border-color: var(--gradient-end);
+    color: #000;
+    box-shadow: 0 0 0 0.2rem rgba(var(--gradient-end-rgb), 0.25);
+}
+
+.form-control::placeholder {
+    color: rgba(0, 0, 0, 0.5);
+}
+
+textarea.form-control {
+    min-height: 120px;
+}
+
+.form-check-input {
+    width: 3rem;
+    height: 1.5rem;
+    background-color: rgba(255, 255, 255, 0.8);
+    border-color: rgba(0, 0, 0, 0.3);
+}
+
+.form-check-input:checked {
+    background-color: var(--gradient-end);
+    border-color: var(--gradient-end);
+}
+
+.form-check-label {
+    color: #000;
+    font-weight: 600;
+}
+
+.form-text {
+    color: rgba(0, 0, 0, 0.7) !important;
+    font-weight: 500;
+}
+
+.text-danger {
+    color: #dc3545 !important;
+    font-weight: bold;
+}
+
+#priorityPreview {
+    margin-top: 1rem;
+    border-radius: 8px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+</style>
+{% endblock %}

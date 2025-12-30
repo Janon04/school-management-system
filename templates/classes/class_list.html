@@ -92,13 +92,20 @@
                     {% endif %}
                 </div>
                 <div class="card-footer">
-                    <div class="d-flex justify-content-between">
-                        <a href="{% url 'classes:class_detail' class.pk %}" class="btn btn-sm btn-outline-primary">
-                            <i class="bi bi-eye"></i> View Details
-                        </a>
-                        {% if user.is_admin or user.is_staff %}
-                        <a href="{% url 'admin:classes_classroom_change' class.pk %}" class="btn btn-sm btn-outline-secondary">
-                            <i class="bi bi-pencil"></i> Edit
+                    <div class="d-flex flex-column gap-2">
+                        <div class="d-flex justify-content-between">
+                            <a href="{% url 'classes:class_detail' class.pk %}" class="btn btn-sm btn-outline-primary">
+                                <i class="bi bi-eye"></i> View Details
+                            </a>
+                            {% if user.is_admin or user.is_staff %}
+                            <a href="{% url 'admin:classes_classroom_change' class.pk %}" class="btn btn-sm btn-outline-secondary">
+                                <i class="bi bi-pencil"></i> Edit
+                            </a>
+                            {% endif %}
+                        </div>
+                        {% if user.is_teacher or user.is_admin %}
+                        <a href="{% url 'attendance:mark_attendance' class.pk %}" class="btn btn-sm btn-success w-100">
+                            <i class="bi bi-calendar-check"></i> Mark Attendance
                         </a>
                         {% endif %}
                     </div>

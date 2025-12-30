@@ -15,7 +15,7 @@
             </a>
         </div>
         {% if user.is_admin or user.is_staff %}
-        <a href="{% url 'admin:teachers_teacher_change' teacher.pk %}" class="btn btn-sm btn-primary">
+        <a href="{% url 'teachers:teacher_edit' teacher.pk %}" class="btn btn-sm btn-primary">
             <i class="bi bi-pencil"></i> Edit Profile
         </a>
         {% endif %}
@@ -60,7 +60,7 @@
                 </div>
                 <div class="mb-2">
                     <small class="text-muted">Date of Joining:</small>
-                    <div><strong>{{ teacher.date_of_joining|date:"F d, Y" }}</strong></div>
+                    <div><strong>{{ teacher.joining_date|date:"F d, Y" }}</strong></div>
                 </div>
                 <div class="mb-2">
                     <small class="text-muted">Specialization:</small>
@@ -111,15 +111,11 @@
                     </div>
                     <div class="col-md-6 mb-3">
                         <small class="text-muted">Date of Birth</small>
-                        <div><strong>{{ teacher.date_of_birth|date:"F d, Y"|default:"N/A" }}</strong></div>
+                        <div><strong>{{ teacher.user.date_of_birth|date:"F d, Y"|default:"N/A" }}</strong></div>
                     </div>
                     <div class="col-md-6 mb-3">
-                        <small class="text-muted">Gender</small>
-                        <div><strong>{{ teacher.get_gender_display|default:"N/A" }}</strong></div>
-                    </div>
-                    <div class="col-md-6 mb-3">
-                        <small class="text-muted">Blood Group</small>
-                        <div><strong>{{ teacher.blood_group|default:"N/A" }}</strong></div>
+                        <small class="text-muted">Employment Type</small>
+                        <div><strong>{{ teacher.get_employment_type_display }}</strong></div>
                     </div>
                     <div class="col-md-12 mb-3">
                         <small class="text-muted">Address</small>
@@ -142,7 +138,7 @@
                     </div>
                     <div class="col-md-6 mb-3">
                         <small class="text-muted">Date of Joining</small>
-                        <div><strong>{{ teacher.date_of_joining|date:"F d, Y" }}</strong></div>
+                        <div><strong>{{ teacher.joining_date|date:"F d, Y" }}</strong></div>
                     </div>
                     <div class="col-md-6 mb-3">
                         <small class="text-muted">Qualification</small>
@@ -170,14 +166,13 @@
                 <h6 class="mb-0"><i class="bi bi-diagram-3"></i> Classes Assigned</h6>
             </div>
             <div class="card-body">
-                {% comment %}
-                {% if teacher.classroom_set.all %}
+                {% if classes %}
                 <div class="row">
-                    {% for classroom in teacher.classroom_set.all %}
-                    <div class="col-md-4 mb-2">
+                    {% for classroom in classes %}
+                    <div class="col-md-6 mb-2">
                         <div class="card">
                             <div class="card-body">
-                                <h6>{{ classroom.name }}</h6>
+                                <h6 class="mb-1">{{ classroom.name }}</h6>
                                 <small class="text-muted">Class Teacher</small>
                             </div>
                         </div>
@@ -185,31 +180,25 @@
                     {% endfor %}
                 </div>
                 {% else %}
-                <p class="text-muted">Not assigned as class teacher</p>
+                <p class="text-muted mb-0">Not assigned as class teacher</p>
                 {% endif %}
-                {% endcomment %}
-                <p class="text-muted">Class assignments information will be displayed here</p>
             </div>
         </div>
         
-        <!-- Emergency Contact -->
+        <!-- Additional Information -->
         <div class="card mb-3">
             <div class="card-header">
-                <h6 class="mb-0"><i class="bi bi-telephone"></i> Emergency Contact</h6>
+                <h6 class="mb-0"><i class="bi bi-info-circle"></i> Additional Information</h6>
             </div>
             <div class="card-body">
                 <div class="row">
-                    <div class="col-md-6 mb-3">
-                        <small class="text-muted">Contact Person</small>
-                        <div><strong>{{ teacher.emergency_contact_name|default:"N/A" }}</strong></div>
+                    <div class="col-md-12 mb-3">
+                        <small class="text-muted">Biography</small>
+                        <div>{{ teacher.bio|default:"No biography available"|linebreaks }}</div>
                     </div>
-                    <div class="col-md-6 mb-3">
-                        <small class="text-muted">Contact Number</small>
-                        <div><strong>{{ teacher.emergency_contact_phone|default:"N/A" }}</strong></div>
-                    </div>
-                    <div class="col-md-6 mb-3">
-                        <small class="text-muted">Relationship</small>
-                        <div><strong>{{ teacher.emergency_contact_relation|default:"N/A" }}</strong></div>
+                    <div class="col-md-12 mb-3">
+                        <small class="text-muted">Certifications</small>
+                        <div>{{ teacher.certifications|default:"No certifications listed"|linebreaks }}</div>
                     </div>
                 </div>
             </div>
@@ -233,7 +222,7 @@
                     <div class="col-md-4">
                         <div class="card bg-light">
                             <div class="card-body">
-                                <h4 class="text-success">0</h4>
+                                <h4 class="text-success">{{ classes.count }}</h4>
                                 <small class="text-muted">Classes</small>
                             </div>
                         </div>

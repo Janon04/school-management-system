@@ -9,8 +9,8 @@
         <i class="bi bi-book"></i> Subjects Management
     </h1>
     <div class="btn-toolbar mb-2 mb-md-0">
-        {% if user.is_admin or user.is_staff %}
-        <a href="{% url 'admin:classes_subject_add' %}" class="btn btn-primary">
+        {% if user.role == 'ADMIN' %}
+        <a href="{% url 'classes:subject_create' %}" class="btn btn-primary">
             <i class="bi bi-plus-circle"></i> Add Subject
         </a>
         {% endif %}
@@ -69,15 +69,15 @@
                         </td>
                         <td>
                             <span class="badge 
-                                {% if subject.subject_type == 'CORE' %}bg-danger
-                                {% elif subject.subject_type == 'ELECTIVE' %}bg-warning
+                                {% if subject.category == 'CORE' %}bg-danger
+                                {% elif subject.category == 'ELECTIVE' %}bg-warning
                                 {% else %}bg-info
                                 {% endif %}">
-                                {{ subject.get_subject_type_display }}
+                                {{ subject.get_category_display }}
                             </span>
                         </td>
-                        <td>{{ subject.total_marks }}</td>
-                        <td>{{ subject.pass_marks }}</td>
+                        <td><strong class="text-primary">{{ subject.total_marks }}</strong></td>
+                        <td><strong class="text-success">{{ subject.pass_mark }}</strong></td>
                         <td>
                             <span class="badge bg-success">{{ subject.teacher_set.count }} teacher(s)</span>
                         </td>
@@ -89,8 +89,8 @@
                                 <a href="{% url 'classes:subject_detail' subject.pk %}" class="btn btn-outline-primary" title="View Details">
                                     <i class="bi bi-eye"></i>
                                 </a>
-                                {% if user.is_admin or user.is_staff %}
-                                <a href="{% url 'admin:classes_subject_change' subject.pk %}" class="btn btn-outline-secondary" title="Edit">
+                                {% if user.role == 'ADMIN' %}
+                                <a href="{% url 'classes:subject_update' subject.pk %}" class="btn btn-outline-secondary" title="Edit">
                                     <i class="bi bi-pencil"></i>
                                 </a>
                                 {% endif %}

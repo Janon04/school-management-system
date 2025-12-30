@@ -1,0 +1,710 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>University Transcript - {{ student.user.get_full_name }}</title>
+    <style>
+        @page {
+            size: A4 portrait;
+            margin: 15mm;
+        }
+        
+        @media print {
+            body {
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
+            }
+            .no-print {
+                display: none !important;
+            }
+            .page-break {
+                page-break-after: always;
+            }
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Times New Roman', 'Georgia', serif;
+            font-size: 11pt;
+            line-height: 1.5;
+            color: #000;
+            background: white;
+        }
+        
+        .report-container {
+            max-width: 210mm;
+            margin: 0 auto;
+            background: white;
+            padding: 20px;
+            border: 3px solid #6A1B9A;
+        }
+        
+        /* Header Section */
+        .report-header {
+            text-align: center;
+            border-bottom: 4px double #6A1B9A;
+            padding-bottom: 15px;
+            margin-bottom: 20px;
+            background: linear-gradient(to bottom, #F3E5F5 0%, #ffffff 100%);
+            padding: 15px;
+        }
+        
+        .university-logo {
+            width: 80px;
+            height: 80px;
+            margin: 0 auto 10px;
+            background: #6A1B9A;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 36pt;
+            color: #fff;
+            border: 4px solid #8E24AA;
+        }
+        
+        .university-name {
+            font-size: 26pt;
+            font-weight: bold;
+            color: #4A148C;
+            margin-bottom: 5px;
+            text-transform: uppercase;
+            letter-spacing: 3px;
+        }
+        
+        .university-address {
+            font-size: 10pt;
+            color: #555;
+            margin-bottom: 3px;
+        }
+        
+        .university-motto {
+            font-size: 11pt;
+            color: #6A1B9A;
+            font-style: italic;
+            margin-top: 8px;
+            font-weight: 600;
+        }
+        
+        .report-title {
+            font-size: 18pt;
+            font-weight: bold;
+            color: #fff;
+            margin-top: 12px;
+            text-transform: uppercase;
+            letter-spacing: 3px;
+            padding: 10px;
+            background: #6A1B9A;
+            border-radius: 5px;
+        }
+        
+        /* Student Information */
+        .student-info {
+            margin-bottom: 20px;
+            background: #fafafa;
+            padding: 15px;
+            border-radius: 5px;
+            border: 2px solid #6A1B9A;
+        }
+        
+        .info-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+        }
+        
+        .info-item {
+            padding: 8px;
+            background: white;
+            border-left: 3px solid #6A1B9A;
+            padding-left: 12px;
+        }
+        
+        .info-label {
+            font-weight: bold;
+            color: #4A148C;
+            display: block;
+            font-size: 9pt;
+            text-transform: uppercase;
+            margin-bottom: 3px;
+        }
+        
+        .info-value {
+            color: #333;
+            font-size: 11pt;
+        }
+        
+        /* Semester Info */
+        .semester-info {
+            background: #F3E5F5;
+            padding: 12px;
+            margin-bottom: 15px;
+            border-left: 5px solid #6A1B9A;
+            border-radius: 3px;
+        }
+        
+        .semester-title {
+            font-size: 14pt;
+            font-weight: bold;
+            color: #4A148C;
+            margin-bottom: 5px;
+        }
+        
+        /* Results Table */
+        .results-section {
+            margin-bottom: 20px;
+        }
+        
+        .section-title {
+            font-size: 14pt;
+            font-weight: bold;
+            color: #4A148C;
+            margin-bottom: 10px;
+            padding: 8px;
+            background: #F3E5F5;
+            border-left: 5px solid #6A1B9A;
+        }
+        
+        .results-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 15px;
+            border: 2px solid #6A1B9A;
+        }
+        
+        .results-table thead {
+            background: #6A1B9A;
+            color: white;
+        }
+        
+        .results-table th,
+        .results-table td {
+            padding: 10px 8px;
+            text-align: center;
+            border: 1px solid #9C27B0;
+        }
+        
+        .results-table th {
+            font-weight: bold;
+            font-size: 10pt;
+        }
+        
+        .results-table tbody tr:nth-child(even) {
+            background: #F3E5F5;
+        }
+        
+        .module-code {
+            text-align: left !important;
+            font-weight: 600;
+            color: #4A148C;
+        }
+        
+        .module-name {
+            text-align: left !important;
+        }
+        
+        .grade-cell {
+            font-weight: bold;
+            font-size: 12pt;
+        }
+        
+        /* University Grading Colors */
+        .grade-A { color: #1B5E20; }
+        .grade-B { color: #2E7D32; }
+        .grade-C { color: #558B2F; }
+        .grade-D { color: #F57F17; }
+        .grade-E { color: #E65100; }
+        .grade-F { color: #C62828; }
+        
+        /* GPA Section */
+        .gpa-section {
+            background: linear-gradient(135deg, #6A1B9A 0%, #8E24AA 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+        
+        .gpa-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+            margin-top: 10px;
+        }
+        
+        .gpa-item {
+            background: rgba(255,255,255,0.15);
+            padding: 15px;
+            border-radius: 5px;
+            text-align: center;
+            border: 2px solid rgba(255,255,255,0.3);
+        }
+        
+        .gpa-label {
+            font-size: 10pt;
+            margin-bottom: 8px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        
+        .gpa-value {
+            font-size: 24pt;
+            font-weight: bold;
+        }
+        
+        /* Performance Analysis */
+        .performance-stats {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+        
+        .stat-box {
+            background: white;
+            border: 2px solid #6A1B9A;
+            border-radius: 5px;
+            padding: 12px;
+            text-align: center;
+        }
+        
+        .stat-label {
+            font-size: 9pt;
+            color: #666;
+            margin-bottom: 5px;
+            text-transform: uppercase;
+        }
+        
+        .stat-value {
+            font-size: 16pt;
+            font-weight: bold;
+            color: #4A148C;
+        }
+        
+        /* Grading Scale */
+        .grading-scale {
+            margin-bottom: 15px;
+        }
+        
+        .scale-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 2px solid #6A1B9A;
+            font-size: 9.5pt;
+        }
+        
+        .scale-table th {
+            background: #6A1B9A;
+            color: white;
+            padding: 8px;
+            font-weight: bold;
+        }
+        
+        .scale-table td {
+            padding: 6px 8px;
+            text-align: center;
+            border: 1px solid #9C27B0;
+        }
+        
+        .scale-table tbody tr:nth-child(even) {
+            background: #F3E5F5;
+        }
+        
+        /* Comments Section */
+        .comments-section {
+            margin-bottom: 15px;
+        }
+        
+        .comment-box {
+            border: 2px solid #6A1B9A;
+            padding: 12px;
+            margin-bottom: 12px;
+            background: #fff;
+            min-height: 80px;
+            border-radius: 5px;
+        }
+        
+        .comment-title {
+            font-weight: bold;
+            color: #4A148C;
+            margin-bottom: 8px;
+            font-size: 11pt;
+        }
+        
+        .comment-text {
+            color: #333;
+            font-style: italic;
+            line-height: 1.6;
+        }
+        
+        /* Certification */
+        .certification {
+            background: #F3E5F5;
+            padding: 15px;
+            border: 2px solid #6A1B9A;
+            border-radius: 5px;
+            margin-bottom: 15px;
+            text-align: center;
+        }
+        
+        .certification-text {
+            font-size: 10pt;
+            line-height: 1.6;
+            color: #333;
+        }
+        
+        /* Signatures */
+        .signatures {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 30px;
+            padding-top: 20px;
+            border-top: 2px solid #6A1B9A;
+        }
+        
+        .signature-box {
+            width: 30%;
+            text-align: center;
+        }
+        
+        .signature-line {
+            border-bottom: 2px solid #333;
+            margin-bottom: 5px;
+            height: 40px;
+        }
+        
+        .signature-label {
+            font-size: 9pt;
+            color: #555;
+            font-weight: bold;
+        }
+        
+        /* Print Button */
+        .print-button {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: #6A1B9A;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            font-size: 14pt;
+            border-radius: 5px;
+            cursor: pointer;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+            z-index: 1000;
+        }
+        
+        .print-button:hover {
+            background: #4A148C;
+        }
+        
+        /* Footer */
+        .report-footer {
+            text-align: center;
+            margin-top: 20px;
+            padding-top: 15px;
+            border-top: 2px solid #6A1B9A;
+            font-size: 9pt;
+            color: #666;
+        }
+        
+        .watermark {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%) rotate(-45deg);
+            font-size: 120pt;
+            color: rgba(106, 27, 154, 0.05);
+            z-index: -1;
+            font-weight: bold;
+            pointer-events: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="watermark">OFFICIAL</div>
+    
+    <button class="print-button no-print" onclick="window.print()">
+        🖨️ Print Transcript
+    </button>
+    
+    <div class="report-container">
+        <!-- Header -->
+        <div class="report-header">
+            <div class="university-logo">🎓</div>
+            <div class="university-name">YOUR UNIVERSITY NAME</div>
+            <div class="university-address">University Campus, City, Country</div>
+            <div class="university-address">Tel: +1234567890 | Email: registrar@university.edu</div>
+            <div class="university-motto">"Knowledge, Excellence, Innovation"</div>
+            <div class="report-title">Academic Transcript</div>
+        </div>
+        
+        <!-- Student Information -->
+        <div class="student-info">
+            <div class="info-grid">
+                <div class="info-item">
+                    <span class="info-label">Student Name</span>
+                    <span class="info-value">{{ student.user.get_full_name }}</span>
+                </div>
+                <div class="info-item">
+                    <span class="info-label">Student ID</span>
+                    <span class="info-value">{{ student.admission_number }}</span>
+                </div>
+                <div class="info-item">
+                    <span class="info-label">Program/Course</span>
+                    <span class="info-value">{{ student.class_assigned.full_name }}</span>
+                </div>
+                <div class="info-item">
+                    <span class="info-label">Academic Year</span>
+                    <span class="info-value">{{ exam.academic_year.name }}</span>
+                </div>
+                <div class="info-item">
+                    <span class="info-label">Date of Birth</span>
+                    <span class="info-value">{{ student.date_of_birth|date:"F d, Y" }}</span>
+                </div>
+                <div class="info-item">
+                    <span class="info-label">Transcript Date</span>
+                    <span class="info-value">{{ report_card.generated_at|date:"F d, Y" }}</span>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Semester Info -->
+        <div class="semester-info">
+            <div class="semester-title">{{ exam.name }} - {{ exam.term }}</div>
+            <p style="color: #666; font-size: 10pt;">
+                Examination Period: {{ exam.start_date|date:"F d, Y" }} to {{ exam.end_date|date:"F d, Y" }}
+            </p>
+        </div>
+        
+        <!-- Grading Scale -->
+        <div class="grading-scale">
+            <div class="section-title">University Grading Scale</div>
+            <table class="scale-table">
+                <thead>
+                    <tr>
+                        <th>Grade</th>
+                        <th>Percentage Range</th>
+                        <th>Grade Point</th>
+                        <th>Description</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><strong>A</strong></td>
+                        <td>80% - 100%</td>
+                        <td>4.0</td>
+                        <td>Excellent</td>
+                    </tr>
+                    <tr>
+                        <td><strong>B</strong></td>
+                        <td>70% - 79%</td>
+                        <td>3.5</td>
+                        <td>Very Good</td>
+                    </tr>
+                    <tr>
+                        <td><strong>C</strong></td>
+                        <td>60% - 69%</td>
+                        <td>3.0</td>
+                        <td>Good</td>
+                    </tr>
+                    <tr>
+                        <td><strong>D</strong></td>
+                        <td>50% - 59%</td>
+                        <td>2.5</td>
+                        <td>Satisfactory</td>
+                    </tr>
+                    <tr>
+                        <td><strong>E</strong></td>
+                        <td>40% - 49%</td>
+                        <td>2.0</td>
+                        <td>Pass</td>
+                    </tr>
+                    <tr>
+                        <td><strong>F</strong></td>
+                        <td>0% - 39%</td>
+                        <td>0.0</td>
+                        <td>Fail</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+        
+        <!-- Results -->
+        <div class="results-section">
+            <div class="section-title">Module Performance</div>
+            <table class="results-table">
+                <thead>
+                    <tr>
+                        <th style="width: 12%;">Module Code</th>
+                        <th style="width: 30%;">Module Name</th>
+                        <th style="width: 10%;">Credits</th>
+                        <th style="width: 10%;">Max Marks</th>
+                        <th style="width: 12%;">Marks Obtained</th>
+                        <th style="width: 10%;">Percentage</th>
+                        <th style="width: 8%;">Grade</th>
+                        <th style="width: 8%;">GP</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for result in results %}
+                    <tr>
+                        <td class="module-code">{{ result.subject.code }}</td>
+                        <td class="module-name">{{ result.subject.name }}</td>
+                        <td>3</td>
+                        <td>{{ result.max_marks }}</td>
+                        <td>
+                            {% if result.is_absent %}
+                                <span style="color: red;">Absent</span>
+                            {% else %}
+                                {{ result.marks_obtained }}
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if not result.is_absent %}
+                                {{ result.percentage|floatformat:2 }}%
+                            {% else %}
+                                -
+                            {% endif %}
+                        </td>
+                        <td class="grade-cell grade-{{ result.grade }}">
+                            {% if not result.is_absent %}
+                                {{ result.grade }}
+                            {% else %}
+                                -
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if not result.is_absent %}
+                                {% if result.percentage >= 80 %}4.0
+                                {% elif result.percentage >= 70 %}3.5
+                                {% elif result.percentage >= 60 %}3.0
+                                {% elif result.percentage >= 50 %}2.5
+                                {% elif result.percentage >= 40 %}2.0
+                                {% else %}0.0
+                                {% endif %}
+                            {% else %}
+                                -
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="8" style="text-align: center; color: #999;">No results available</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        
+        <!-- Performance Statistics -->
+        <div class="performance-stats">
+            <div class="stat-box">
+                <div class="stat-label">Total Credits</div>
+                <div class="stat-value">{{ results|length|mul:3 }}</div>
+            </div>
+            <div class="stat-box">
+                <div class="stat-label">Passed</div>
+                <div class="stat-value" style="color: #2E7D32;">
+                    {% widthratio results|length 1 1 as total %}
+                    {{ results|length }}
+                </div>
+            </div>
+            <div class="stat-box">
+                <div class="stat-label">Failed</div>
+                <div class="stat-value" style="color: #C62828;">0</div>
+            </div>
+            <div class="stat-box">
+                <div class="stat-label">Total Modules</div>
+                <div class="stat-value">{{ results|length }}</div>
+            </div>
+        </div>
+        
+        <!-- GPA Section -->
+        <div class="gpa-section">
+            <div style="font-size: 14pt; font-weight: bold; margin-bottom: 10px; text-align: center;">
+                SEMESTER PERFORMANCE SUMMARY
+            </div>
+            <div class="gpa-grid">
+                <div class="gpa-item">
+                    <div class="gpa-label">Semester GPA</div>
+                    <div class="gpa-value">{{ report_card.gpa|default:"0.00"|floatformat:2 }}</div>
+                </div>
+                <div class="gpa-item">
+                    <div class="gpa-label">Overall Percentage</div>
+                    <div class="gpa-value">{{ report_card.percentage|floatformat:1 }}%</div>
+                </div>
+                <div class="gpa-item">
+                    <div class="gpa-label">Overall Grade</div>
+                    <div class="gpa-value">{{ report_card.overall_grade|default:"N/A" }}</div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Comments -->
+        {% if report_card.teacher_comment or report_card.principal_comment %}
+        <div class="comments-section">
+            {% if report_card.teacher_comment %}
+            <div class="comment-box">
+                <div class="comment-title">Academic Advisor's Comments:</div>
+                <div class="comment-text">
+                    {{ report_card.teacher_comment }}
+                </div>
+            </div>
+            {% endif %}
+            
+            {% if report_card.principal_comment %}
+            <div class="comment-box">
+                <div class="comment-title">Dean's Comments:</div>
+                <div class="comment-text">
+                    {{ report_card.principal_comment }}
+                </div>
+            </div>
+            {% endif %}
+        </div>
+        {% endif %}
+        
+        <!-- Certification -->
+        <div class="certification">
+            <div class="certification-text">
+                <strong>CERTIFICATION:</strong><br>
+                This is to certify that the above is a true and accurate record of the academic performance of 
+                <strong>{{ student.user.get_full_name }}</strong> (Student ID: {{ student.admission_number }}) 
+                for the {{ exam.term }} of the {{ exam.academic_year.name }} academic year.
+            </div>
+        </div>
+        
+        <!-- Signatures -->
+        <div class="signatures">
+            <div class="signature-box">
+                <div class="signature-line"></div>
+                <div class="signature-label">Academic Advisor</div>
+            </div>
+            <div class="signature-box">
+                <div class="signature-line"></div>
+                <div class="signature-label">Registrar</div>
+            </div>
+            <div class="signature-box">
+                <div class="signature-line"></div>
+                <div class="signature-label">Dean of Faculty</div>
+            </div>
+        </div>
+        
+        <!-- Footer -->
+        <div class="report-footer">
+            <p><strong>Important Notice:</strong> This transcript is valid only if it bears the official university seal and authorized signatures.</p>
+            <p style="margin-top: 5px;">For verification, please contact the Office of the Registrar.</p>
+            <p style="margin-top: 10px; font-size: 8pt;">Generated on: {{ report_card.generated_at|date:"F d, Y h:i A" }}</p>
+        </div>
+    </div>
+</body>
+</html>

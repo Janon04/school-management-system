@@ -39,6 +39,7 @@ class ClassRoom(models.Model):
         ('PRIMARY', 'Primary School'),
         ('SECONDARY', 'Secondary School'),
         ('HIGH_SCHOOL', 'High School'),
+        ('UNIVERSITY', 'University Level'),
     )
     
     name = models.CharField(max_length=50, help_text='e.g., Grade 10, Form 4')

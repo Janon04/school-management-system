@@ -1,0 +1,188 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Attendance Management{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <!-- Page Header -->
+    <div class="page-header-modern mb-4">
+        <div class="d-flex justify-content-between align-items-center flex-wrap">
+            <div>
+                <h1 class="mb-2">
+                    <i class="bi bi-calendar-check-fill"></i>
+                    Attendance Management
+                </h1>
+                <p class="mb-0" style="opacity: 0.95;">
+                    Select a class to mark attendance or view reports
+                </p>
+            </div>
+            <div class="mt-3 mt-md-0">
+                <a href="{% url 'attendance:attendance_report' %}" class="btn btn-light btn-lg">
+                    <i class="bi bi-graph-up-arrow"></i> View All Reports
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quick Stats -->
+    <div class="row g-4 mb-4">
+        <div class="col-md-3">
+            <div class="stat-card-mini stat-primary">
+                <div class="d-flex align-items-center">
+                    <div class="stat-icon">
+                        <i class="bi bi-door-open-fill"></i>
+                    </div>
+                    <div class="flex-grow-1">
+                        <div class="stat-label">Total Classes</div>
+                        <div class="stat-value">{{ classes.count }}</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="stat-card-mini stat-success">
+                <div class="d-flex align-items-center">
+                    <div class="stat-icon">
+                        <i class="bi bi-people-fill"></i>
+                    </div>
+                    <div class="flex-grow-1">
+                        <div class="stat-label">Total Students</div>
+                        <div class="stat-value">{{ total_students }}</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="stat-card-mini stat-info">
+                <div class="d-flex align-items-center">
+                    <div class="stat-icon">
+                        <i class="bi bi-calendar-event"></i>
+                    </div>
+                    <div class="flex-grow-1">
+                        <div class="stat-label">Today's Date</div>
+                        <div class="stat-value" style="font-size: 1.25rem;">{{ today|date:"M d" }}</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="stat-card-mini stat-warning">
+                <div class="d-flex align-items-center">
+                    <div class="stat-icon">
+                        <i class="bi bi-check-circle-fill"></i>
+                    </div>
+                    <div class="flex-grow-1">
+                        <div class="stat-label">Marked Today</div>
+                        <div class="stat-value">{{ marked_today_count }}</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Classes Grid -->
+    <div class="row g-4">
+        {% for class in classes %}
+        <div class="col-md-6 col-lg-4">
+            <div class="card-modern h-100">
+                <div class="card-header" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 1.25rem;">
+                    <h5 class="mb-0">
+                        <i class="bi bi-door-open-fill me-2"></i>
+                        {{ class.name }}
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <small class="text-muted">Class Teacher</small>
+                        </div>
+                        <div class="fw-semibold">
+                            {% if class.class_teacher %}
+                            <i class="bi bi-person-badge text-primary me-1"></i>
+                            {{ class.class_teacher.user.get_full_name }}
+                            {% else %}
+                            <span class="text-muted">Not Assigned</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <small class="text-muted">Academic Year</small>
+                        </div>
+                        <div class="fw-semibold">
+                            <i class="bi bi-calendar3 text-info me-1"></i>
+                            {{ class.academic_year.name }}
+                        </div>
+                    </div>
+                    
+                    <div class="row g-2 mb-3">
+                        <div class="col-6">
+                            <div class="p-3 text-center rounded" style="background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%); border-left: 4px solid #667eea;">
+                                <div class="fs-3 fw-bold text-primary">{{ class.students.count }}</div>
+                                <small class="text-muted">Students</small>
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <div class="p-3 text-center rounded" style="background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%); border-left: 4px solid #56ab2f;">
+                                <div class="fs-3 fw-bold text-success">
+                                    {% if class.id in marked_classes %}
+                                    <i class="bi bi-check-circle-fill"></i>
+                                    {% else %}
+                                    <i class="bi bi-dash-circle"></i>
+                                    {% endif %}
+                                </div>
+                                <small class="text-muted">
+                                    {% if class.id in marked_classes %}
+                                    Marked
+                                    {% else %}
+                                    Not Marked
+                                    {% endif %}
+                                </small>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    {% if class.id in marked_classes %}
+                    <div class="alert alert-success mb-3" style="border-left: 4px solid #56ab2f;">
+                        <small>
+                            <i class="bi bi-check-circle-fill me-1"></i>
+                            Attendance already marked for today
+                        </small>
+                    </div>
+                    {% endif %}
+                </div>
+                <div class="card-footer bg-light">
+                    <div class="d-grid gap-2">
+                        <a href="{% url 'attendance:mark_attendance' class.pk %}" class="btn btn-gradient-primary">
+                            <i class="bi bi-calendar-check-fill me-2"></i>
+                            {% if class.id in marked_classes %}
+                            Update Attendance
+                            {% else %}
+                            Mark Attendance
+                            {% endif %}
+                        </a>
+                        <a href="{% url 'classes:class_detail' class.pk %}" class="btn btn-outline-secondary">
+                            <i class="bi bi-eye me-2"></i>View Details
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% empty %}
+        <div class="col-12">
+            <div class="empty-state-modern">
+                <i class="bi bi-inbox"></i>
+                <p>No classes available</p>
+                {% if user.is_admin or user.is_staff %}
+                <a href="{% url 'classes:class_list' %}" class="btn btn-gradient-primary mt-3">
+                    <i class="bi bi-plus-circle me-2"></i>Add Classes
+                </a>
+                {% endif %}
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}

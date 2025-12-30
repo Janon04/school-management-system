@@ -1,0 +1,594 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Secondary School Report - {{ student.user.get_full_name }}</title>
+    <style>
+        @page {
+            size: A4 portrait;
+            margin: 12mm;
+        }
+        
+        @media print {
+            body {
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
+            }
+            .no-print {
+                display: none !important;
+            }
+            .page-break {
+                page-break-after: always;
+            }
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Arial', 'Helvetica', sans-serif;
+            font-size: 10pt;
+            line-height: 1.4;
+            color: #000;
+            background: white;
+        }
+        
+        .report-container {
+            max-width: 210mm;
+            margin: 0 auto;
+            background: white;
+            padding: 20px;
+            border: 4px double #2196F3;
+        }
+        
+        /* Header Section */
+        .report-header {
+            text-align: center;
+            border-bottom: 3px solid #2196F3;
+            padding-bottom: 15px;
+            margin-bottom: 20px;
+            background: linear-gradient(to bottom, #E3F2FD 0%, #ffffff 100%);
+            padding: 15px;
+        }
+        
+        .school-logo {
+            width: 70px;
+            height: 70px;
+            margin: 0 auto 10px;
+            background: #2196F3;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 32pt;
+            color: #fff;
+            border: 3px solid #64B5F6;
+        }
+        
+        .school-name {
+            font-size: 24pt;
+            font-weight: bold;
+            color: #1565C0;
+            margin-bottom: 5px;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+        
+        .school-address {
+            font-size: 9pt;
+            color: #555;
+            margin-bottom: 3px;
+        }
+        
+        .school-motto {
+            font-size: 10pt;
+            color: #1976D2;
+            font-style: italic;
+            margin-top: 5px;
+            font-weight: 600;
+        }
+        
+        .report-title {
+            font-size: 16pt;
+            font-weight: bold;
+            color: #fff;
+            margin-top: 12px;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            padding: 8px;
+            background: #2196F3;
+            border-radius: 5px;
+        }
+        
+        /* Student Information */
+        .student-info {
+            margin-bottom: 15px;
+            background: #f9f9f9;
+            padding: 12px;
+            border-radius: 5px;
+            border: 2px solid #2196F3;
+        }
+        
+        .info-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 6px;
+            flex-wrap: wrap;
+        }
+        
+        .info-item {
+            width: 48%;
+            margin-bottom: 4px;
+            font-size: 9.5pt;
+        }
+        
+        .info-label {
+            font-weight: bold;
+            color: #1565C0;
+            display: inline-block;
+            min-width: 110px;
+        }
+        
+        .info-value {
+            color: #333;
+        }
+        
+        /* Results Table */
+        .results-section {
+            margin-bottom: 15px;
+        }
+        
+        .section-title {
+            font-size: 13pt;
+            font-weight: bold;
+            color: #1565C0;
+            margin-bottom: 8px;
+            padding: 6px;
+            background: #E3F2FD;
+            border-left: 5px solid #2196F3;
+        }
+        
+        .results-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 12px;
+            border: 2px solid #2196F3;
+            font-size: 9.5pt;
+        }
+        
+        .results-table thead {
+            background: #2196F3;
+            color: white;
+        }
+        
+        .results-table th,
+        .results-table td {
+            padding: 8px 6px;
+            text-align: center;
+            border: 1px solid #64B5F6;
+        }
+        
+        .results-table th {
+            font-weight: bold;
+            font-size: 9pt;
+        }
+        
+        .results-table tbody tr:nth-child(even) {
+            background: #E3F2FD;
+        }
+        
+        .results-table tbody tr:hover {
+            background: #BBDEFB;
+        }
+        
+        .subject-name {
+            text-align: left !important;
+            font-weight: 600;
+        }
+        
+        .grade-cell {
+            font-weight: bold;
+            font-size: 11pt;
+        }
+        
+        .grade-A { color: #1B5E20; }
+        .grade-B { color: #2E7D32; }
+        .grade-C { color: #558B2F; }
+        .grade-D { color: #F57F17; }
+        .grade-E { color: #E65100; }
+        .grade-F { color: #C62828; }
+        
+        /* Summary Section */
+        .summary-box {
+            background: #E3F2FD;
+            padding: 12px;
+            border-radius: 5px;
+            border: 2px solid #2196F3;
+            margin-bottom: 12px;
+        }
+        
+        .summary-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+        }
+        
+        .summary-item {
+            padding: 8px;
+            background: white;
+            border-radius: 3px;
+            border: 1px solid #64B5F6;
+        }
+        
+        .summary-label {
+            font-weight: bold;
+            color: #1565C0;
+            font-size: 9pt;
+            display: block;
+            margin-bottom: 4px;
+        }
+        
+        .summary-value {
+            font-weight: bold;
+            color: #0D47A1;
+            font-size: 13pt;
+        }
+        
+        /* Performance Analysis */
+        .performance-analysis {
+            margin-bottom: 15px;
+        }
+        
+        .analysis-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 8px;
+            margin-top: 10px;
+        }
+        
+        .analysis-item {
+            background: white;
+            border: 2px solid #2196F3;
+            border-radius: 5px;
+            padding: 10px;
+            text-align: center;
+        }
+        
+        .analysis-label {
+            font-size: 9pt;
+            color: #666;
+            margin-bottom: 5px;
+        }
+        
+        .analysis-value {
+            font-size: 14pt;
+            font-weight: bold;
+            color: #1565C0;
+        }
+        
+        /* Comments Section */
+        .comments-section {
+            margin-bottom: 12px;
+        }
+        
+        .comment-box {
+            border: 2px solid #2196F3;
+            padding: 10px;
+            margin-bottom: 10px;
+            background: #fff;
+            min-height: 70px;
+            border-radius: 5px;
+        }
+        
+        .comment-title {
+            font-weight: bold;
+            color: #1565C0;
+            margin-bottom: 6px;
+            font-size: 10pt;
+        }
+        
+        .comment-text {
+            color: #333;
+            font-style: italic;
+            line-height: 1.5;
+            font-size: 9.5pt;
+        }
+        
+        /* Signatures */
+        .signatures {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 25px;
+            padding-top: 15px;
+            border-top: 2px solid #2196F3;
+        }
+        
+        .signature-box {
+            width: 30%;
+            text-align: center;
+        }
+        
+        .signature-line {
+            border-bottom: 2px solid #333;
+            margin-bottom: 5px;
+            height: 35px;
+        }
+        
+        .signature-label {
+            font-size: 9pt;
+            color: #555;
+            font-weight: bold;
+        }
+        
+        /* Grading Key */
+        .grading-key {
+            background: #f9f9f9;
+            padding: 8px;
+            border: 1px solid #2196F3;
+            border-radius: 5px;
+            margin-bottom: 12px;
+        }
+        
+        .grading-key-title {
+            font-weight: bold;
+            color: #1565C0;
+            margin-bottom: 6px;
+            font-size: 10pt;
+        }
+        
+        .grade-items {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+        
+        .grade-item {
+            padding: 4px 8px;
+            background: white;
+            border-radius: 3px;
+            border: 1px solid #64B5F6;
+            font-size: 8.5pt;
+        }
+        
+        /* Print Button */
+        .print-button {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: #2196F3;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            font-size: 14pt;
+            border-radius: 5px;
+            cursor: pointer;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+            z-index: 1000;
+        }
+        
+        .print-button:hover {
+            background: #1976D2;
+        }
+        
+        /* Footer */
+        .report-footer {
+            text-align: center;
+            margin-top: 15px;
+            padding-top: 12px;
+            border-top: 2px solid #2196F3;
+            font-size: 8.5pt;
+            color: #666;
+        }
+    </style>
+</head>
+<body>
+    <button class="print-button no-print" onclick="window.print()">
+        🖨️ Print Report
+    </button>
+    
+    <div class="report-container">
+        <!-- Header -->
+        <div class="report-header">
+            <div class="school-logo">🏫</div>
+            <div class="school-name">YOUR SCHOOL NAME</div>
+            <div class="school-address">123 School Street, City, Country</div>
+            <div class="school-address">Tel: +1234567890 | Email: info@school.com</div>
+            <div class="school-motto">"Striving for Excellence"</div>
+            <div class="report-title">Secondary School Report Card</div>
+        </div>
+        
+        <!-- Student Information -->
+        <div class="student-info">
+            <div class="info-row">
+                <div class="info-item">
+                    <span class="info-label">Student Name:</span>
+                    <span class="info-value">{{ student.user.get_full_name }}</span>
+                </div>
+                <div class="info-item">
+                    <span class="info-label">Admission No:</span>
+                    <span class="info-value">{{ student.admission_number }}</span>
+                </div>
+            </div>
+            <div class="info-row">
+                <div class="info-item">
+                    <span class="info-label">Class/Form:</span>
+                    <span class="info-value">{{ student.class_assigned.full_name }}</span>
+                </div>
+                <div class="info-item">
+                    <span class="info-label">Roll Number:</span>
+                    <span class="info-value">{{ student.roll_number|default:"N/A" }}</span>
+                </div>
+            </div>
+            <div class="info-row">
+                <div class="info-item">
+                    <span class="info-label">Examination:</span>
+                    <span class="info-value">{{ exam.name }} - {{ exam.term }}</span>
+                </div>
+                <div class="info-item">
+                    <span class="info-label">Academic Year:</span>
+                    <span class="info-value">{{ exam.academic_year.name }}</span>
+                </div>
+            </div>
+            {% if report_card.attendance_days %}
+            <div class="info-row">
+                <div class="info-item">
+                    <span class="info-label">Attendance:</span>
+                    <span class="info-value">{{ report_card.attendance_days }}/{{ report_card.total_school_days }} days ({{ report_card.attendance_days|floatformat:0|add:0|mul:100|div:report_card.total_school_days|floatformat:1 }}%)</span>
+                </div>
+                <div class="info-item">
+                    <span class="info-label">Report Date:</span>
+                    <span class="info-value">{{ report_card.generated_at|date:"F d, Y" }}</span>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+        
+        <!-- Grading Key -->
+        <div class="grading-key">
+            <div class="grading-key-title">Grading Scale:</div>
+            <div class="grade-items">
+                <div class="grade-item">A (80-100%): Excellent</div>
+                <div class="grade-item">B (70-79%): Very Good</div>
+                <div class="grade-item">C (60-69%): Good</div>
+                <div class="grade-item">D (50-59%): Satisfactory</div>
+                <div class="grade-item">E (40-49%): Pass</div>
+                <div class="grade-item">F (0-39%): Fail</div>
+            </div>
+        </div>
+        
+        <!-- Results -->
+        <div class="results-section">
+            <div class="section-title">Subject-wise Performance</div>
+            <table class="results-table">
+                <thead>
+                    <tr>
+                        <th style="width: 4%;">S/N</th>
+                        <th style="width: 26%;">Subject</th>
+                        <th style="width: 12%;">Max Marks</th>
+                        <th style="width: 14%;">Marks Obtained</th>
+                        <th style="width: 12%;">Percentage</th>
+                        <th style="width: 8%;">Grade</th>
+                        <th style="width: 12%;">Status</th>
+                        <th style="width: 12%;">Remarks</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for result in results %}
+                    <tr>
+                        <td>{{ forloop.counter }}</td>
+                        <td class="subject-name">{{ result.subject.name }}</td>
+                        <td>{{ result.max_marks }}</td>
+                        <td>
+                            {% if result.is_absent %}
+                                <span style="color: red;">Absent</span>
+                            {% else %}
+                                {{ result.marks_obtained }}
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if not result.is_absent %}
+                                {{ result.percentage|floatformat:1 }}%
+                            {% else %}
+                                -
+                            {% endif %}
+                        </td>
+                        <td class="grade-cell grade-{{ result.grade }}">
+                            {% if not result.is_absent %}
+                                {{ result.grade }}
+                            {% else %}
+                                -
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if result.is_absent %}
+                                <span style="color: red;">Absent</span>
+                            {% elif result.is_pass %}
+                                <span style="color: green;">Pass</span>
+                            {% else %}
+                                <span style="color: red;">Fail</span>
+                            {% endif %}
+                        </td>
+                        <td style="font-size: 8.5pt;">{{ result.remarks|default:"-" }}</td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="8" style="text-align: center; color: #999;">No results available</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        
+        <!-- Performance Summary -->
+        <div class="performance-analysis">
+            <div class="section-title">Performance Summary</div>
+            <div class="summary-box">
+                <div class="summary-grid">
+                    <div class="summary-item">
+                        <span class="summary-label">Total Marks</span>
+                        <div class="summary-value">{{ report_card.marks_obtained|floatformat:1 }} / {{ report_card.total_marks|floatformat:0 }}</div>
+                    </div>
+                    <div class="summary-item">
+                        <span class="summary-label">Overall Percentage</span>
+                        <div class="summary-value">{{ report_card.percentage|floatformat:2 }}%</div>
+                    </div>
+                    <div class="summary-item">
+                        <span class="summary-label">Overall Grade</span>
+                        <div class="summary-value grade-{{ report_card.overall_grade }}">{{ report_card.overall_grade }}</div>
+                    </div>
+                    {% if report_card.class_position %}
+                    <div class="summary-item">
+                        <span class="summary-label">Class Position</span>
+                        <div class="summary-value">{{ report_card.class_position }}/{{ total_students }}</div>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        
+        <!-- Comments -->
+        <div class="comments-section">
+            <div class="comment-box">
+                <div class="comment-title">Class Teacher's Remarks:</div>
+                <div class="comment-text">
+                    {{ report_card.teacher_comment|default:"The student has shown good progress this term. Continue with the same effort." }}
+                </div>
+            </div>
+            
+            <div class="comment-box">
+                <div class="comment-title">Principal's Remarks:</div>
+                <div class="comment-text">
+                    {{ report_card.principal_comment|default:"Performance is satisfactory. Keep working hard." }}
+                </div>
+            </div>
+        </div>
+        
+        <!-- Signatures -->
+        <div class="signatures">
+            <div class="signature-box">
+                <div class="signature-line"></div>
+                <div class="signature-label">Class Teacher</div>
+            </div>
+            <div class="signature-box">
+                <div class="signature-line"></div>
+                <div class="signature-label">Principal</div>
+            </div>
+            <div class="signature-box">
+                <div class="signature-line"></div>
+                <div class="signature-label">Parent/Guardian</div>
+            </div>
+        </div>
+        
+        <!-- Footer -->
+        <div class="report-footer">
+            <p><strong>Next Term/Semester Begins:</strong> [Insert Date]</p>
+            <p>This is an official document issued by the school. Keep it safely for future reference.</p>
+        </div>
+    </div>
+</body>
+</html>
