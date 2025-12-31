@@ -38,9 +38,23 @@
                         {% endfor %}
                     {% endif %}
 
+                    {% if result %}
+                    <!-- Status Badge -->
+                    <div class="mb-3">
+                        <span class="badge 
+                            {% if result.status == 'DRAFT' %}bg-secondary
+                            {% elif result.status == 'SUBMITTED' %}bg-info
+                            {% elif result.status == 'APPROVED' %}bg-success
+                            {% elif result.status == 'PUBLISHED' %}bg-primary
+                            {% endif %}">
+                            <i class="bi bi-flag me-1"></i>
+                            {{ result.get_status_display }}
+                        </span>
+                    </div>
+                    {% endif %}
+
                     <form method="post" id="resultForm">
                         {% csrf_token %}
-                        
                         {% if result %}
                         <!-- Display Only (when editing) -->
                         <div class="row mb-4">
@@ -62,7 +76,7 @@
                                 <select class="form-select" id="exam" name="exam" required>
                                     <option value="">Select Exam</option>
                                     {% for exam in exams %}
-                                    <option value="{{ exam.id }}">{{ exam.name }} - {{ exam.term }}</option>
+                                    <option value="{{ exam.id }}" {% if prefill_exam_id and prefill_exam_id|stringformat:'s' == exam.id|stringformat:'s' %}selected{% endif %}>{{ exam.name }} - {{ exam.term }}</option>
                                     {% endfor %}
                                 </select>
                             </div>
@@ -110,29 +124,29 @@
                                 <label for="max_marks" class="form-label">
                                     <i class="bi bi-clipboard-check me-1"></i>Total Marks <span class="text-danger">*</span>
                                 </label>
-                                <input type="number" 
-                                       class="form-control" 
-                                       id="max_marks" 
-                                       name="max_marks" 
-                                       value="{% if result %}{{ result.max_marks }}{% else %}100{% endif %}"
-                                       min="1"
-                                       required
-                                       onchange="calculatePercentage()">
+                                    <input type="number" 
+                                        class="form-control" 
+                                        id="max_marks" 
+                                        name="max_marks" 
+                                        value="{% if result %}{{ result.max_marks }}{% else %}{{ subjects.0.total_marks|default:100 }}{% endif %}"
+                                        min="1"
+                                        required
+                                        onchange="calculatePercentage()">
                             </div>
 
                             <div class="col-md-6 mb-3">
                                 <label for="marks_obtained" class="form-label">
                                     <i class="bi bi-check-circle me-1"></i>Marks Obtained <span class="text-danger">*</span>
                                 </label>
-                                <input type="number" 
-                                       class="form-control" 
-                                       id="marks_obtained" 
-                                       name="marks_obtained" 
-                                       value="{% if result %}{{ result.marks_obtained }}{% endif %}"
-                                       min="0"
-                                       step="0.01"
-                                       required
-                                       onchange="calculatePercentage()">
+                                    <input type="number" 
+                                        class="form-control" 
+                                        id="marks_obtained" 
+                                        name="marks_obtained" 
+                                        value="{% if result %}{{ result.marks_obtained }}{% else %}0{% endif %}"
+                                        min="0"
+                                        step="0.01"
+                                        required
+                                        onchange="calculatePercentage()">
                             </div>
 
                             <div class="col-md-12 mb-3">
@@ -187,14 +201,31 @@
                             </div>
                         </div>
 
-                        <!-- Action Buttons -->
+                        <!-- Action Buttons: Workflow -->
                         <div class="d-flex justify-content-between mt-4">
                             <a href="{% url 'results:result_list' %}" class="btn btn-outline-secondary">
                                 <i class="bi bi-x-circle me-2"></i>Cancel
                             </a>
-                            <button type="submit" class="btn btn-gradient-primary">
-                                <i class="bi bi-check-circle me-2"></i>{{ action }} Result
-                            </button>
+                            <div>
+                                {% if not result or result.status == 'DRAFT' %}
+                                    <button type="submit" name="action" value="save" class="btn btn-gradient-primary me-2">
+                                        <i class="bi bi-save me-1"></i>Save
+                                    </button>
+                                    {% if user.role == 'TEACHER' %}
+                                    <button type="submit" name="action" value="submit" class="btn btn-info">
+                                        <i class="bi bi-upload me-1"></i>Submit for Approval
+                                    </button>
+                                    {% endif %}
+                                {% elif result.status == 'SUBMITTED' and user.role in 'ADMIN,HOD' %}
+                                    <button type="submit" name="action" value="approve" class="btn btn-success me-2">
+                                        <i class="bi bi-check2-circle me-1"></i>Approve
+                                    </button>
+                                {% elif result.status == 'APPROVED' and user.role == 'ADMIN' %}
+                                    <button type="submit" name="action" value="publish" class="btn btn-primary">
+                                        <i class="bi bi-megaphone me-1"></i>Publish
+                                    </button>
+                                {% endif %}
+                            </div>
                         </div>
                     </form>
                 </div>

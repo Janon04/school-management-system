@@ -5,6 +5,32 @@ from django.http import HttpResponseForbidden, JsonResponse
 from django.contrib.auth.decorators import login_required
 from django.db.models import Q
 from .models import User
+from django.contrib.auth import login, logout, authenticate
+from django.db.models import Count
+from django.utils import timezone
+from datetime import timedelta
+from .forms import UserLoginForm, UserRegistrationForm
+from apps.exams.models import ExamSchedule
+
+@login_required
+def user_create_view(request):
+    """Create a new user (frontend form, admin only)"""
+    if not request.user.is_admin:
+        messages.error(request, 'You do not have permission to add users.')
+        return redirect('accounts:user_list')
+    if request.method == 'POST':
+        form = UserRegistrationForm(request.POST)
+        if form.is_valid():
+            user = form.save(commit=False)
+            user.set_password(form.cleaned_data['password'])
+            user.save()
+            messages.success(request, f'User "{user.username}" created successfully!')
+            return redirect('accounts:user_list')
+        else:
+            messages.error(request, 'Please correct the errors below.')
+    else:
+        form = UserRegistrationForm()
+    return render(request, 'accounts/user_form.html', {'form': form, 'title': 'Add New User', 'button_text': 'Create User'})
 
 @login_required
 def user_detail_view(request, user_id):
@@ -320,24 +346,28 @@ def dashboard_view(request):
             teacher = Teacher.objects.get(user=user)
             classes_assigned = ClassRoom.objects.filter(class_teacher=teacher)
             subjects = teacher.subjects.all()
-            
             # Count students in teacher's classes
             total_students_teaching = Student.objects.filter(
                 class_assigned__in=classes_assigned
             ).count()
-            
-            # Upcoming exams - use schedules instead of direct exam filter
+            # Attendance marked today (for teacher's classes)
+            from apps.attendance.models import Attendance
             today = timezone.now().date()
+            attendance_marked_today = Attendance.objects.filter(
+                class_room__in=classes_assigned, date=today
+            ).values('class_room').distinct().count()
+            # Upcoming exams - use schedules instead of direct exam filter
+            from apps.exams.models import ExamSchedule
             upcoming_exams = ExamSchedule.objects.filter(
                 subject__in=subjects,
                 exam_date__gte=today
             ).count()
-            
             context.update({
                 'teacher': teacher,
                 'subjects': subjects,
                 'classes_assigned': classes_assigned,
-                'total_students_teaching': total_students_teaching,
+                'total_students': total_students_teaching,
+                'attendance_marked_today': attendance_marked_today,
                 'upcoming_exams': upcoming_exams,
             })
         except Teacher.DoesNotExist:
@@ -402,33 +432,40 @@ def dashboard_view(request):
         try:
             parent = Parent.objects.get(user=user)
             children = Student.objects.filter(parent=parent).select_related('class_assigned')
-            
             # Get recent results for all children
             recent_results = Result.objects.filter(
                 student__in=children
             ).select_related('student__user', 'exam', 'subject').order_by('-exam__date')[:10]
-            
-            # Get attendance summary for all children (last 7 days)
-            today = timezone.now().date()
-            last_7_days = today - timedelta(days=7)
-            attendance_summary = {}
-            
-            for child in children:
-                attendance_summary[child.id] = {
-                    'child': child,
-                    'present': Attendance.objects.filter(
-                        student=child, date__gte=last_7_days, status='Present'
-                    ).count(),
-                    'total': Attendance.objects.filter(
-                        student=child, date__gte=last_7_days
-                    ).count(),
-                }
-            
+            # Get attendance summary for all children (this term)
+            from apps.attendance.models import Attendance
+            from django.db.models import Avg
+            # Calculate average performance for all children
+            from apps.results.models import Result
+            if children:
+                average_performance = Result.objects.filter(student__in=children).aggregate(avg=Avg('marks_obtained'))['avg']
+                if average_performance is not None:
+                    average_performance = round(average_performance, 1)
+                else:
+                    average_performance = '-'
+                # Attendance this term (present days / total days for all children)
+                present = Attendance.objects.filter(student__in=children, status='Present').count()
+                total = Attendance.objects.filter(student__in=children).count()
+                if total > 0:
+                    attendance_this_term = f"{present} / {total}"
+                else:
+                    attendance_this_term = '-'
+            else:
+                average_performance = '-'
+                attendance_this_term = '-'
+            # Unread notifications (reuse from admin context if available)
+            unread_notifications = context.get('unread_notifications', 0)
             context.update({
                 'parent': parent,
                 'children': children,
                 'recent_results': recent_results,
-                'attendance_summary': attendance_summary,
+                'average_performance': average_performance,
+                'attendance_this_term': attendance_this_term,
+                'unread_notifications': unread_notifications,
             })
         except Parent.DoesNotExist:
             messages.warning(request, 'Your parent profile is not complete. Please contact admin.')
@@ -439,24 +476,72 @@ def dashboard_view(request):
 @login_required
 def profile_view(request):
     """User profile view"""
-    return render(request, 'auth/profile.html', {'user': request.user})
+    teacher_profile = getattr(request.user, 'teacher_profile', None)
+    staff_profile = getattr(request.user, 'staff_profile', None)
+    return render(request, 'auth/profile.html', {
+        'user': request.user,
+        'teacher_profile': teacher_profile,
+        'staff_profile': staff_profile,
+    })
+
 
 
 @login_required
 def profile_update_view(request):
-    """Update user profile"""
+    """Update user profile. Superusers can update any user's role/status via ?user_id= param."""
     from .forms import UserProfileUpdateForm
-    
+    user_obj = request.user
+    # Allow superuser to update other users
+    user_id = request.GET.get('user_id')
+    if request.user.is_superuser and user_id:
+        from django.shortcuts import get_object_or_404
+        user_obj = get_object_or_404(User, pk=user_id)
+
     if request.method == 'POST':
-        form = UserProfileUpdateForm(request.POST, request.FILES, instance=request.user)
+        form = UserProfileUpdateForm(request.POST, request.FILES, instance=user_obj)
+        updated = False
         if form.is_valid():
             form.save()
-            messages.success(request, 'Profile updated successfully!')
+            updated = True
+            # Allow superuser to update role and is_superuser
+            if request.user.is_superuser and user_obj != request.user:
+                new_role = request.POST.get('role')
+                is_super = request.POST.get('is_superuser') == 'on'
+                if new_role and new_role in dict(User.ROLE_CHOICES):
+                    user_obj.role = new_role
+                user_obj.is_superuser = is_super
+                user_obj.save()
+            # Save teacher professional info
+            if user_obj.role == 'TEACHER' and hasattr(user_obj, 'teacher_profile'):
+                teacher = user_obj.teacher_profile
+                teacher.qualification = request.POST.get('qualification', teacher.qualification)
+                teacher.specialization = request.POST.get('specialization', teacher.specialization)
+                teacher.experience_years = request.POST.get('experience_years', teacher.experience_years)
+                teacher.certifications = request.POST.get('certifications', teacher.certifications)
+                teacher.bio = request.POST.get('bio', teacher.bio)
+                teacher.save()
+            # Save staff professional info
+            if user_obj.role == 'STAFF' and hasattr(user_obj, 'staff_profile'):
+                staff = user_obj.staff_profile
+                staff.designation = request.POST.get('designation', staff.designation)
+                joining_date = request.POST.get('joining_date', None)
+                if joining_date:
+                    staff.joining_date = joining_date
+                salary = request.POST.get('salary', None)
+                if salary:
+                    staff.salary = salary
+                staff.save()
+            if updated:
+                messages.success(request, 'Profile updated successfully!')
+            else:
+                messages.info(request, 'No changes detected.')
+            # Redirect to same page for the edited user
+            if request.user.is_superuser and user_id:
+                return redirect(f"{request.path}?user_id={user_id}")
             return redirect('accounts:profile_update')
     else:
-        form = UserProfileUpdateForm(instance=request.user)
-    
-    return render(request, 'auth/profile_update.html', {'user': request.user, 'form': form})
+        form = UserProfileUpdateForm(instance=user_obj)
+    return render(request, 'auth/profile_update.html', {'user': user_obj, 'form': form})
 
 
 @login_required

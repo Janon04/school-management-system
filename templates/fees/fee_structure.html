@@ -1,6 +1,7 @@
 {% extends 'base.html' %}
 {% load static %}
 {% load fee_tags %}
+{% load humanize %}
 
 {% block title %}Fee Structure - School Management System{% endblock %}
 
@@ -17,8 +18,8 @@
             </div>
             {% if user.role == 'ADMIN' %}
             <div>
-                <a href="{% url 'admin:fees_feestructure_add' %}" class="btn btn-gradient-light">
-                    <i class="bi bi-plus-circle me-2"></i>Add Fee (Use Admin)
+                <a href="{% url 'fees:fee_structure_add' %}" class="btn btn-gradient-light">
+                    <i class="bi bi-plus-circle me-2"></i>Add Fee
                 </a>
             </div>
             {% endif %}
@@ -33,7 +34,7 @@
                     <i class="bi bi-list-ul"></i>
                 </div>
                 <div class="stat-details">
-                    <h3>{{ fee_structures.count }}</h3>
+                    <h3>{{ fee_structures.count|intcomma }}</h3>
                     <p>Total Structures</p>
                 </div>
             </div>
@@ -44,7 +45,7 @@
                     <i class="bi bi-building"></i>
                 </div>
                 <div class="stat-details">
-                    <h3>{{ unique_classes }}</h3>
+                    <h3>{{ unique_classes|intcomma }}</h3>
                     <p>Classes Covered</p>
                 </div>
             </div>
@@ -55,7 +56,7 @@
                     <i class="bi bi-calendar-check"></i>
                 </div>
                 <div class="stat-details">
-                    <h3>{{ unique_years }}</h3>
+                    <h3>{{ unique_years|intcomma }}</h3>
                     <p>Academic Years</p>
                 </div>
             </div>
@@ -66,7 +67,7 @@
                     <i class="bi bi-tags"></i>
                 </div>
                 <div class="stat-details">
-                    <h3>{{ unique_types }}</h3>
+                    <h3>{{ unique_types|intcomma }}</h3>
                     <p>Fee Types</p>
                 </div>
             </div>
@@ -138,7 +139,7 @@
                                         </span>
                                     </td>
                                     <td>
-                                        <strong class="text-success">{{ structure.amount|floatformat:2 }} Frw</strong>
+                                        <strong class="text-success">{{ structure.amount|floatformat:2|intcomma }} Frw</strong>
                                     </td>
                                     <td>
                                         <span class="badge bg-info">
@@ -182,7 +183,7 @@
                                     <td colspan="4" class="text-end"><strong>Total Amount:</strong></td>
                                     <td colspan="{% if user.role == 'ADMIN' %}5{% else %}4{% endif %}">
                                         <strong class="text-success fs-5">
-                                            {{ total_amount|floatformat:2 }} Frw
+                                            {{ total_amount|floatformat:2|intcomma }} Frw
                                         </strong>
                                     </td>
                                 </tr>
@@ -214,7 +215,7 @@
                                     {% for structure in class_group.list %}
                                     <li class="mb-2 d-flex justify-content-between">
                                         <span>{{ structure.get_fee_type_display }}:</span>
-                                        <strong class="text-success">{{ structure.amount|floatformat:2 }} Frw</strong>
+                                        <strong class="text-success">{{ structure.amount|floatformat:2|intcomma }} Frw</strong>
                                     </li>
                                     {% endfor %}
                                 </ul>
@@ -222,7 +223,7 @@
                                 <div class="d-flex justify-content-between">
                                     <strong>Total:</strong>
                                     <strong class="text-success">
-                                        {{ class_group.list|sum_amounts|floatformat:2 }} Frw
+                                        {{ class_group.list|sum_amounts|floatformat:2|intcomma }} Frw
                                     </strong>
                                 </div>
                             </div>

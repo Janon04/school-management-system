@@ -1,5 +1,27 @@
+
+from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib import messages
 from apps.accounts.decorators import teacher_required
+from django.http import JsonResponse
+from apps.classes.models import ClassSubject
+from django.views.decorators.http import require_POST
+from .models import Exam, ExamSchedule
+from .forms import ExamForm, ExamScheduleForm
+
+# --- Update ExamSchedule Status View ---
+@teacher_required
+@require_POST
+def exam_schedule_update_status_view(request, pk):
+    schedule = get_object_or_404(ExamSchedule, pk=pk)
+    new_status = request.POST.get('status')
+    if new_status in dict(ExamSchedule.SCHEDULE_STATUS_CHOICES):
+        schedule.status = new_status
+        schedule.save()
+        messages.success(request, f"Status updated to {schedule.get_status_display()}.")
+    else:
+        messages.error(request, "Invalid status selected.")
+    return redirect('exams:exam_schedule_list')
+
 @teacher_required
 def exam_schedule_edit_view(request, pk):
     schedule = get_object_or_404(ExamSchedule, pk=pk)
@@ -28,6 +50,11 @@ from django.contrib.auth.decorators import login_required
 def exam_schedule_list_view(request):
     from .models import ExamSchedule
     schedules = ExamSchedule.objects.select_related('class_room', 'subject').order_by('exam_date', 'start_time')
+    import logging
+    logger = logging.getLogger('django')
+    logger.info(f"ExamSchedule count: {schedules.count()}")
+    for s in schedules:
+        logger.info(f"Schedule: id={s.id}, exam={s.exam}, class={s.class_room}, subject={s.subject}, date={s.exam_date}")
     return render(request, 'exams/exam_schedule_list.html', {'schedules': schedules})
 from .forms import ExamScheduleForm
 from apps.accounts.decorators import teacher_required
@@ -37,7 +64,8 @@ def exam_schedule_create_view(request, exam_id):
     exam = get_object_or_404(Exam, pk=exam_id)
     from django.contrib import messages
     if request.method == 'POST':
-        form = ExamScheduleForm(request.POST)
+        class_room_id = request.POST.get('class_room')
+        form = ExamScheduleForm(request.POST, class_room=class_room_id)
         if form.is_valid():
             schedule = form.save(commit=False)
             schedule.exam = exam
@@ -112,3 +140,14 @@ def exam_schedule_view(request, exam_id):
     exam = Exam.objects.get(pk=exam_id)
     schedules = ExamSchedule.objects.filter(exam=exam).order_by('exam_date', 'start_time')
     return render(request, 'exams/exam_schedule.html', {'exam': exam, 'schedules': schedules})
+
+def get_subjects_for_class(request):
+    class_room_id = request.GET.get('class_room_id')
+    if not class_room_id:
+        return JsonResponse({'subjects': []})
+    subjects = ClassSubject.objects.filter(class_room_id=class_room_id, is_active=True).select_related('subject')
+    subject_list = [
+        {'id': cs.subject.id, 'name': cs.subject.name}
+        for cs in subjects
+    ]
+    return JsonResponse({'subjects': subject_list})

@@ -13,7 +13,7 @@ class ExamForm(forms.ModelForm):
         model = Exam
         fields = [
             'name', 'exam_type', 'academic_year', 'term',
-            'start_date', 'end_date', 'description', 'is_published', 'exam_file'
+            'start_date', 'end_date', 'description', 'is_published', 'exam_file', 'status'
         ]
         widgets = {
             'exam_file': forms.ClearableFileInput(attrs={'class': 'form-control', 'accept': '.pdf,.doc,.docx'}),
@@ -74,13 +74,24 @@ class ExamForm(forms.ModelForm):
 
 class ExamScheduleForm(forms.ModelForm):
     """Form for creating and updating exam schedules"""
-    
+
+    def __init__(self, *args, **kwargs):
+        class_room = None
+        if 'class_room' in kwargs:
+            class_room = kwargs.pop('class_room')
+        super().__init__(*args, **kwargs)
+        # If class_room is provided, filter subjects to only those registered for the class
+        if class_room:
+            from apps.classes.models import ClassSubject
+            self.fields['subject'].queryset = ClassSubject.objects.filter(class_room=class_room, is_active=True).values_list('subject', flat=True)
+            self.fields['subject'].queryset = self.fields['subject'].queryset.model.objects.filter(id__in=self.fields['subject'].queryset)
+
     class Meta:
         model = ExamSchedule
         fields = [
             'exam', 'class_room', 'subject', 'exam_date',
             'start_time', 'end_time', 'room_number',
-            'max_marks', 'pass_marks'
+            'max_marks', 'pass_marks', 'status'
         ]
         widgets = {
             'exam': forms.Select(attrs={
@@ -117,14 +128,14 @@ class ExamScheduleForm(forms.ModelForm):
                 'placeholder': '40'
             })
         }
-    
+
     def clean(self):
         cleaned_data = super().clean()
         start_time = cleaned_data.get('start_time')
         end_time = cleaned_data.get('end_time')
         max_marks = cleaned_data.get('max_marks')
         pass_marks = cleaned_data.get('pass_marks')
-        
+
         # Validate that end_time is after start_time
         if start_time and end_time:
             if end_time <= start_time:

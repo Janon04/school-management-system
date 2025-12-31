@@ -174,7 +174,35 @@
                             </div>
                         </div>
 
-                        <!-- Profile Picture Section -->
+                        <!-- Assign Students Section -->
+                        <div class="form-section">
+                            <h5 class="section-title">
+                                <i class="bi bi-people me-2"></i>
+                                Assign Students
+                            </h5>
+                            <div class="mb-3">
+                                <label class="form-label">Select Students to Assign</label>
+                                <div class="dropdown">
+                                    <button class="btn btn-outline-primary dropdown-toggle w-100" type="button" id="studentsDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                                        Choose Students
+                                    </button>
+                                    <div class="dropdown-menu w-100 p-3" aria-labelledby="studentsDropdown" style="max-height: 300px; overflow-y: auto; min-width: 350px;">
+                                        <div class="list-group list-group-flush">
+                                            {% for checkbox in form.students %}
+                                                <label class="list-group-item d-flex align-items-center gap-2" for="{{ checkbox.id_for_label }}" style="cursor:pointer; color: #222; font-weight: 500;">
+                                                    {{ checkbox.tag }}
+                                                    <span>{{ checkbox.choice_label }}</span>
+                                                </label>
+                                            {% endfor %}
+                                        </div>
+                                    </div>
+                                </div>
+                                {% if form.students.errors %}
+                                    <div class="invalid-feedback d-block">{{ form.students.errors.0 }}</div>
+                                {% endif %}
+                                <small class="form-text text-muted">You can assign multiple students to this parent.</small>
+                            </div>
+                        </div>
                         <div class="form-section">
                             <h5 class="section-title">
                                 <i class="bi bi-file-earmark-image-fill me-2"></i>

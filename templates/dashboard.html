@@ -1,5 +1,6 @@
 {% extends 'base.html' %}
 {% load static %}
+{% load humanize %}
 
 {% block title %}Dashboard - School Management System{% endblock %}
 
@@ -220,11 +221,11 @@
             font-size: 1.5rem;
         }
         .stat-value {
-            font-size: 1.5rem;
+            font-size: 1.2rem;
         }
-            .stat-value {
-                font-size: 1rem;
-            }
+        .main-content {
+            padding-bottom: 3.5rem !important;
+        }
     }
 </style>
 {% endblock %}
@@ -261,7 +262,7 @@
                     <i class="bi bi-people-fill"></i>
                 </div>
                 <div class="stat-label">Total Students</div>
-                <div class="stat-value">{{ total_students|default:0 }}</div>
+                <div class="stat-value">{{ total_students|default:0|intcomma }}</div>
                 <small class="text-muted">
                     <i class="bi bi-arrow-up text-success"></i>
                     {{ active_students|default:0 }} active
@@ -275,7 +276,7 @@
                     <i class="bi bi-person-badge-fill"></i>
                 </div>
                 <div class="stat-label">Total Teachers</div>
-                <div class="stat-value">{{ total_teachers|default:0 }}</div>
+                <div class="stat-value">{{ total_teachers|default:0|intcomma }}</div>
                 <small class="text-muted">
                     <i class="bi bi-check-circle text-success"></i>
                     {{ active_teachers|default:0 }} active
@@ -289,7 +290,7 @@
                     <i class="bi bi-door-open-fill"></i>
                 </div>
                 <div class="stat-label">Total Classes</div>
-                <div class="stat-value">{{ total_classes|default:0 }}</div>
+                <div class="stat-value">{{ total_classes|default:0|intcomma }}</div>
                 <small class="text-muted">
                     <i class="bi bi-check-circle text-success"></i>
                     {{ active_classes|default:0 }} active
@@ -303,7 +304,7 @@
                     <i class="bi bi-clipboard-data-fill"></i>
                 </div>
                 <div class="stat-label">Total Exams</div>
-                <div class="stat-value">{{ total_exams|default:0 }}</div>
+                <div class="stat-value">{{ total_exams|default:0|intcomma }}</div>
                 <small class="text-muted">
                     <i class="bi bi-clock text-warning"></i>
                     {{ upcoming_exams|default:0 }} upcoming
@@ -322,7 +323,7 @@
                     </div>
                     <div class="flex-grow-1">
                         <div class="stat-label">Present Today</div>
-                        <div class="stat-value text-success">{{ today_attendance|default:0 }}</div>
+                        <div class="stat-value text-success">{{ today_attendance|default:0|intcomma }}</div>
                     </div>
                 </div>
             </div>
@@ -335,7 +336,7 @@
                     </div>
                     <div class="flex-grow-1">
                         <div class="stat-label">Absent Today</div>
-                        <div class="stat-value text-danger">{{ today_absent|default:0 }}</div>
+                        <div class="stat-value text-danger">{{ today_absent|default:0|intcomma }}</div>
                     </div>
                 </div>
             </div>
@@ -348,7 +349,7 @@
                     </div>
                     <div class="flex-grow-1">
                         <div class="stat-label">Payments (30d)</div>
-                        <div class="stat-value text-warning">{{ total_revenue_30days|default:0|floatformat:0 }} Frw</div>
+                        <div class="stat-value text-warning">{{ total_revenue_30days|default:0|floatformat:0|intcomma }} Frw</div>
                     </div>
                 </div>
             </div>
@@ -374,7 +375,7 @@
                     </div>
                     <div class="flex-grow-1">
                         <div class="stat-label">Total Results</div>
-                        <div class="stat-value text-primary">{{ total_results|default:0 }}</div>
+                        <div class="stat-value text-primary">{{ total_results|default:0|intcomma }}</div>
                     </div>
                 </div>
             </div>
@@ -387,7 +388,7 @@
                     </div>
                     <div class="flex-grow-1">
                         <div class="stat-label">Promotions</div>
-                        <div class="stat-value text-success">{{ total_promotions|default:0 }}</div>
+                        <div class="stat-value text-success">{{ total_promotions|default:0|intcomma }}</div>
                     </div>
                 </div>
             </div>
@@ -442,7 +443,7 @@
                                     <tr>
                                         <td><strong>#{{ payment.receipt_number }}</strong></td>
                                         <td>{{ payment.student.user.get_full_name }}</td>
-                                        <td><span class="badge" style="background: linear-gradient(135deg, #56ab2f 0%, #a8e063 100%); padding: 0.5rem 1rem;">{{ payment.amount_paid }} Frw</span></td>
+                                        <td><span class="badge" style="background: linear-gradient(135deg, #56ab2f 0%, #a8e063 100%); padding: 0.5rem 1rem;">{{ payment.amount_paid|intcomma }} Frw</span></td>
                                         <td>{{ payment.payment_date|date:"M d, Y" }}</td>
                                         <td><span class="badge bg-success">Paid</span></td>
                                     </tr>
@@ -638,17 +639,45 @@
                 </div>
                 <div class="card-body">
                     <a href="{% url 'students:student_list' %}" class="btn btn-gradient-primary w-100 quick-action-btn">
-                        <i class="bi bi-person-plus-fill"></i>
+                        <i class="bi bi-people"></i>
                         Manage Students
                     </a>
+                    {% if user.is_admin or user.is_staff %}
+                    <a href="{% url 'students:student_create' %}" class="btn btn-outline-primary w-100 quick-action-btn mb-2">
+                        <i class="bi bi-plus-circle"></i>
+                        Add New Student
+                    </a>
+                    {% endif %}
                     <a href="{% url 'teachers:teacher_list' %}" class="btn btn-gradient-success w-100 quick-action-btn">
                         <i class="bi bi-person-badge"></i>
                         Manage Teachers
                     </a>
+                    {% if user.is_admin or user.is_staff %}
+                    <a href="{% url 'teachers:teacher_create' %}" class="btn btn-outline-success w-100 quick-action-btn mb-2">
+                        <i class="bi bi-plus-circle"></i>
+                        Add New Teacher
+                    </a>
+                    {% endif %}
                     <a href="{% url 'classes:class_list' %}" class="btn btn-gradient-info w-100 quick-action-btn">
                         <i class="bi bi-door-open"></i>
                         Manage Classes
                     </a>
+                    {% if user.is_admin or user.is_staff %}
+                    <a href="{% url 'classes:class_create' %}" class="btn btn-outline-info w-100 quick-action-btn mb-2">
+                        <i class="bi bi-plus-circle"></i>
+                        Add New Class
+                    </a>
+                    {% endif %}
+                    <a href="{% url 'accounts:user_list' %}" class="btn btn-gradient-dark w-100 quick-action-btn">
+                        <i class="bi bi-people"></i>
+                        Manage Users
+                    </a>
+                    {% if user.is_admin %}
+                    <a href="{% url 'accounts:user_create' %}" class="btn btn-outline-dark w-100 quick-action-btn mb-2">
+                        <i class="bi bi-plus-circle"></i>
+                        Add New User
+                    </a>
+                    {% endif %}
                     <a href="{% url 'exams:exam_list' %}" class="btn btn-gradient-warning w-100 quick-action-btn">
                         <i class="bi bi-clipboard-data"></i>
                         Manage Exams
@@ -671,15 +700,15 @@
                 <div class="card-body">
                     <div class="d-flex justify-content-between align-items-center mb-3 pb-3 border-bottom">
                         <span><i class="bi bi-people text-primary me-2"></i>Total Parents</span>
-                        <strong>{{ total_parents|default:0 }}</strong>
+                        <strong>{{ total_parents|default:0|intcomma }}</strong>
                     </div>
                     <div class="d-flex justify-content-between align-items-center mb-3 pb-3 border-bottom">
                         <span><i class="bi bi-person-workspace text-success me-2"></i>Staff Members</span>
-                        <strong>{{ total_staff|default:0 }}</strong>
+                        <strong>{{ total_staff|default:0|intcomma }}</strong>
                     </div>
                     <div class="d-flex justify-content-between align-items-center mb-3 pb-3 border-bottom">
                         <span><i class="bi bi-person-circle text-info me-2"></i>Total Users</span>
-                        <strong>{{ total_users|default:0 }}</strong>
+                        <strong>{{ total_users|default:0|intcomma }}</strong>
                     </div>
                     <div class="d-flex justify-content-between align-items-center mb-3 pb-3 border-bottom">
                         <span><i class="bi bi-bell text-warning me-2"></i>Notifications</span>
@@ -687,7 +716,7 @@
                     </div>
                     <div class="d-flex justify-content-between align-items-center">
                         <span><i class="bi bi-check-circle text-success me-2"></i>Marked Today</span>
-                        <strong>{{ total_marked_today|default:0 }}</strong>
+                        <strong>{{ total_marked_today|default:0|intcomma }}</strong>
                     </div>
                 </div>
             </div>
@@ -725,6 +754,36 @@
 
 {% elif user.is_teacher %}
     <!-- Teacher Dashboard -->
+    <div class="row g-4 mb-4">
+        <div class="col-md-3">
+            <div class="stat-card primary">
+                <div class="stat-icon"><i class="bi bi-door-open"></i></div>
+                <div class="stat-label">My Classes</div>
+                <div class="stat-value">{{ classes_assigned|length|default:0 }}</div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="stat-card success">
+                <div class="stat-icon"><i class="bi bi-people"></i></div>
+                <div class="stat-label">Total Students</div>
+                <div class="stat-value">{{ total_students|default:0|intcomma }}</div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="stat-card info">
+                <div class="stat-icon"><i class="bi bi-journal-text"></i></div>
+                <div class="stat-label">My Subjects</div>
+                <div class="stat-value">{{ subjects|length|default:0 }}</div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="stat-card warning">
+                <div class="stat-icon"><i class="bi bi-calendar-check"></i></div>
+                <div class="stat-label">Attendance Marked</div>
+                <div class="stat-value">{{ attendance_marked_today|default:0 }}</div>
+            </div>
+        </div>
+    </div>
     <div class="row g-4">
         <div class="col-md-8">
             <div class="content-card">
@@ -741,7 +800,7 @@
                                     <h5 class="mb-2">{{ class_room.name }}</h5>
                                     <p class="text-muted mb-2">
                                         <i class="bi bi-people me-1"></i>
-                                        {{ class_room.students.count }} Students
+                                        {{ class_room.students.count|intcomma }} Students
                                     </p>
                                     <a href="{% url 'classes:class_detail' class_room.pk %}" class="btn btn-sm btn-gradient-primary">
                                         View Details
@@ -759,7 +818,6 @@
                 </div>
             </div>
         </div>
-        
         <div class="col-md-4">
             <div class="content-card">
                 <div class="card-header">
@@ -799,7 +857,7 @@
                 <div class="card-body">
                     <div class="mb-3 pb-3 border-bottom">
                         <div class="text-muted small mb-1">Admission Number</div>
-                        <div class="fw-bold">{{ student.admission_number }}</div>
+                        <div class="fw-bold">{{ student.admission_number|intcomma }}</div>
                     </div>
                     <div class="mb-3 pb-3 border-bottom">
                         <div class="text-muted small mb-1">Class</div>
@@ -807,7 +865,7 @@
                     </div>
                     <div>
                         <div class="text-muted small mb-1">Roll Number</div>
-                        <div class="fw-bold">{{ student.roll_number|default:"Not Assigned" }}</div>
+                        <div class="fw-bold">{{ student.roll_number|intcomma|default:"Not Assigned" }}</div>
                     </div>
                 </div>
             </div>
@@ -844,6 +902,36 @@
 
 {% elif user.is_parent %}
     <!-- Parent Dashboard -->
+    <div class="row g-4 mb-4">
+        <div class="col-md-3">
+            <div class="stat-card primary">
+                <div class="stat-icon"><i class="bi bi-people"></i></div>
+                <div class="stat-label">My Children</div>
+                <div class="stat-value">{{ children|length|default:0 }}</div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="stat-card info">
+                <div class="stat-icon"><i class="bi bi-bar-chart"></i></div>
+                <div class="stat-label">Average Performance</div>
+                <div class="stat-value">{{ average_performance|default:"-" }}</div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="stat-card warning">
+                <div class="stat-icon"><i class="bi bi-bell"></i></div>
+                <div class="stat-label">Notifications</div>
+                <div class="stat-value">{{ unread_notifications|default:0 }}</div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="stat-card success">
+                <div class="stat-icon"><i class="bi bi-calendar-check"></i></div>
+                <div class="stat-label">Attendance This Term</div>
+                <div class="stat-value">{{ attendance_this_term|default:"-" }}</div>
+            </div>
+        </div>
+    </div>
     <div class="row g-4">
         <div class="col-md-12">
             <div class="content-card">
@@ -863,7 +951,7 @@
                                     <h5 class="mb-3">{{ child.user.get_full_name }}</h5>
                                     <div class="mb-2">
                                         <small class="text-muted">Admission No:</small>
-                                        <div class="fw-bold">{{ child.admission_number }}</div>
+                                        <div class="fw-bold">{{ child.admission_number|intcomma }}</div>
                                     </div>
                                     <div class="mb-3">
                                         <small class="text-muted">Class:</small>

@@ -1,6 +1,7 @@
 {% extends 'base.html' %}
 {% load static %}
 {% load attendance_tags %}
+{% load humanize %}
 
 {% block title %}Mark Attendance - {{ class_room.name }}{% endblock %}
 
@@ -225,7 +226,7 @@
         <div class="summary-cards">
             <div class="summary-card" style="border-top: 4px solid #667eea;">
                 <div class="summary-icon">👥</div>
-                <div class="summary-value" id="totalCount">{{ students.count }}</div>
+                <div class="summary-value" id="totalCount">{{ students.count|intcomma }}</div>
                 <div class="summary-label">Total Students</div>
             </div>
             <div class="summary-card" style="border-top: 4px solid #56ab2f;">
@@ -279,9 +280,9 @@
                     <div class="student-details">
                         <div class="student-name">{{ student.user.get_full_name }}</div>
                         <div class="student-admission">
-                            <i class="bi bi-hash"></i>{{ student.admission_number }}
+                            <i class="bi bi-hash"></i>{{ student.admission_number|intcomma }}
                             {% if student.roll_number %}
-                            | Roll: {{ student.roll_number }}
+                            | Roll: {{ student.roll_number|intcomma }}
                             {% endif %}
                         </div>
                     </div>

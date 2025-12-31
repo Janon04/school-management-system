@@ -63,7 +63,7 @@
         <!-- Children Count Card -->
         <div class="card mt-3">
             <div class="card-body text-center">
-                <h2 class="text-primary mb-0">{{ parent.student_set.count }}</h2>
+                <h2 class="text-primary mb-0">{{ parent.children.count }}</h2>
                 <small class="text-muted">Child(ren) Registered</small>
             </div>
         </div>
@@ -116,7 +116,7 @@
                 <h6 class="mb-0"><i class="bi bi-people-fill"></i> Children</h6>
             </div>
             <div class="card-body">
-                {% if parent.student_set.all %}
+                {% if parent.children.all %}
                 <div class="table-responsive">
                     <table class="table table-sm">
                         <thead>
@@ -129,7 +129,7 @@
                             </tr>
                         </thead>
                         <tbody>
-                            {% for student in parent.student_set.all %}
+                            {% for student in parent.children.all %}
                             <tr>
                                 <td>{{ student.admission_number }}</td>
                                 <td>

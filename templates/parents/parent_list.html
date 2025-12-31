@@ -78,6 +78,7 @@
                                     <i class="bi bi-eye"></i>
                                 </a>
                                 {% if user.is_admin or user.is_staff %}
+                                {% if user.is_admin or user.is_staff %}
                                 <a href="{% url 'parents:parent_update' parent.pk %}" class="btn btn-outline-secondary" title="Edit">
                                     <i class="bi bi-pencil"></i>
                                 </a>

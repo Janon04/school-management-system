@@ -1,7 +1,90 @@
+from django.template.loader import render_to_string
+from django.http import HttpResponse, JsonResponse
+from xhtml2pdf import pisa
+from django.shortcuts import render, get_object_or_404, redirect
+from django.contrib.auth.decorators import login_required
+from django.contrib import messages
+from django.views.decorators.http import require_POST
+from django.db.models import Count, Avg, Sum, Q
+from apps.accounts.decorators import teacher_required, admin_required
+from .models import Result, ReportCard
+from apps.accounts.models import User
+from apps.students.models import Student
+from apps.exams.models import Exam, ExamSchedule
+from apps.classes.models import ClassRoom, Subject
+from apps.notifications.models import Notification
+from apps.parents.models import Parent
+import json
+
+# PDF report card view (xhtml2pdf)
+@login_required
+def report_card_pdf(request, student_id, exam_id):
+    student = get_object_or_404(Student, pk=student_id)
+    exam = get_object_or_404(Exam, pk=exam_id)
+    report_card, _ = ReportCard.objects.get_or_create(student=student, exam=exam)
+    report_card.calculate_totals()
+    results = Result.objects.filter(student=student, exam=exam).order_by('subject__name')
+    # School info from DB
+    from apps.config.models import SchoolInfo
+    school_info_obj = SchoolInfo.objects.order_by('-updated_at').first()
+    school_info = {
+        'name': school_info_obj.name if school_info_obj else '',
+        'address': school_info_obj.address if school_info_obj else '',
+        'phone': school_info_obj.phone if school_info_obj else '',
+        'email': school_info_obj.email if school_info_obj else '',
+        'motto': school_info_obj.motto if school_info_obj else '',
+        'logo': school_info_obj.logo if school_info_obj and school_info_obj.logo else None,
+    }
+    headmaster = school_info_obj.headmaster if school_info_obj and school_info_obj.headmaster else None
+    class_teacher = student.class_assigned.class_teacher if student.class_assigned and student.class_assigned.class_teacher else None
+    # Per-subject ranking
+    subject_ranks = {}
+    for result in results:
+        subject_results = Result.objects.filter(
+            exam=exam,
+            subject=result.subject,
+            student__class_assigned=student.class_assigned
+        ).order_by('-marks_obtained')
+        rank = None
+        for idx, r in enumerate(subject_results, start=1):
+            if r.student_id == student.id:
+                rank = idx
+                break
+        subject_ranks[result.subject.id] = {
+            'rank': rank,
+            'total': subject_results.count()
+        }
+    context = {
+        'student': student,
+        'exam': exam,
+        'report_card': report_card,
+        'results': results,
+        'school_info': school_info,
+        'headmaster': headmaster,
+        'class_teacher': class_teacher,
+        'subject_ranks': subject_ranks,
+    }
+    html = render_to_string('results/report_card_pdf.html', context)
+    response = HttpResponse(content_type='application/pdf')
+    response['Content-Disposition'] = f'attachment; filename="report_card_{student.admission_number}_{exam.name}.pdf"'
+    pisa_status = pisa.CreatePDF(html, dest=response)
+    if pisa_status.err:
+        return HttpResponse('Error generating PDF', status=500)
+    return response
+
+# Utility: Send notification to user
+def send_result_notification(user, title, message, link=None, notification_type='INFO'):
+    Notification.objects.create(
+        user=user,
+        title=title,
+        message=message,
+        notification_type=notification_type,
+        link=link or ''
+    )
+
 """
 Views for Results Management
 """
-from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.http import JsonResponse
@@ -102,12 +185,13 @@ def result_create_view(request):
         max_marks = request.POST.get('max_marks', 100)
         is_absent = request.POST.get('is_absent') == 'on'
         remarks = request.POST.get('remarks', '')
-        
+        action = request.POST.get('action', 'save')  # 'save' or 'submit'
+
         try:
             student = Student.objects.get(pk=student_id)
             exam = Exam.objects.get(pk=exam_id)
             subject = Subject.objects.get(pk=subject_id)
-            
+
             # Check if result already exists
             result, created = Result.objects.get_or_create(
                 student=student,
@@ -118,23 +202,42 @@ def result_create_view(request):
                     'max_marks': int(max_marks),
                     'is_absent': is_absent,
                     'remarks': remarks,
-                    'entered_by': request.user
+                    'entered_by': request.user,
+                    'status': 'DRAFT'
                 }
             )
-            
-            if not created:
-                # Update existing result
-                result.marks_obtained = float(marks_obtained) if not is_absent else 0
-                result.max_marks = int(max_marks)
-                result.is_absent = is_absent
-                result.remarks = remarks
-                result.save()
-                messages.warning(request, f'Result updated for {student.user.get_full_name()}')
+
+            # Update fields
+            result.marks_obtained = float(marks_obtained) if not is_absent else 0
+            result.max_marks = int(max_marks)
+            result.is_absent = is_absent
+            result.remarks = remarks
+
+            # Status logic
+            if action == 'submit':
+                result.status = 'SUBMITTED'
             else:
-                result.calculate_grade()
-                result.save()
+                result.status = 'DRAFT'
+
+            result.calculate_grade()
+            result.save()
+
+            if action == 'submit':
+                # Notify HOD/Admin for approval
+                admin_users = User.objects.filter(role='ADMIN')
+                for admin in admin_users:
+                    send_result_notification(
+                        admin,
+                        title='Result Submitted for Approval',
+                        message=f'Result for {student.user.get_full_name()} ({subject.name}) has been submitted by {request.user.get_full_name()}.',
+                        link='/results/'
+                    )
+                messages.success(request, f'Result submitted for approval for {student.user.get_full_name()}')
+            elif created:
                 messages.success(request, f'Result created for {student.user.get_full_name()}')
-            
+            else:
+                messages.warning(request, f'Result updated for {student.user.get_full_name()}')
+
             return redirect('results:result_list')
         except Exception as e:
             messages.error(request, f'Error creating result: {str(e)}')
@@ -143,12 +246,16 @@ def result_create_view(request):
     exams = Exam.objects.all().order_by('-start_date')[:10]
     classes = ClassRoom.objects.filter(is_active=True)
     subjects = Subject.objects.filter(is_active=True)
-    
+
+    # Prefill exam if provided in query params
+    prefill_exam_id = request.GET.get('exam')
+
     context = {
         'exams': exams,
         'classes': classes,
         'subjects': subjects,
-        'action': 'Create'
+        'action': 'Create',
+        'prefill_exam_id': prefill_exam_id
     }
     return render(request, 'results/result_form.html', context)
 
@@ -161,19 +268,71 @@ def result_update_view(request, pk):
     
     if request.method == 'POST':
         marks_obtained = request.POST.get('marks_obtained')
+        if marks_obtained in [None, '']:
+            marks_obtained = 0
         max_marks = request.POST.get('max_marks', 100)
         is_absent = request.POST.get('is_absent') == 'on'
         remarks = request.POST.get('remarks', '')
-        
+        action = request.POST.get('action', 'save')  # 'save', 'submit', 'approve', 'publish'
+
         try:
             result.marks_obtained = float(marks_obtained) if not is_absent else 0
             result.max_marks = int(max_marks)
             result.is_absent = is_absent
             result.remarks = remarks
+
+            # Status logic
+            if action == 'submit':
+                result.status = 'SUBMITTED'
+            elif action == 'approve':
+                result.status = 'APPROVED'
+            elif action == 'publish':
+                result.status = 'PUBLISHED'
+            else:
+                result.status = 'DRAFT'
+
             result.calculate_grade()
             result.save()
-            
-            messages.success(request, f'Result updated successfully')
+
+            if action == 'submit':
+                # Notify HOD/Admin for approval
+                admin_users = User.objects.filter(role='ADMIN')
+                for admin in admin_users:
+                    send_result_notification(
+                        admin,
+                        title='Result Submitted for Approval',
+                        message=f'Result for {result.student.user.get_full_name()} ({result.subject.name}) has been submitted by {request.user.get_full_name()}.',
+                        link='/results/'
+                    )
+                messages.success(request, 'Result submitted for approval')
+            elif action == 'approve':
+                # Notify teacher who entered the result
+                if result.entered_by:
+                    send_result_notification(
+                        result.entered_by,
+                        title='Result Approved',
+                        message=f'Result for {result.student.user.get_full_name()} ({result.subject.name}) has been approved.',
+                        link='/results/'
+                    )
+                messages.success(request, 'Result approved')
+            elif action == 'publish':
+                # Notify student and parent
+                send_result_notification(
+                    result.student.user,
+                    title='Result Published',
+                    message=f'Your result for {result.subject.name} ({result.exam.name}) has been published.',
+                    link='/results/'
+                )
+                if result.student.parent and result.student.parent.user:
+                    send_result_notification(
+                        result.student.parent.user,
+                        title='Result Published',
+                        message=f'Result for your child {result.student.user.get_full_name()} ({result.subject.name}) has been published.',
+                        link='/results/'
+                    )
+                messages.success(request, 'Result published')
+            else:
+                messages.success(request, 'Result updated successfully')
             return redirect('results:result_list')
         except Exception as e:
             messages.error(request, f'Error updating result: {str(e)}')
@@ -311,43 +470,59 @@ def enter_results_view(request, exam_id, class_id):
 
 
 @login_required
-@teacher_required
 @require_POST
 def save_results_view(request, exam_id, class_id):
     """Save results via AJAX"""
+    import logging
+    logger = logging.getLogger('django')
     try:
         exam = get_object_or_404(Exam, pk=exam_id)
         class_room = get_object_or_404(ClassRoom, pk=class_id)
-        
+
+        # Restrict teacher access to only their assigned classes
+        if request.user.is_teacher and not request.user.is_admin:
+            teacher = getattr(request.user, 'teacher_profile', None)
+            if teacher:
+                allowed_class_ids = set(teacher.classes_as_teacher.values_list('id', flat=True)).union(
+                    set(teacher.teaching_subjects.values_list('class_room_id', flat=True))
+                )
+                if class_room.id not in allowed_class_ids:
+                    logger.warning(f"User {request.user} tried to save results for unassigned class {class_room.id}")
+                    return JsonResponse({'success': False, 'error': 'You do not have permission to save results for this class.'})
+
         data = json.loads(request.body)
+        logger.info(f"Received save results data: {data}")
         subject_id = data.get('subject')
         results_data = data.get('results', [])
-        
+
         subject = get_object_or_404(Subject, pk=subject_id)
-        
+
         for result_data in results_data:
             student = Student.objects.get(pk=result_data['student'])
-            
-            # Get or create result
             result, created = Result.objects.get_or_create(
                 student=student,
                 exam=exam,
                 subject=subject,
                 defaults={'entered_by': request.user}
             )
-            
-            # Update result
+            logger.info(f"Result for student {student.id}, subject {subject.id}: created={created}")
+            # Always update all fields and save, even if unchanged
             result.is_absent = result_data.get('is_absent', False)
             if not result.is_absent:
                 result.marks_obtained = float(result_data.get('marks', 0))
                 result.grade = result_data.get('grade', '')
+            else:
+                result.marks_obtained = 0
+                result.grade = 'ABS'
             result.remarks = result_data.get('remarks', '')
             result.entered_by = request.user
-            result.save()
-        
+            result.save(force_update=not created)
+            logger.info(f"Saved result: {result}")
+
         return JsonResponse({'success': True})
-    
+
     except Exception as e:
+        logger.error(f"Error saving results: {e}", exc_info=True)
         return JsonResponse({'success': False, 'error': str(e)})
 
 
@@ -472,27 +647,57 @@ def report_card_view(request, student_id, exam_id):
         student=student,
         exam=exam
     )
-    
     if created or request.GET.get('regenerate'):
         report_card.calculate_totals()
-    
+
     results = Result.objects.filter(student=student, exam=exam).order_by('subject__name')
-    
+
     # Calculate class position if not set
     if not report_card.class_position and student.class_assigned:
         class_reports = ReportCard.objects.filter(
             exam=exam,
             student__class_assigned=student.class_assigned
         ).order_by('-percentage')
-        
         for index, rc in enumerate(class_reports, start=1):
             if rc.id == report_card.id:
                 report_card.class_position = index
                 report_card.save()
                 break
-    
+
     total_students = student.class_assigned.students.count() if student.class_assigned else 1
-    
+
+    # School info from DB
+    from apps.config.models import SchoolInfo
+    school_info_obj = SchoolInfo.objects.order_by('-updated_at').first()
+    school_info = {
+        'name': school_info_obj.name if school_info_obj else '',
+        'address': school_info_obj.address if school_info_obj else '',
+        'phone': school_info_obj.phone if school_info_obj else '',
+        'email': school_info_obj.email if school_info_obj else '',
+        'motto': school_info_obj.motto if school_info_obj else '',
+        'logo': school_info_obj.logo if school_info_obj and school_info_obj.logo else None,
+    }
+    headmaster = school_info_obj.headmaster if school_info_obj and school_info_obj.headmaster else None
+    class_teacher = student.class_assigned.class_teacher if student.class_assigned and student.class_assigned.class_teacher else None
+
+    # Per-subject ranking
+    subject_ranks = {}
+    for result in results:
+        subject_results = Result.objects.filter(
+            exam=exam,
+            subject=result.subject,
+            student__class_assigned=student.class_assigned
+        ).order_by('-marks_obtained')
+        rank = None
+        for idx, r in enumerate(subject_results, start=1):
+            if r.student_id == student.id:
+                rank = idx
+                break
+        subject_ranks[result.subject.id] = {
+            'rank': rank,
+            'total': subject_results.count()
+        }
+
     # Determine which template to use based on education level
     template_name = 'results/report_card.html'  # Default
     if student.class_assigned:
@@ -503,13 +708,17 @@ def report_card_view(request, student_id, exam_id):
             template_name = 'results/report_card_secondary.html'
         elif level == 'UNIVERSITY':
             template_name = 'results/report_card_university.html'
-    
+
     context = {
         'student': student,
         'exam': exam,
         'report_card': report_card,
         'results': results,
         'total_students': total_students,
+        'school_info': school_info,
+        'headmaster': headmaster,
+        'class_teacher': class_teacher,
+        'subject_ranks': subject_ranks,
     }
     return render(request, template_name, context)
 

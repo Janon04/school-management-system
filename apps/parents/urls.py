@@ -8,6 +8,7 @@ app_name = 'parents'
 
 urlpatterns = [
     path('', views.parent_list_view, name='parent_list'),
+    path('dashboard/', views.parent_dashboard_view, name='parent_dashboard'),
     path('create/', views.parent_create_view, name='parent_create'),
     path('<int:pk>/', views.parent_detail_view, name='parent_detail'),
     path('<int:pk>/edit/', views.parent_update_view, name='parent_update'),

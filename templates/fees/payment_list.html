@@ -1,5 +1,6 @@
 {% extends 'base.html' %}
 {% load static %}
+{% load humanize %}
 
 {% block title %}Payment Records - School Management System{% endblock %}
 
@@ -48,7 +49,7 @@
                 </div>
                 <div class="stat-details">
                     {% load fee_tags %}
-                    <h3>{{ payments|sum_payment_amounts|floatformat:2 }} Frw</h3>
+                    <h3>{{ payments|sum_payment_amounts|floatformat:2|intcomma }} Frw</h3>
                     <p>Total Amount</p>
                 </div>
             </div>
@@ -160,7 +161,7 @@
                                         {% endif %}
                                     </td>
                                     <td>
-                                        <strong class="text-success">{{ payment.amount_paid|floatformat:2 }} Frw</strong>
+                                        <strong class="text-success">{{ payment.amount_paid|floatformat:2|intcomma }} Frw</strong>
                                     </td>
                                     <td>
                                         <span class="badge bg-info">
@@ -242,7 +243,7 @@
                                 <span class="badge bg-primary rounded-pill me-2">{{ method_group.list|length }}</span>
                                 <strong class="text-success">
                                     {% load fee_tags %}
-                                    {{ method_group.list|sum_payment_amounts|floatformat:2 }} Frw
+                                    {{ method_group.list|sum_payment_amounts|floatformat:2|intcomma }} Frw
                                 </strong>
                             </div>
                         </div>
@@ -278,7 +279,7 @@
                                 <span class="badge bg-primary rounded-pill me-2">{{ status_group.list|length }}</span>
                                 <strong class="text-success">
                                     {% load fee_tags %}
-                                    {{ status_group.list|sum_payment_amounts|floatformat:2 }} Frw
+                                    {{ status_group.list|sum_payment_amounts|floatformat:2|intcomma }} Frw
                                 </strong>
                             </div>
                         </div>

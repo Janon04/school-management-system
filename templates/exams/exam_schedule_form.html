@@ -83,10 +83,50 @@
                 {% endif %}
             </div>
         </div>
+        <div class="row g-3 mt-2">
+            <div class="col-md-6">
+                <label class="form-label">Status</label>
+                {{ form.status }}
+                {% if form.status.errors %}
+                <div class="invalid-feedback d-block">{{ form.status.errors.0 }}</div>
+                {% endif %}
+                <small class="form-text text-muted">Set to Completed, Postponed, or Cancelled as needed.</small>
+            </div>
+        </div>
         <div class="mt-4">
             <button type="submit" class="btn btn-primary btn-lg">Add Schedule</button>
             <a href="{% url 'exams:exam_detail' exam.id %}" class="btn btn-secondary btn-lg">Cancel</a>
         </div>
     </form>
 </div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const classSelect = document.getElementById('id_class_room');
+    const subjectSelect = document.getElementById('id_subject');
+    if (classSelect && subjectSelect) {
+        classSelect.addEventListener('change', function() {
+            const classId = this.value;
+            subjectSelect.innerHTML = '<option value="">Loading...</option>';
+            fetch('/exams/ajax/get_subjects/?class_room_id=' + classId)
+                .then(response => response.json())
+                .then(data => {
+                    subjectSelect.innerHTML = '';
+                    if (data.subjects.length === 0) {
+                        subjectSelect.innerHTML = '<option value="">No subjects found</option>';
+                    } else {
+                        data.subjects.forEach(function(subject) {
+                            const opt = document.createElement('option');
+                            opt.value = subject.id;
+                            opt.textContent = subject.name;
+                            subjectSelect.appendChild(opt);
+                        });
+                    }
+                });
+        });
+    }
+});
+</script>
 {% endblock %}

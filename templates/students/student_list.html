@@ -1,7 +1,9 @@
 {% extends 'base.html' %}
 {% load static %}
+{% load humanize %}
+{% load i18n %}
 
-{% block title %}Students List - SMS{% endblock %}
+{% block title %}{% trans "Students List" %} - SMS{% endblock %}
 
 {% block content %}
 <div class="container-fluid py-4">
@@ -11,14 +13,14 @@
             <div>
                 <h1>
                     <i class="bi bi-people-fill"></i>
-                    Students Management
+                    {% trans "Students Management" %}
                 </h1>
-                <p>Manage all student records and information</p>
+                <p>{% trans "Manage all student records and information" %}</p>
             </div>
             <div class="mt-3 mt-md-0">
                 {% if user.is_admin or user.is_staff %}
                 <a href="{% url 'students:student_create' %}" class="btn btn-light btn-lg">
-                    <i class="bi bi-plus-circle-fill"></i> Add Student
+                    <i class="bi bi-plus-circle-fill"></i> {% trans "Add Student" %}
                 </a>
                 {% endif %}
             </div>
@@ -32,8 +34,8 @@
                 <div class="stat-icon-mini">
                     <i class="bi bi-people-fill"></i>
                 </div>
-                <div class="stat-label-mini">Total Students</div>
-                <div class="stat-value-mini">{{ students.count }}</div>
+                <div class="stat-label-mini">{% trans "Total Students" %}</div>
+                <div class="stat-value-mini">{{ students.count|intcomma }}</div>
             </div>
         </div>
         <div class="col-md-3">
@@ -41,8 +43,8 @@
                 <div class="stat-icon-mini">
                     <i class="bi bi-check-circle-fill"></i>
                 </div>
-                <div class="stat-label-mini">Active</div>
-                <div class="stat-value-mini">{{ students|length }}</div>
+                <div class="stat-label-mini">{% trans "Active" %}</div>
+                <div class="stat-value-mini">{{ students|length|intcomma }}</div>
             </div>
         </div>
         <div class="col-md-3">
@@ -50,8 +52,8 @@
                 <div class="stat-icon-mini">
                     <i class="bi bi-person-badge-fill"></i>
                 </div>
-                <div class="stat-label-mini">Male</div>
-                <div class="stat-value-mini">{{ male_count }}</div>
+                <div class="stat-label-mini">{% trans "Male" %}</div>
+                <div class="stat-value-mini">{{ male_count|intcomma }}</div>
             </div>
         </div>
         <div class="col-md-3">
@@ -59,8 +61,8 @@
                 <div class="stat-icon-mini">
                     <i class="bi bi-person-hearts"></i>
                 </div>
-                <div class="stat-label-mini">Female</div>
-                <div class="stat-value-mini">{{ female_count }}</div>
+                <div class="stat-label-mini">{% trans "Female" %}</div>
+                <div class="stat-value-mini">{{ female_count|intcomma }}</div>
             </div>
         </div>
     </div>
@@ -69,9 +71,9 @@
     <div class="filters-section">
         <form method="get" class="filter-group">
             <input type="text" name="q" class="search-box-modern flex-grow-1" 
-                   placeholder="🔍 Search by name or admission number" value="{{ query }}">
+                   placeholder="🔍 {% trans 'Search by name or admission number' %}" value="{{ query }}">
             <select name="class" class="form-select" style="max-width: 200px;">
-                <option value="">All Classes</option>
+                <option value="">{% trans 'All Classes' %}</option>
                 {% for class in classes %}
                 <option value="{{ class.id }}" {% if class_filter == class.id|stringformat:"s" %}selected{% endif %}>
                     {{ class.name }}
@@ -79,16 +81,28 @@
                 {% endfor %}
             </select>
             <button type="submit" class="btn-gradient-primary">
-                <i class="bi bi-search"></i> Search
+                <i class="bi bi-search"></i> {% trans "Search" %}
             </button>
         </form>
     </div>
+
+    <!-- Download and Import Buttons -->
+    {% if user.is_admin or user.is_staff %}
+    <div class="mb-4">
+        <a href="{% url 'students:student_template_download' %}" class="btn btn-outline-primary btn-lg me-2">
+            <i class="bi bi-download"></i> Download Import Template
+        </a>
+        <a href="{% url 'students:student_import' %}" class="btn btn-gradient-primary btn-lg">
+            <i class="bi bi-upload"></i> Import Students
+        </a>
+    </div>
+    {% endif %}
 
     <!-- Students Table -->
     <div class="card-modern">
         <div class="card-header">
             <i class="bi bi-list-ul me-2"></i>
-            Students List
+            {% trans "Students List" %}
         </div>
         <div class="card-body">
             {% if students %}
@@ -96,35 +110,27 @@
                 <table class="table table-modern">
                     <thead>
                         <tr>
-                            <th>Admission No.</th>
-                            <th>Name</th>
-                            <th>Class</th>
-                            <th>Gender</th>
-                            <th>Parent</th>
-                            <th>Status</th>
-                            <th>Actions</th>
+                            <th>{% trans "Admission No." %}</th>
+                            <th>{% trans "First Name" %}</th>
+                            <th>{% trans "Middle Name" %}</th>
+                            <th>{% trans "Last Name" %}</th>
+                            <th>{% trans "Class" %}</th>
+                            <th>{% trans "Gender" %}</th>
+                            <th>{% trans "Parent" %}</th>
+                            <th>{% trans "Status" %}</th>
+                            <th>{% trans "Actions" %}</th>
                         </tr>
                     </thead>
                     <tbody>
                         {% for student in students %}
                         <tr>
-                            <td><strong class="text-primary">{{ student.admission_number }}</strong></td>
-                            <td>
-                                <div class="d-flex align-items-center">
-                                    {% if student.user.profile_picture %}
-                                    <img src="{{ student.user.profile_picture.url }}" class="rounded-circle me-2" width="40" height="40" alt="{{ student.user.get_full_name }}">
-                                    {% else %}
-                                    <div class="rounded-circle d-flex align-items-center justify-content-center me-2" 
-                                         style="width: 40px; height: 40px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; font-weight: 600;">
-                                        {{ student.user.first_name.0 }}{{ student.user.last_name.0 }}
-                                    </div>
-                                    {% endif %}
-                                    <span class="fw-semibold">{{ student.user.get_full_name }}</span>
-                                </div>
-                            </td>
+                            <td><strong class="text-primary">{{ student.admission_number|intcomma }}</strong></td>
+                            <td>{{ student.user.first_name }}</td>
+                            <td>{{ student.middle_name }}</td>
+                            <td>{{ student.user.last_name }}</td>
                             <td>
                                 <span class="badge-modern bg-info">
-                                    {{ student.class_assigned.name|default:"Not Assigned" }}
+                                    {{ student.class_assigned.name|default:_('Not Assigned') }}
                                 </span>
                             </td>
                             <td>{{ student.get_gender_display }}</td>
@@ -132,23 +138,23 @@
                             <td>
                                 {% if student.is_active %}
                                 <span class="badge-modern bg-success">
-                                    <i class="bi bi-check-circle-fill me-1"></i>Active
+                                    <i class="bi bi-check-circle-fill me-1"></i>{% trans "Active" %}
                                 </span>
                                 {% else %}
                                 <span class="badge-modern bg-danger">
-                                    <i class="bi bi-x-circle-fill me-1"></i>Inactive
+                                    <i class="bi bi-x-circle-fill me-1"></i>{% trans "Inactive" %}
                                 </span>
                                 {% endif %}
                             </td>
                             <td>
                                 <div class="action-buttons-group">
                                     <a href="{% url 'students:student_detail' student.pk %}" 
-                                       class="action-btn-sm btn-gradient-info" title="View Details">
+                                       class="action-btn-sm btn-gradient-info" title="{% trans 'View Details' %}">
                                         <i class="bi bi-eye-fill"></i>
                                     </a>
                                     {% if user.is_admin or user.is_staff %}
                                     <a href="{% url 'students:student_update' student.pk %}" 
-                                       class="action-btn-sm btn-gradient-primary" title="Edit">
+                                       class="action-btn-sm btn-gradient-primary" title="{% trans 'Edit' %}">
                                         <i class="bi bi-pencil-fill"></i>
                                     </a>
                                     {% endif %}
@@ -162,16 +168,16 @@
             
             <!-- Footer -->
             <div class="mt-3 d-flex justify-content-between align-items-center">
-                <p class="text-muted mb-0">Showing {{ students.count }} student(s)</p>
+                <p class="text-muted mb-0">{% blocktrans %}Showing {{ students.count|intcomma }} student(s){% endblocktrans %}</p>
             </div>
             {% else %}
             <div class="empty-state-modern">
                 <i class="bi bi-inbox"></i>
-                <h4>No Students Found</h4>
-                <p>Start by adding your first student to the system</p>
+                <h4>{% trans "No Students Found" %}</h4>
+                <p>{% trans "Start by adding your first student to the system" %}</p>
                 {% if user.is_admin or user.is_staff %}
                 <a href="{% url 'students:student_create' %}" class="btn-gradient-primary">
-                    <i class="bi bi-plus-circle-fill"></i> Add First Student
+                    <i class="bi bi-plus-circle-fill"></i> {% trans "Add First Student" %}
                 </a>
                 {% endif %}
             </div>

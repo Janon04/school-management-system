@@ -1,6 +1,19 @@
 {% extends 'base.html' %}
 {% load static %}
 
+<!-- Class Assignment -->
+<div class="col-md-12 mb-3">
+    <label for="classes" class="form-label">
+        <i class="bi bi-door-open me-1"></i>Assign Classes
+    </label>
+    <select class="form-select" id="classes" name="classes">
+        <option value="">Select Class</option>
+        {% for class in classes %}
+            <option value="{{ class.id }}" {% if class in assigned_classes %}selected{% endif %}>{{ class.name }}</option>
+        {% endfor %}
+    </select>
+</div>
+
 {% block title %}{{ action }} Subject - School Management System{% endblock %}
 
 {% block content %}
@@ -42,6 +55,18 @@
                         {% csrf_token %}
                         
                         <div class="row">
+                                                        <!-- Teacher Assignment -->
+                                                        <div class="col-md-12 mb-3">
+                                                            <label for="teacher" class="form-label">
+                                                                <i class="bi bi-person-badge me-1"></i>Assign Teacher
+                                                            </label>
+                                                            <select class="form-select" id="teacher" name="teacher">
+                                                                <option value="">Select Teacher</option>
+                                                                {% for teacher in teachers %}
+                                                                    <option value="{{ teacher.id }}" {% if subject and teacher in subject.teachers.all %}selected{% endif %}>{{ teacher.user.get_full_name }}</option>
+                                                                {% endfor %}
+                                                            </select>
+                                                        </div>
                             <!-- Subject Name -->
                             <div class="col-md-8 mb-3">
                                 <label for="name" class="form-label">

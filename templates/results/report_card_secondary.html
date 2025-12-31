@@ -1,4 +1,4 @@
-{% load static %}
+{% load static humanize mathfilters %}
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -394,11 +394,17 @@
     <div class="report-container">
         <!-- Header -->
         <div class="report-header">
-            <div class="school-logo">🏫</div>
-            <div class="school-name">YOUR SCHOOL NAME</div>
-            <div class="school-address">123 School Street, City, Country</div>
-            <div class="school-address">Tel: +1234567890 | Email: info@school.com</div>
-            <div class="school-motto">"Striving for Excellence"</div>
+            <div class="school-logo">
+                {% if school_info.logo %}
+                    <img src="{{ school_info.logo.url }}" alt="School Logo" style="max-width: 70px; max-height: 70px; border-radius: 50%; border: 2px solid #2196F3; background: #fff;">
+                {% else %}
+                    🏫
+                {% endif %}
+            </div>
+            <div class="school-name">{{ school_info.name }}</div>
+            <div class="school-address">{{ school_info.address }}</div>
+            <div class="school-address">Tel: {{ school_info.phone }} | Email: {{ school_info.email }}</div>
+            <div class="school-motto">"{{ school_info.motto }}"</div>
             <div class="report-title">Secondary School Report Card</div>
         </div>
         
@@ -586,7 +592,6 @@
         
         <!-- Footer -->
         <div class="report-footer">
-            <p><strong>Next Term/Semester Begins:</strong> [Insert Date]</p>
             <p>This is an official document issued by the school. Keep it safely for future reference.</p>
         </div>
     </div>

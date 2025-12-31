@@ -1,0 +1,60 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ title }}{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="row justify-content-center">
+        <div class="col-lg-7">
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">{{ title }}</h5>
+                </div>
+                <div class="card-body">
+                    {% if messages %}
+                        {% for message in messages %}
+                        <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                            {{ message }}
+                            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                        </div>
+                        {% endfor %}
+                    {% endif %}
+                    <form method="post">
+                        {% csrf_token %}
+                        {{ form.non_field_errors }}
+                        <div class="mb-3">
+                            <label for="id_class_room" class="form-label">Class</label>
+                            {{ form.class_room }}
+                            {% if form.class_room.errors %}
+                                <div class="text-danger small">{{ form.class_room.errors }}</div>
+                            {% endif %}
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Subjects</label>
+                            {{ form.subjects }}
+                            {% if form.subjects.errors %}
+                                <div class="text-danger small">{{ form.subjects.errors }}</div>
+                            {% endif %}
+                        </div>
+                        <div class="mb-3">
+                            <label for="id_teacher" class="form-label">Teacher</label>
+                            {{ form.teacher }}
+                            {% if form.teacher.errors %}
+                                <div class="text-danger small">{{ form.teacher.errors }}</div>
+                            {% endif %}
+                        </div>
+                        <div class="form-check mb-3">
+                            {{ form.is_active }}
+                            <label class="form-check-label" for="id_is_active">Active</label>
+                        </div>
+                        <button type="submit" class="btn btn-gradient-primary">
+                            <i class="bi bi-check-circle me-2"></i>{{ button_text|default:'Assign' }}
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -59,6 +59,28 @@
                             <td>{{ user.date_joined|date:"F d, Y" }}</td>
                         </tr>
                     </table>
+                    {% if user.role == 'TEACHER' and user.teacher_profile %}
+                    <hr>
+                    <h5 class="mb-2">Professional Information</h5>
+                    <table class="table">
+                        <tr><th>Qualification:</th><td>{{ user.teacher_profile.qualification }}</td></tr>
+                        <tr><th>Specialization:</th><td>{{ user.teacher_profile.specialization }}</td></tr>
+                        <tr><th>Experience (years):</th><td>{{ user.teacher_profile.experience_years }}</td></tr>
+                        <tr><th>Employment Type:</th><td>{{ user.teacher_profile.get_employment_type_display }}</td></tr>
+                        <tr><th>Certifications:</th><td>{{ user.teacher_profile.certifications }}</td></tr>
+                        <tr><th>Bio:</th><td>{{ user.teacher_profile.bio }}</td></tr>
+                    </table>
+                    {% endif %}
+                    {% if user.role == 'STAFF' and user.staff_profile %}
+                    <hr>
+                    <h5 class="mb-2">Staff Information</h5>
+                    <table class="table">
+                        <tr><th>Department:</th><td>{{ user.staff_profile.get_department_display }}</td></tr>
+                        <tr><th>Designation:</th><td>{{ user.staff_profile.designation }}</td></tr>
+                        <tr><th>Joining Date:</th><td>{{ user.staff_profile.joining_date|date:'F d, Y' }}</td></tr>
+                        <tr><th>Salary:</th><td>{{ user.staff_profile.salary }}</td></tr>
+                    </table>
+                    {% endif %}
                 </div>
             </div>
         </div>

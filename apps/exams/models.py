@@ -9,6 +9,19 @@ class Exam(models.Model):
     """
     Exam/Test definition
     """
+    EXAM_STATUS_CHOICES = (
+        ('SCHEDULED', 'Scheduled'),
+        ('ONGOING', 'Ongoing'),
+        ('COMPLETED', 'Completed'),
+        ('POSTPONED', 'Postponed'),
+    )
+
+    status = models.CharField(
+        max_length=12,
+        choices=EXAM_STATUS_CHOICES,
+        default='SCHEDULED',
+        help_text='Current status of the exam.'
+    )
     
     EXAM_TYPE_CHOICES = (
         ('MID_TERM', 'Mid Term'),
@@ -58,6 +71,19 @@ class ExamSchedule(models.Model):
     """
     Schedule for individual exam papers
     """
+    SCHEDULE_STATUS_CHOICES = (
+        ('SCHEDULED', 'Scheduled'),
+        ('COMPLETED', 'Completed'),
+        ('POSTPONED', 'Postponed'),
+        ('CANCELLED', 'Cancelled'),
+    )
+
+    status = models.CharField(
+        max_length=12,
+        choices=SCHEDULE_STATUS_CHOICES,
+        default='SCHEDULED',
+        help_text='Current status of the exam schedule.'
+    )
     exam = models.ForeignKey(
         Exam,
         on_delete=models.CASCADE,

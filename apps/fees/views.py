@@ -6,6 +6,30 @@ from django.contrib.auth.decorators import login_required
 from apps.accounts.decorators import admin_required
 from .models import FeeStructure, Payment, FeeBalance
 from apps.students.models import Student
+from .forms import FeeStructureForm
+
+@login_required
+@admin_required
+def fee_structure_create_view(request):
+    """Create a new fee structure (frontend)"""
+    if request.method == 'POST':
+        form = FeeStructureForm(request.POST)
+        if form.is_valid():
+            fee_structure = form.save()
+            from django.contrib import messages
+            messages.success(request, 'Fee structure added successfully!')
+            return redirect('fees:fee_structure')
+    else:
+        form = FeeStructureForm()
+    return render(request, 'fees/fee_structure_form.html', {'form': form, 'title': 'Add Fee Structure', 'button_text': 'Add Fee'})
+"""
+Views for Fees Management
+"""
+from django.shortcuts import render, get_object_or_404
+from django.contrib.auth.decorators import login_required
+from apps.accounts.decorators import admin_required
+from .models import FeeStructure, Payment, FeeBalance
+from apps.students.models import Student
 
 
 @login_required

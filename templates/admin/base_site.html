@@ -1250,17 +1250,18 @@
     <!-- Sidebar Navigation -->
     <aside class="custom-sidebar" id="adminSidebar">
         <nav class="sidebar-nav">
-            <div class="sidebar-section">
-                <div class="sidebar-section-title">Main</div>
-                <ul class="sidebar-menu">
-                    <li class="sidebar-menu-item">
-                        <a href="{% url 'admin:index' %}" class="sidebar-menu-link">
-                            <i class="bi bi-speedometer2 sidebar-menu-icon"></i>
-                            <span>Dashboard</span>
-                        </a>
-                    </li>
-                </ul>
-            </div>
+                        <div class="sidebar-section">
+                            <div class="sidebar-section-title">Quick Access</div>
+                            <ul class="sidebar-menu">
+                                <li class="sidebar-menu-item">
+                                    <a href="/dashboard/" class="sidebar-menu-link">
+                                        <i class="bi bi-speedometer2 sidebar-menu-icon"></i>
+                                        <span>Admin Dashboard</span>
+                                    </a>
+                                </li>
+                            </ul>
+                        </div>
+            <!-- Removed duplicate dashboard link from admin sidebar -->
             
             <div class="sidebar-section">
                 <div class="sidebar-section-title">Academic</div>

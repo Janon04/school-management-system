@@ -414,17 +414,24 @@
                     This is to certify that the above is a true and accurate record of 
                     {{ item.student.user.get_full_name }}'s academic performance for {{ exam.name }}.
                 </p>
+                <p class="cert-text" style="margin-top: 10px;">
+                    <strong>Date Printed:</strong> {% now "d-M-Y H:i" %}
+                </p>
                 
                 <div class="signatures">
-                    <div class="signature-box">
-                        <div class="signature-line">Academic Advisor</div>
-                    </div>
-                    <div class="signature-box">
-                        <div class="signature-line">Dean of Studies</div>
-                    </div>
-                    <div class="signature-box">
-                        <div class="signature-line">Registrar</div>
-                    </div>
+                                        {# Signature block uses top-level context variables: school_info, class_teacher, headmaster #}
+                    {% include 'results/signature_block.html' with 
+                        signature=school_info.class_teacher_signature 
+                        name=school_info.class_teacher_name|default:class_teacher.full_name|default:'Academic Advisor' 
+                        label='Academic Advisor' %}
+                    {% include 'results/signature_block.html' with 
+                        signature=school_info.school_stamp 
+                        name='' 
+                        label='School Stamp' %}
+                    {% include 'results/signature_block.html' with 
+                        signature=school_info.principal_signature 
+                        name=school_info.principal_name|default:headmaster.full_name|default:'Dean/Registrar' 
+                        label='Dean/Registrar' %}
                 </div>
             </div>
         </div>

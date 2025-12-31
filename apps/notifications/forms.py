@@ -73,7 +73,7 @@ class NotificationForm(forms.ModelForm):
     )
     
     # Custom users selection (only shown when CUSTOM is selected)
-    users = forms.ModelMultipleChoiceField(
+    users = forms.ModelChoiceField(
         queryset=User.objects.all().order_by('role', 'first_name', 'last_name'),
         widget=forms.SelectMultiple(attrs={
             'class': 'form-select',

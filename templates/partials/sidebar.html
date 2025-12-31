@@ -6,75 +6,61 @@
                 <i class="bi bi-house-door"></i> Dashboard
             </a>
         </li>
-        
+
         {% if user.is_admin or user.is_staff %}
-            <li class="nav-item">
-                <a class="nav-link" href="{% url 'students:student_list' %}">
-                    <i class="bi bi-people"></i> Students
-                </a>
+        <li class="nav-item mt-3">
+            <span class="text-uppercase text-muted small ps-3">Admin Management</span>
+        </li>
+            <li class="nav-item ms-2">
+                <a class="nav-link" href="{% url 'school_info_update' %}"><i class="bi bi-building"></i> School Info</a>
             </li>
-            
-            <li class="nav-item">
-                <a class="nav-link" href="{% url 'teachers:teacher_list' %}">
-                    <i class="bi bi-person-badge"></i> Teachers
-                </a>
-            </li>
-            
-            <li class="nav-item">
-                <a class="nav-link" href="{% url 'parents:parent_list' %}">
-                    <i class="bi bi-person-hearts"></i> Parents
-                </a>
-            </li>
-            
-            <li class="nav-item">
-                <a class="nav-link" href="{% url 'staff:staff_list' %}">
-                    <i class="bi bi-person-workspace"></i> Staff
-                </a>
-            </li>
-                <li class="nav-item">
-                    <a class="nav-link" href="/admin/accounts/user/">
-                        <i class="bi bi-people"></i> Users
-                    </a>
-                </li>
+        <li class="nav-item ms-2">
+            <a class="nav-link" href="{% url 'students:student_list' %}"><i class="bi bi-people"></i> Students</a>
+            <a class="nav-link text-success" href="{% url 'students:student_create' %}"><i class="bi bi-plus-circle"></i> Add Student</a>
+        </li>
+        <li class="nav-item ms-2">
+            <a class="nav-link" href="{% url 'teachers:teacher_list' %}"><i class="bi bi-person-badge"></i> Teachers</a>
+            <a class="nav-link text-success" href="{% url 'teachers:teacher_create' %}"><i class="bi bi-plus-circle"></i> Add Teacher</a>
+        </li>
+        <li class="nav-item ms-2">
+            <a class="nav-link" href="{% url 'classes:class_list' %}"><i class="bi bi-door-open"></i> Classes</a>
+            <a class="nav-link text-success" href="{% url 'classes:class_create' %}"><i class="bi bi-plus-circle"></i> Add Class</a>
+        </li>
+        <li class="nav-item ms-2">
+            <a class="nav-link" href="{% url 'accounts:user_list' %}"><i class="bi bi-people"></i> Users</a>
+            <a class="nav-link text-success" href="/admin/accounts/user/add/"><i class="bi bi-plus-circle"></i> Add User</a>
+        </li>
+        <li class="nav-item ms-2">
+            <a class="nav-link" href="{% url 'parents:parent_list' %}"><i class="bi bi-person-hearts"></i> Parents</a>
+        </li>
+        <li class="nav-item ms-2">
+            <a class="nav-link" href="{% url 'staff:staff_list' %}"><i class="bi bi-person-workspace"></i> Staff</a>
+        </li>
         {% endif %}
-        
-        <li class="nav-item">
-            <a class="nav-link" href="{% url 'classes:class_list' %}">
-                <i class="bi bi-door-open"></i> Classes
-            </a>
+
+        <li class="nav-item mt-3">
+            <span class="text-uppercase text-muted small ps-3">Academic</span>
         </li>
-        
-        <li class="nav-item">
-            <a class="nav-link" href="{% url 'classes:subject_list' %}">
-                <i class="bi bi-book"></i> Subjects
-            </a>
+        <li class="nav-item ms-2">
+            <a class="nav-link" href="{% url 'classes:subject_list' %}"><i class="bi bi-book"></i> Subjects</a>
         </li>
-        
+        <li class="nav-item ms-2">
+            <a class="nav-link" href="{% url 'exams:exam_list' %}"><i class="bi bi-clipboard-data"></i> Exams</a>
+            <a class="nav-link text-success" href="{% url 'exams:exam_create' %}"><i class="bi bi-plus-circle"></i> Add Exam</a>
+        </li>
+
         {% if user.is_teacher or user.is_admin %}
-            <li class="nav-item">
-                <a class="nav-link" href="{% url 'attendance:attendance_home' %}">
-                    <i class="bi bi-calendar-check"></i> Attendance
-                </a>
-            </li>
+        <li class="nav-item ms-2">
+            <a class="nav-link" href="{% url 'attendance:attendance_home' %}"><i class="bi bi-calendar-check"></i> Attendance</a>
+        </li>
         {% endif %}
-        
-        <li class="nav-item">
-            <a class="nav-link" href="{% url 'exams:exam_list' %}">
-                <i class="bi bi-clipboard-data"></i> Exams
-            </a>
-        </li>
-        
-        <li class="nav-item">
-            <a class="nav-link" href="{% url 'exams:exam_create' %}">
-                <i class="bi bi-plus-circle"></i> Add Exam
-            </a>
-        </li>
-        
+
         {% if user.is_teacher or user.is_admin or user.is_staff %}
-        <li class="nav-item">
-            <a class="nav-link" href="#" data-bs-toggle="collapse" data-bs-target="#resultsMenu">
-                <i class="bi bi-file-earmark-text"></i> Results & Reports
-            </a>
+        <li class="nav-item mt-3">
+            <span class="text-uppercase text-muted small ps-3">Reports</span>
+        </li>
+        <li class="nav-item ms-2">
+            <a class="nav-link" href="#" data-bs-toggle="collapse" data-bs-target="#resultsMenu"><i class="bi bi-file-earmark-text"></i> Results & Reports</a>
             <div class="collapse" id="resultsMenu">
                 <ul class="nav flex-column ms-3">
                     <li class="nav-item">

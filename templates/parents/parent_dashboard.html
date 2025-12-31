@@ -1,0 +1,49 @@
+{% extends 'base.html' %}
+{% block title %}Parent Dashboard{% endblock %}
+{% block content %}
+<div class="container py-4">
+    <h2 class="mb-4"><i class="bi bi-house-door"></i> My Children</h2>
+    {% if child_reports %}
+    <div class="row">
+        {% for item in child_reports %}
+        {% with child=item.child latest_exam=item.latest_exam report_cards=item.report_cards %}
+        <div class="col-md-6 col-lg-4 mb-4">
+            <div class="card h-100">
+                <div class="card-body text-center">
+                    {% if child.user.profile_picture %}
+                    <img src="{{ child.user.profile_picture.url }}" class="rounded-circle mb-2" width="80" height="80" alt="{{ child.user.get_full_name }}">
+                    {% else %}
+                    <div class="rounded-circle bg-primary text-white d-flex align-items-center justify-content-center mx-auto mb-2" style="width: 80px; height: 80px; font-size: 32px;">
+                        {{ child.user.first_name.0 }}{{ child.user.last_name.0 }}
+                    </div>
+                    {% endif %}
+                    <h5 class="card-title">{{ child.user.get_full_name }}</h5>
+                    <p class="text-muted mb-1">Admission No: <strong>{{ child.admission_number }}</strong></p>
+                    <p class="mb-1">Class: <strong>{{ child.class_assigned|default:'Not Assigned' }}</strong></p>
+                    <a href="{% url 'students:student_detail' child.pk %}" class="btn btn-outline-primary btn-sm mb-2">View Full Profile</a>
+                    {% if latest_exam %}
+                    <a href="{% url 'results:report_card' child.pk latest_exam.pk %}" class="btn btn-outline-success btn-sm mb-2">Latest Report Card</a>
+                    {% endif %}
+                    {% if report_cards %}
+                    <div class="mt-2">
+                        <strong>All Reports:</strong>
+                        <ul class="list-unstyled mb-0">
+                            {% for rc in report_cards %}
+                            <li>
+                                <a href="{% url 'results:report_card' child.pk rc.exam.pk %}" class="link-primary">{{ rc.exam.name }} ({{ rc.exam.term }})</a>
+                            </li>
+                            {% endfor %}
+                        </ul>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        {% endwith %}
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="alert alert-info">No children registered under your account.</div>
+    {% endif %}
+</div>
+{% endblock %}

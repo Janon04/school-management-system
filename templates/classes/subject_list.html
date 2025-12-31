@@ -9,9 +9,12 @@
         <i class="bi bi-book"></i> Subjects Management
     </h1>
     <div class="btn-toolbar mb-2 mb-md-0">
-        {% if user.role == 'ADMIN' %}
-        <a href="{% url 'classes:subject_create' %}" class="btn btn-primary">
+        {% if user.role == 'ADMIN' or user.is_staff %}
+        <a href="{% url 'classes:subject_create' %}" class="btn btn-primary me-2">
             <i class="bi bi-plus-circle"></i> Add Subject
+        </a>
+        <a href="{% url 'classes:classsubject_create' %}" class="btn btn-outline-info">
+            <i class="bi bi-person-badge"></i> Assign Teacher to Subject/Class
         </a>
         {% endif %}
     </div>
@@ -41,7 +44,26 @@
     </div>
 </div>
 
-<!-- Subjects Table -->
+<!-- My Subjects Section (for teachers) -->
+{% if is_teacher and my_subjects %}
+<div class="card mb-4">
+    <div class="card-header bg-info text-white">
+        <h5 class="mb-0"><i class="bi bi-person-lines-fill"></i> My Subjects</h5>
+    </div>
+    <div class="card-body">
+        <ul class="list-group list-group-flush">
+            {% for subject in my_subjects %}
+            <li class="list-group-item">
+                <i class="bi bi-book-fill text-primary"></i>
+                <strong>{{ subject.name }}</strong> ({{ subject.code }})
+            </li>
+            {% endfor %}
+        </ul>
+    </div>
+</div>
+{% endif %}
+
+<!-- All Subjects Table -->
 <div class="card">
     <div class="card-body">
         {% if subjects %}
@@ -79,10 +101,46 @@
                         <td><strong class="text-primary">{{ subject.total_marks }}</strong></td>
                         <td><strong class="text-success">{{ subject.pass_mark }}</strong></td>
                         <td>
-                            <span class="badge bg-success">{{ subject.teacher_set.count }} teacher(s)</span>
+                            {% with teachers=subject.class_subjects.all|dictsort:"teacher_id" %}
+                                {% if teachers %}
+                                    {% regroup teachers by teacher as teacher_list %}
+                                    <ul class="list-unstyled mb-0">
+                                    {% for group in teacher_list %}
+                                        {% if group.grouper %}
+                                            <li>
+                                                <span class="badge bg-success">{{ group.grouper.user.get_full_name }}</span>
+                                            </li>
+                                        {% endif %}
+                                    {% endfor %}
+                                    </ul>
+                                    {% if teacher_list|length == 0 %}
+                                        <span class="badge bg-secondary">No teachers assigned</span>
+                                    {% endif %}
+                                {% else %}
+                                    <span class="badge bg-secondary">No teachers assigned</span>
+                                {% endif %}
+                            {% endwith %}
                         </td>
                         <td>
-                            <span class="badge bg-primary">{{ subject.classsubject_set.count }} class(es)</span>
+                            {% with classes=subject.class_subjects.all|dictsort:"class_room_id" %}
+                                {% if classes %}
+                                    {% regroup classes by class_room as class_list %}
+                                    <ul class="list-unstyled mb-0">
+                                    {% for group in class_list %}
+                                        {% if group.grouper %}
+                                            <li>
+                                                <span class="badge bg-primary">{{ group.grouper.name }}</span>
+                                            </li>
+                                        {% endif %}
+                                    {% endfor %}
+                                    </ul>
+                                    {% if class_list|length == 0 %}
+                                        <span class="badge bg-secondary">No classes assigned</span>
+                                    {% endif %}
+                                {% else %}
+                                    <span class="badge bg-secondary">No classes assigned</span>
+                                {% endif %}
+                            {% endwith %}
                         </td>
                         <td>
                             <div class="btn-group btn-group-sm" role="group">
@@ -101,8 +159,6 @@
                 </tbody>
             </table>
         </div>
-        
-        <!-- Pagination would go here -->
         <div class="mt-3">
             <p class="text-muted">Showing {{ subjects.count }} subject(s)</p>
         </div>
@@ -118,5 +174,5 @@
         </div>
         {% endif %}
     </div>
-</div>
+
 {% endblock %}

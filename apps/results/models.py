@@ -3,6 +3,7 @@ Results Management Models
 """
 from django.db import models
 from django.core.validators import MinValueValidator, MaxValueValidator
+from django.conf import settings
 from apps.students.models import Student
 from apps.classes.models import Subject
 from apps.exams.models import Exam, ExamSchedule
@@ -12,14 +13,29 @@ class Result(models.Model):
     """
     Individual exam results/marks
     """
-    
-    GRADE_CHOICES = (
-        ('A', 'A - Excellent'),
-        ('B', 'B - Very Good'),
-        ('C', 'C - Good'),
-        ('D', 'D - Satisfactory'),
-        ('E', 'E - Pass'),
-        ('F', 'F - Fail'),
+    status = models.CharField(
+        max_length=12,
+        choices=getattr(settings, 'RESULT_STATUS_CHOICES', [
+            ("DRAFT", "Draft"),
+            ("SUBMITTED", "Submitted"),
+            ("APPROVED", "Approved"),
+            ("PUBLISHED", "Published"),
+        ]),
+        default='DRAFT',
+        help_text='Workflow status for result approval and publishing.'
+    )
+
+    grade = models.CharField(
+        max_length=1,
+        choices=getattr(settings, 'RESULT_GRADE_CHOICES', [
+            ("A", "A - Excellent"),
+            ("B", "B - Very Good"),
+            ("C", "C - Good"),
+            ("D", "D - Satisfactory"),
+            ("E", "E - Pass"),
+            ("F", "F - Fail"),
+        ]),
+        blank=True
     )
     
     student = models.ForeignKey(
@@ -48,11 +64,7 @@ class Result(models.Model):
     
     max_marks = models.IntegerField(default=100)
     
-    grade = models.CharField(
-        max_length=1,
-        choices=GRADE_CHOICES,
-        blank=True
-    )
+    # grade field moved above to use settings.RESULT_GRADE_CHOICES
     
     remarks = models.TextField(blank=True)
     
@@ -115,7 +127,6 @@ class Result(models.Model):
         if not self.is_absent and not self.grade:
             self.grade = self.calculate_grade()
         super().save(*args, **kwargs)
-
 
 class ReportCard(models.Model):
     """

@@ -93,16 +93,78 @@
                     <div class="mb-3">
                         <small class="text-muted">Status</small>
                         <div>
-                            {% if exam.end_date < today %}
-                            <span class="badge bg-secondary">Completed</span>
-                            {% elif exam.start_date <= today and exam.end_date >= today %}
-                            <span class="badge bg-success">Ongoing</span>
-                            {% else %}
-                            <span class="badge bg-primary">Upcoming</span>
-                            {% endif %}
+                            {% with exam.schedules.all|dictsortreversed:'exam_date' as sorted_schedules %}
+                                {% if sorted_schedules|length > 0 %}
+                                    {% for sched in sorted_schedules %}
+                                        {% if forloop.first %}
+                                            {% if sched.status == 'POSTPONED' %}
+                                                <span class="badge bg-danger" style="font-size:1.1em;">Postponed</span>
+                                            {% elif sched.status == 'CANCELLED' %}
+                                                <span class="badge bg-dark" style="font-size:1.1em;">Cancelled</span>
+                                            {% elif sched.status == 'COMPLETED' %}
+                                                <span class="badge bg-secondary">Completed</span>
+                                            {% elif exam.status == 'POSTPONED' %}
+                                                <span class="badge bg-danger" style="font-size:1.1em;">Postponed</span>
+                                            {% elif exam.end_date < today %}
+                                                <span class="badge bg-secondary">Completed</span>
+                                            {% elif exam.start_date <= today and exam.end_date >= today %}
+                                                <span class="badge bg-success">Ongoing</span>
+                                            {% else %}
+                                                <span class="badge bg-primary">Upcoming</span>
+                                            {% endif %}
+                                        {% endif %}
+                                    {% endfor %}
+                                {% else %}
+                                    {% if exam.status == 'POSTPONED' %}
+                                        <span class="badge bg-danger" style="font-size:1.1em;">Postponed</span>
+                                    {% elif exam.end_date < today %}
+                                        <span class="badge bg-secondary">Completed</span>
+                                    {% elif exam.start_date <= today and exam.end_date >= today %}
+                                        <span class="badge bg-success">Ongoing</span>
+                                    {% else %}
+                                        <span class="badge bg-primary">Upcoming</span>
+                                    {% endif %}
+                                {% endif %}
+                            {% endwith %}
                         </div>
                     </div>
                     
+                    {% with exam.schedules.all as schedules %}
+                        {% if schedules|length > 0 %}
+                        <div class="mb-2">
+                            <small class="text-muted">Subjects</small>
+                            <div>
+                                {% if schedules|length > 0 %}
+                                    {% with seen_subjects="" %}
+                                        {% for sched in schedules %}
+                                            {% if sched.subject.name not in seen_subjects %}
+                                                <span class="badge bg-light text-dark border">{{ sched.subject.name }}</span>
+                                                {% ifchanged %}{% with seen_subjects=seen_subjects|add:sched.subject.name|add:"," %}{% endwith %}{% endifchanged %}
+                                            {% endif %}
+                                        {% endfor %}
+                                    {% endwith %}
+                                {% else %}
+                                    <span class="text-muted">No subjects scheduled</span>
+                                {% endif %}
+                            </div>
+                        </div>
+                        <div class="mb-2">
+                            <small class="text-muted">Timeline</small>
+                            <div>
+                                <i class="bi bi-calendar-range"></i>
+                                <strong>
+                                    {% for sched in schedules|dictsort:'exam_date' %}
+                                        {% if forloop.first %}{{ sched.exam_date|date:"M d, Y" }}{% endif %}
+                                    {% endfor %}
+                                    -
+                                    {% for sched in schedules|dictsortreversed:'exam_date' %}
+                                        {% if forloop.first %}{{ sched.exam_date|date:"M d, Y" }}{% endif %}
+                                    {% endfor %}
+                                </strong>
+                            </div>
+                        </div>
+                        {% endif %}
+                    {% endwith %}
                     {% if exam.description %}
                     <div class="mb-2">
                         <small class="text-muted">Description</small>
@@ -119,7 +181,7 @@
                         <a href="{% url 'results:report_processing' exam.pk %}" class="btn btn-sm btn-success">
                             <i class="bi bi-file-earmark-text"></i> Reports
                         </a>
-                        <a href="{% url 'admin:exams_exam_change' exam.pk %}" class="btn btn-sm btn-outline-secondary">
+                        <a href="{% url 'exams:exam_update' exam.pk %}" class="btn btn-sm btn-outline-secondary">
                             <i class="bi bi-pencil"></i>
                         </a>
                         {% endif %}

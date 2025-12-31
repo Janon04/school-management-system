@@ -6,9 +6,24 @@ from django.contrib.auth import get_user_model
 from .models import Parent
 
 User = get_user_model()
-
+from apps.students.models import Student
 
 class ParentForm(forms.ModelForm):
+    def student_label(self, student):
+        return f"{student.admission_number} - {student.user.get_full_name()}"
+
+    students = forms.ModelMultipleChoiceField(
+        queryset=Student.objects.filter(is_active=True, parent__isnull=True),
+        required=False,
+        widget=forms.CheckboxSelectMultiple(attrs={'class': 'dropdown-menu show', 'style': 'max-height: 300px; overflow-y: auto;'}),
+        help_text='Assign students to this parent',
+        label='Select Students to Assign',
+        to_field_name=None,
+    )
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields['students'].label_from_instance = self.student_label
     """Form for creating and updating parent records"""
     
     # User fields
@@ -78,7 +93,7 @@ class ParentForm(forms.ModelForm):
         fields = [
             'relation', 'occupation', 'employer', 'office_address',
             'annual_income', 'alt_contact_name', 'alt_contact_phone',
-            'alt_contact_relation', 'is_active'
+            'alt_contact_relation', 'is_active', 'students'
         ]
         widgets = {
             'relation': forms.Select(attrs={
@@ -134,6 +149,9 @@ class ParentForm(forms.ModelForm):
             # Password not required when editing
             self.fields['password'].required = False
             self.fields['password_confirm'].required = False
+            # Pre-select students already assigned to this parent
+            self.fields['students'].queryset = self.fields['students'].queryset | self.instance.children.all()
+            self.fields['students'].initial = self.instance.children.values_list('pk', flat=True)
         else:
             # Password required when creating
             self.fields['password'].required = True
@@ -143,8 +161,10 @@ class ParentForm(forms.ModelForm):
         email = self.cleaned_data.get('email')
         # Check if email already exists (excluding current user if editing)
         qs = User.objects.filter(email=email)
-        if self.instance and self.instance.pk and hasattr(self.instance, 'user'):
-            qs = qs.exclude(pk=self.instance.user.pk)
+        current_user = getattr(self.instance, 'user', None)
+        if current_user and current_user.pk:
+            qs = qs.exclude(pk=current_user.pk)
+        # Only raise error if another user (not the current one) has this email
         if qs.exists():
             raise forms.ValidationError('A user with this email already exists.')
         return email
@@ -163,7 +183,7 @@ class ParentForm(forms.ModelForm):
     
     def save(self, commit=True):
         parent = super().save(commit=False)
-        
+
         # Handle user creation or update
         if self.instance.pk:
             # Update existing user
@@ -173,17 +193,17 @@ class ParentForm(forms.ModelForm):
             user.email = self.cleaned_data['email']
             user.phone_number = self.cleaned_data.get('phone_number', '')
             user.address = self.cleaned_data.get('address', '')
-            
+
             # Update password if provided
             password = self.cleaned_data.get('password')
             if password:
                 user.set_password(password)
-            
+
             # Update profile picture if provided
             profile_picture = self.cleaned_data.get('profile_picture')
             if profile_picture:
                 user.profile_picture = profile_picture
-            
+
             if commit:
                 user.save()
         else:
@@ -198,16 +218,24 @@ class ParentForm(forms.ModelForm):
                 address=self.cleaned_data.get('address', ''),
                 role='PARENT'
             )
-            
+
             # Add profile picture if provided
             profile_picture = self.cleaned_data.get('profile_picture')
             if profile_picture:
                 user.profile_picture = profile_picture
                 user.save()
-            
+
             parent.user = user
-        
+
         if commit:
             parent.save()
-        
+
+        # Assign selected students to this parent
+        if 'students' in self.cleaned_data:
+            selected_students = self.cleaned_data['students']
+            # Remove this parent from students not selected
+            parent.children.exclude(pk__in=selected_students).update(parent=None)
+            # Assign this parent to selected students
+            selected_students.update(parent=parent)
+
         return parent

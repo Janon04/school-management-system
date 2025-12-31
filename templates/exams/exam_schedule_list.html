@@ -34,6 +34,14 @@
                     <td>{{ schedule.max_marks }}</td>
                     <td>{{ schedule.pass_marks }}</td>
                     <td>
+                        <form method="post" action="{% url 'exams:exam_schedule_update_status' schedule.id %}" class="d-inline">
+                            {% csrf_token %}
+                            <select name="status" class="form-select form-select-sm d-inline w-auto align-middle" onchange="this.form.submit()">
+                                {% for value, label in schedule.SCHEDULE_STATUS_CHOICES %}
+                                    <option value="{{ value }}" {% if schedule.status == value %}selected{% endif %}>{{ label }}</option>
+                                {% endfor %}
+                            </select>
+                        </form>
                         <a href="{% url 'exams:exam_schedule_edit' schedule.id %}" class="btn btn-sm btn-warning me-1">Edit</a>
                         <form method="post" action="{% url 'exams:exam_schedule_delete' schedule.id %}" style="display:inline;">
                             {% csrf_token %}

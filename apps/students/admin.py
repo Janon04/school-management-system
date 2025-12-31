@@ -33,12 +33,18 @@ class StudentAdminForm(forms.ModelForm):
         help_text='Login username (will be auto-generated if empty)'
     )
     
+    middle_name = forms.CharField(
+        max_length=50,
+        required=False,
+        help_text='Student middle name (optional)'
+    )
     class Meta:
         model = Student
         fields = '__all__'
         widgets = {
             'medical_conditions': forms.Textarea(attrs={'rows': 3}),
             'previous_school': forms.TextInput(attrs={'size': 50}),
+            'middle_name': forms.TextInput(attrs={'size': 30, 'placeholder': 'Middle name (optional)'}),
         }
     
     def __init__(self, *args, **kwargs):
@@ -125,6 +131,7 @@ class StudentAdmin(admin.ModelAdmin):
         'photo_thumbnail',
         'admission_number_display',
         'full_name_display',
+        'middle_name',
         'class_assigned_display',
         'gender_display',
         'age_display',
@@ -143,6 +150,7 @@ class StudentAdmin(admin.ModelAdmin):
     search_fields = [
         'admission_number',
         'user__first_name',
+        'middle_name',
         'user__last_name',
         'user__email',
         'roll_number',

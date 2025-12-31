@@ -55,13 +55,19 @@ class Student(models.Model):
         default=generate_admission_number,
         help_text='Unique student identification number'
     )
-    
+
+    middle_name = models.CharField(
+        max_length=50,
+        blank=True,
+        help_text='Middle name (optional)'
+    )
+
     roll_number = models.CharField(
         max_length=20,
         blank=True,
         help_text='Class roll number'
     )
-    
+
     date_of_birth = models.DateField(help_text='Student date of birth')
     gender = models.CharField(max_length=1, choices=GENDER_CHOICES)
     blood_group = models.CharField(

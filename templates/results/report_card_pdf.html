@@ -1,0 +1,52 @@
+{% extends 'base.html' %}
+{% load humanize %}
+{% block content %}
+<div style="padding: 2em; font-family: Arial, sans-serif;">
+    <h2 style="text-align:center;">{{ school_info.name }}</h2>
+    <div style="text-align:center; font-size:12pt; color:#555;">{{ school_info.address }} | Tel: {{ school_info.phone }} | Email: {{ school_info.email }}</div>
+    <div style="text-align:center; font-size:11pt; color:#1976D2; font-style:italic; margin-bottom:10px;">"{{ school_info.motto }}"</div>
+    <hr>
+    <h4>Student: {{ student.user.get_full_name }} ({{ student.admission_number }})</h4>
+    <h5>Class: {{ student.class_assigned.name }} | Exam: {{ exam.name }}</h5>
+    <h5>Date: {{ exam.start_date|date:'d M Y' }}</h5>
+    <h5>Class Teacher: {{ class_teacher.full_name if class_teacher else "-" }} | Headmaster/Principal: {{ headmaster.full_name if headmaster else "-" }}</h5>
+    <br>
+    <table border="1" cellspacing="0" cellpadding="6" width="100%" style="border-collapse: collapse;">
+        <thead>
+            <tr style="background:#f0f0f0;">
+                <th>Subject</th>
+                <th>Marks Obtained</th>
+                <th>Max Marks</th>
+                <th>Grade</th>
+                <th>Status</th>
+            </tr>
+        </thead>
+        <tbody>
+        {% for result in results %}
+            <tr>
+                <td>{{ result.subject.name }}</td>
+                <td>{{ result.marks_obtained|intcomma }}</td>
+                <td>{{ result.max_marks|intcomma }}</td>
+                <td>{{ result.grade }}</td>
+                <td>{% if result.is_pass %}Pass{% else %}Fail{% endif %}
+                    <br>
+                    <span style="font-size:8pt;color:#1976D2;">
+                        Rank in Subject: {{ subject_ranks[result.subject.id].rank }} / {{ subject_ranks[result.subject.id].total }}
+                    </span>
+                </td>
+            </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+    <br>
+    <h4>Total: {{ report_card.marks_obtained|intcomma }} / {{ report_card.total_marks|intcomma }}</h4>
+    <h4>Percentage: {{ report_card.percentage|floatformat:2 }}%</h4>
+    <h4>Overall Grade: {{ report_card.overall_grade }}</h4>
+    {% if report_card.gpa %}<h4>GPA: {{ report_card.gpa }}</h4>{% endif %}
+    <br>
+    <p><strong>Teacher's Comment:</strong> {{ report_card.teacher_comment }}</p>
+    <p><strong>Principal's Comment:</strong> {{ report_card.principal_comment }}</p>
+    <br>
+    <p style="text-align:right; font-size:small; color:#888;">Generated on {{ now|date:'d M Y H:i' }}</p>
+</div>
+{% endblock %}

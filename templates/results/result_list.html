@@ -147,10 +147,8 @@
                                     <th><i class="bi bi-calculator me-1"></i>Marks</th>
                                     <th><i class="bi bi-percent me-1"></i>Percentage</th>
                                     <th><i class="bi bi-award me-1"></i>Grade</th>
-                                    <th><i class="bi bi-check-circle me-1"></i>Status</th>
-                                    {% if user.role == 'TEACHER' or user.role == 'ADMIN' %}
+                                    <th><i class="bi bi-flag me-1"></i>Status</th>
                                     <th><i class="bi bi-gear me-1"></i>Actions</th>
-                                    {% endif %}
                                 </tr>
                             </thead>
                             <tbody>
@@ -204,31 +202,59 @@
                                         {% endif %}
                                     </td>
                                     <td>
-                                        {% if result.is_absent %}
-                                            <span class="badge bg-secondary">
-                                                <i class="bi bi-x-circle me-1"></i>Absent
-                                            </span>
-                                        {% elif result.is_pass %}
-                                            <span class="badge bg-success">
-                                                <i class="bi bi-check-circle me-1"></i>Pass
-                                            </span>
-                                        {% else %}
-                                            <span class="badge bg-danger">
-                                                <i class="bi bi-x-circle me-1"></i>Fail
-                                            </span>
-                                        {% endif %}
+                                        <span class="badge 
+                                            {% if result.status == 'DRAFT' %}bg-secondary
+                                            {% elif result.status == 'SUBMITTED' %}bg-info
+                                            {% elif result.status == 'APPROVED' %}bg-success
+                                            {% elif result.status == 'PUBLISHED' %}bg-primary
+                                            {% endif %}">
+                                            <i class="bi bi-flag me-1"></i>
+                                            {{ result.get_status_display }}
+                                        </span>
                                     </td>
-                                    {% if user.role == 'TEACHER' or user.role == 'ADMIN' %}
                                     <td>
                                         <div class="btn-group btn-group-sm">
-                                            <a href="{% url 'results:result_update' result.pk %}" 
-                                               class="btn btn-outline-primary" 
-                                               title="Edit">
-                                                <i class="bi bi-pencil"></i>
-                                            </a>
+                                            {% if result.status == 'DRAFT' and user.role == 'TEACHER' %}
+                                                <a href="{% url 'results:result_update' result.pk %}" class="btn btn-outline-primary" title="Edit">
+                                                    <i class="bi bi-pencil"></i>
+                                                </a>
+                                                <form method="post" action="{% url 'results:result_update' result.pk %}" style="display:inline;">
+                                                    {% csrf_token %}
+                                                    <input type="hidden" name="marks_obtained" value="{{ result.marks_obtained }}">
+                                                    <input type="hidden" name="max_marks" value="{{ result.max_marks }}">
+                                                    <input type="hidden" name="remarks" value="{{ result.remarks }}">
+                                                    <input type="hidden" name="is_absent" value="{{ result.is_absent|yesno:'on,' }}">
+                                                    <button type="submit" name="action" value="submit" class="btn btn-info" title="Submit for Approval">
+                                                        <i class="bi bi-upload"></i>
+                                                    </button>
+                                                </form>
+                                            {% elif result.status == 'SUBMITTED' and user.role in 'ADMIN,HOD' %}
+                                                <form method="post" action="{% url 'results:result_update' result.pk %}" style="display:inline;">
+                                                    {% csrf_token %}
+                                                    <input type="hidden" name="marks_obtained" value="{{ result.marks_obtained }}">
+                                                    <input type="hidden" name="max_marks" value="{{ result.max_marks }}">
+                                                    <input type="hidden" name="remarks" value="{{ result.remarks }}">
+                                                    <input type="hidden" name="is_absent" value="{{ result.is_absent|yesno:'on,' }}">
+                                                    <button type="submit" name="action" value="approve" class="btn btn-success" title="Approve">
+                                                        <i class="bi bi-check2-circle"></i>
+                                                    </button>
+                                                </form>
+                                            {% elif result.status == 'APPROVED' and user.role == 'ADMIN' %}
+                                                <form method="post" action="{% url 'results:result_update' result.pk %}" style="display:inline;">
+                                                    {% csrf_token %}
+                                                    <input type="hidden" name="marks_obtained" value="{{ result.marks_obtained }}">
+                                                    <input type="hidden" name="max_marks" value="{{ result.max_marks }}">
+                                                    <input type="hidden" name="remarks" value="{{ result.remarks }}">
+                                                    <input type="hidden" name="is_absent" value="{{ result.is_absent|yesno:'on,' }}">
+                                                    <button type="submit" name="action" value="publish" class="btn btn-primary" title="Publish">
+                                                        <i class="bi bi-megaphone"></i>
+                                                    </button>
+                                                </form>
+                                            {% else %}
+                                                <span class="text-muted">-</span>
+                                            {% endif %}
                                         </div>
                                     </td>
-                                    {% endif %}
                                 </tr>
                                 {% endfor %}
                             </tbody>

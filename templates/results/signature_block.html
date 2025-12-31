@@ -1,0 +1,9 @@
+<div style="text-align: center; margin: 0 10px;">
+	{% if signature %}
+		<img src="{{ signature.url }}" alt="{{ label }} Signature" style="max-width: 120px; max-height: 60px; width: auto; height: auto; display: block; margin: 0 auto 4px; background: none; border: none; object-fit: contain;">
+	{% endif %}
+	{% if name %}
+		<div style="font-weight: bold;">{{ name }}</div>
+	{% endif %}
+	<div style="font-size: 9pt; color: #555;">{{ label }}</div>
+</div>

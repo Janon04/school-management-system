@@ -10,7 +10,7 @@
     </h1>
     <div class="btn-toolbar mb-2 mb-md-0">
         {% if user.is_admin or user.is_staff %}
-        <a href="{% url 'admin:classes_classroom_add' %}" class="btn btn-primary">
+        <a href="{% url 'classes:class_create' %}" class="btn btn-primary">
             <i class="bi bi-plus-circle"></i> Add Class
         </a>
         {% endif %}
@@ -73,7 +73,7 @@
                     <div class="row text-center">
                         <div class="col-6">
                             <div class="p-2 bg-light rounded">
-                                <h4 class="mb-0 text-primary">{{ class.student_set.count }}</h4>
+                                <h4 class="mb-0 text-primary">{{ class.current_students_count }}</h4>
                                 <small class="text-muted">Students</small>
                             </div>
                         </div>
@@ -98,11 +98,14 @@
                                 <i class="bi bi-eye"></i> View Details
                             </a>
                             {% if user.is_admin or user.is_staff %}
-                            <a href="{% url 'admin:classes_classroom_change' class.pk %}" class="btn btn-sm btn-outline-secondary">
+                            <a href="{% url 'classes:class_update' class.pk %}" class="btn btn-sm btn-outline-secondary">
                                 <i class="bi bi-pencil"></i> Edit
                             </a>
                             {% endif %}
                         </div>
+                        <a href="{% url 'classes:class_subjects' class.pk %}" class="btn btn-sm btn-info w-100">
+                            <i class="bi bi-book"></i> View Subjects
+                        </a>
                         {% if user.is_teacher or user.is_admin %}
                         <a href="{% url 'attendance:mark_attendance' class.pk %}" class="btn btn-sm btn-success w-100">
                             <i class="bi bi-calendar-check"></i> Mark Attendance
@@ -120,7 +123,7 @@
                 <i class="bi bi-inbox display-1 text-muted"></i>
                 <p class="text-muted mt-3">No classes found</p>
                 {% if user.is_admin or user.is_staff %}
-                <a href="{% url 'admin:classes_classroom_add' %}" class="btn btn-primary">
+                <a href="{% url 'classes:class_create' %}" class="btn btn-primary">
                     <i class="bi bi-plus-circle"></i> Add First Class
                 </a>
                 {% endif %}

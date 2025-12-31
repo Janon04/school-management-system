@@ -1,0 +1,91 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="card shadow-lg">
+        <div class="card-header bg-primary text-white">
+            <h3 class="mb-0">Update School Information</h3>
+        </div>
+        <div class="card-body">
+            <form method="post" enctype="multipart/form-data" class="needs-validation" novalidate>
+                {% csrf_token %}
+                {{ form.non_field_errors }}
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label for="id_name">School Name</label>
+                        {{ form.name }}
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label for="id_address">Address</label>
+                        {{ form.address }}
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label for="id_phone">Phone</label>
+                        {{ form.phone }}
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label for="id_email">Email</label>
+                        {{ form.email }}
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label for="id_motto">Motto</label>
+                        {{ form.motto }}
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label for="id_headmaster">Headmaster</label>
+                        {{ form.headmaster }}
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label for="id_logo">School Logo</label><br>
+                        {% if school_info.logo %}
+                            <img src="{{ school_info.logo.url }}" alt="School Logo" class="img-thumbnail mb-2" style="max-height: 120px;">
+                        {% endif %}
+                        {{ form.logo }}
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label for="id_school_stamp">School Stamp</label><br>
+                        {% if school_info.school_stamp %}
+                            <img src="{{ school_info.school_stamp.url }}" alt="School Stamp" class="img-thumbnail mb-2" style="max-height: 120px;">
+                        {% endif %}
+                        {{ form.school_stamp }}
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label for="id_principal_signature">Principal Signature</label><br>
+                        {% if school_info.principal_signature %}
+                            <img src="{{ school_info.principal_signature.url }}" alt="Principal Signature" class="img-thumbnail mb-2" style="max-height: 120px;">
+                        {% endif %}
+                        {{ form.principal_signature }}
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label for="id_class_teacher_signature">Class Teacher Signature</label><br>
+                        {% if school_info.class_teacher_signature %}
+                            <img src="{{ school_info.class_teacher_signature.url }}" alt="Class Teacher Signature" class="img-thumbnail mb-2" style="max-height: 120px;">
+                        {% endif %}
+                        {{ form.class_teacher_signature }}
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label for="id_principal_name">Principal Name (Override)</label>
+                        {{ form.principal_name }}
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label for="id_class_teacher_name">Class Teacher Name (Override)</label>
+                        {{ form.class_teacher_name }}
+                    </div>
+                </div>
+                <button type="submit" class="btn btn-success mt-3">Update Information</button>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

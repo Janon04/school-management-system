@@ -33,6 +33,7 @@ urlpatterns = [
     path('results/', include('apps.results.urls')),
     path('promotions/', include('apps.promotions.urls')),
     path('notifications/', include('apps.notifications.urls')),
+    path('config/', include('apps.config.urls')),
     
     # API endpoints
     path('api/', include('config.api_urls')),

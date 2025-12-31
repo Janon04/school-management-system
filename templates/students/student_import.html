@@ -1,0 +1,35 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load i18n %}
+
+{% block title %}{% trans "Import Students" %} - SMS{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="page-header-modern mb-4">
+        <h1><i class="bi bi-upload"></i> {% trans "Import Students" %}</h1>
+        <p>{% trans "Upload an Excel file using the provided template to add students in bulk." %}</p>
+        <a href="/media/students/student_import_template.xlsx" class="btn btn-outline-primary" style="background: linear-gradient(90deg, #6a11cb 0%, #2575fc 100%); color: #fff; border: none;">
+            <i class="bi bi-download"></i> {% trans "Download Template" %}
+        </a>
+    </div>
+    <div class="card-modern">
+        <div class="card-header">
+            <i class="bi bi-file-earmark-spreadsheet me-2"></i>
+            {% trans "Upload Excel File" %}
+        </div>
+        <div class="card-body">
+            <form method="post" enctype="multipart/form-data">
+                {% csrf_token %}
+                <div class="mb-3">
+                    <label for="file" class="form-label">{% trans "Select Excel File (.xlsx)" %}</label>
+                    <input type="file" class="form-control" id="file" name="file" accept=".xlsx,.xls" required>
+                </div>
+                <button type="submit" class="btn btn-gradient-primary">
+                    <i class="bi bi-upload"></i> {% trans "Import Students" %}
+                </button>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,55 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load humanize %}
+
+{% block title %}Payment Details - School Management System{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="card shadow-sm">
+        <div class="card-header bg-gradient-primary text-white">
+            <h3 class="mb-0"><i class="bi bi-receipt me-2"></i>Payment Details</h3>
+        </div>
+        <div class="card-body">
+            <dl class="row">
+                <dt class="col-sm-4">Receipt Number</dt>
+                <dd class="col-sm-8">{{ payment.receipt_number }}</dd>
+
+                <dt class="col-sm-4">Student</dt>
+                <dd class="col-sm-8">{{ payment.student.user.get_full_name }} ({{ payment.student.admission_number|intcomma }})</dd>
+
+                <dt class="col-sm-4">Class</dt>
+                <dd class="col-sm-8">{{ payment.student.class_assigned.name }}</dd>
+
+                <dt class="col-sm-4">Fee Type</dt>
+                <dd class="col-sm-8">{{ payment.fee_structure.get_fee_type_display }}</dd>
+
+                <dt class="col-sm-4">Amount Paid</dt>
+                <dd class="col-sm-8 text-success fw-bold">{{ payment.amount_paid|floatformat:2|intcomma }} Frw</dd>
+
+                <dt class="col-sm-4">Payment Date</dt>
+                <dd class="col-sm-8">{{ payment.payment_date|date:"M d, Y" }}</dd>
+
+                <dt class="col-sm-4">Payment Method</dt>
+                <dd class="col-sm-8">{{ payment.get_payment_method_display }}</dd>
+
+                <dt class="col-sm-4">Status</dt>
+                <dd class="col-sm-8">{{ payment.get_status_display }}</dd>
+
+                <dt class="col-sm-4">Transaction Reference</dt>
+                <dd class="col-sm-8">{{ payment.transaction_reference }}</dd>
+
+                <dt class="col-sm-4">Remarks</dt>
+                <dd class="col-sm-8">{{ payment.remarks|default:'-' }}</dd>
+
+                <dt class="col-sm-4">Received By</dt>
+                <dd class="col-sm-8">{{ payment.received_by.get_full_name|default:'-' }}</dd>
+
+                <dt class="col-sm-4">Created At</dt>
+                <dd class="col-sm-8">{{ payment.created_at|date:"M d, Y H:i" }}</dd>
+            </dl>
+            <a href="{% url 'fees:payment_list' %}" class="btn btn-secondary mt-3"><i class="bi bi-arrow-left"></i> Back to Payments</a>
+        </div>
+    </div>
+</div>
+{% endblock %}

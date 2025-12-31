@@ -396,12 +396,13 @@
 
         <!-- Header -->
         <div class="report-header">
-            <div class="school-logo">🎓</div>
-            <div class="school-name">YOUR SCHOOL NAME</div>
-            <div class="school-address">
-                P.O. Box 12345, City Name, Country | Tel: +123 456 7890 | Email: info@yourschool.edu
-            </div>
-            <div class="school-motto">"Excellence • Integrity • Leadership"</div>
+            {% if school_info and school_info.logo %}
+                <img src="{{ school_info.logo.url }}" alt="School Logo" style="height: 60px; margin-bottom: 8px;">
+            {% endif %}
+            <div class="school-name">{{ school_info.name|default:'PRIMARY SCHOOL' }}</div>
+            <div style="font-size: 13px; color: #003366; margin-bottom: 2px;">{{ school_info.address }}</div>
+            <div style="font-size: 12px; color: #003366; margin-bottom: 2px;">Tel: {{ school_info.phone }} | Email: {{ school_info.email }}</div>
+            <div style="font-size: 12px; color: #0055aa; font-style: italic; margin-bottom: 8px;">"{{ school_info.motto }}"</div>
             <div class="report-title">STUDENT PROGRESS REPORT</div>
         </div>
 
@@ -428,6 +429,50 @@
                     <td class="info-value">{{ student.date_of_birth|date:"d-M-Y" }}</td>
                     <td class="info-label">GENDER</td>
                     <td class="info-value">{{ student.get_gender_display }}</td>
+                </tr>
+                <tr>
+                    <td class="info-label">CLASS TEACHER</td>
+                    <td class="info-value" colspan="3">
+                        {% if school_info.class_teacher_signature %}
+                            <img src="{{ school_info.class_teacher_signature.url }}" alt="Class Teacher Signature" style="max-height: 50px; display: block; margin-bottom: 2px;">
+                        {% endif %}
+                        <strong>
+                        {% if school_info.class_teacher_name %}
+                            {{ school_info.class_teacher_name }}
+                        {% elif class_teacher %}
+                            {{ class_teacher.full_name }}
+                        {% else %}
+                            -
+                        {% endif %}
+                        </strong>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="info-label">HEADMASTER/PRINCIPAL</td>
+                    <td class="info-value" colspan="3">
+                        {% if school_info.principal_signature %}
+                            <img src="{{ school_info.principal_signature.url }}" alt="Principal Signature" style="max-height: 50px; display: block; margin-bottom: 2px;">
+                        {% endif %}
+                        <strong>
+                        {% if school_info.principal_name %}
+                            {{ school_info.principal_name }}
+                        {% elif headmaster %}
+                            {{ headmaster.full_name }}
+                        {% else %}
+                            -
+                        {% endif %}
+                        </strong>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="info-label">SCHOOL STAMP</td>
+                    <td class="info-value" colspan="3">
+                        {% if school_info.school_stamp %}
+                            <img src="{{ school_info.school_stamp.url }}" alt="School Stamp" style="max-height: 50px;">
+                        {% else %}
+                            -
+                        {% endif %}
+                    </td>
                 </tr>
             </table>
         </div>
@@ -491,6 +536,10 @@
                         {% else %}
                             Needs Improvement
                         {% endif %}
+                        <br>
+                        <span style="font-size:8pt;color:#1976D2;">
+                            Rank in Subject: {{ subject_ranks[result.subject.id].rank }} / {{ subject_ranks[result.subject.id].total }}
+                        </span>
                     </td>
                 </tr>
                 {% endfor %}
@@ -588,34 +637,18 @@
         </div>
 
         <!-- Signatures -->
-        <div class="signature-section">
-            <div class="signature-box">
-                <div class="signature-line">
-                    CLASS TEACHER
-                </div>
-                <div class="signature-label">Signature & Date</div>
-            </div>
-            <div class="signature-box">
-                <div class="signature-line">
-                    PRINCIPAL
-                </div>
-                <div class="signature-label">Signature & Stamp</div>
-            </div>
-            <div class="signature-box">
-                <div class="signature-line">
-                    PARENT/GUARDIAN
-                </div>
-                <div class="signature-label">Signature & Date</div>
-            </div>
+        <div class="signature-section" style="display: flex; justify-content: center; gap: 40px; margin-top: 30px;">
+            {% include 'results/signature_block.html' with signature=school_info.class_teacher_signature name=school_info.class_teacher_name|default:'Class Teacher' label='Class Teacher' %}
+            {% include 'results/signature_block.html' with signature=school_info.school_stamp name='' label='School Stamp' %}
+            {% include 'results/signature_block.html' with signature=school_info.principal_signature name=school_info.principal_name|default:'Principal' label='Principal' %}
         </div>
 
         <!-- Footer -->
         <div class="footer">
-            <p><strong>Date of Issue:</strong> {{ report_card.generated_at|date:"d-m-Y" }}</p>
-            <p style="margin-top: 8px; font-style: italic;">
-                This is an official academic document. Please preserve it for future reference.<br>
-                Next term begins on: ________________
-            </p>
+            <div><strong>Date Printed:</strong> {% now "d-M-Y H:i" %}</div>
+            <div style="margin-top: 8px; font-style: italic;">
+                This is an official academic document. Please preserve it for future reference.
+            </div>
         </div>
     </div>
 </body>

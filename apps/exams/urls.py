@@ -1,3 +1,4 @@
+
 from django.urls import path
 from . import views
 
@@ -13,4 +14,6 @@ urlpatterns = [
     path('<int:exam_id>/schedule/add/', views.exam_schedule_create_view, name='exam_schedule_add'),
     path('schedule/<int:pk>/edit/', views.exam_schedule_edit_view, name='exam_schedule_edit'),
     path('schedule/<int:pk>/delete/', views.exam_schedule_delete_view, name='exam_schedule_delete'),
+    path('schedule/<int:pk>/update_status/', views.exam_schedule_update_status_view, name='exam_schedule_update_status'),
+    path('ajax/get_subjects/', views.get_subjects_for_class, name='ajax_get_subjects'),
 ]

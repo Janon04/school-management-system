@@ -1,5 +1,22 @@
 {% extends 'base.html' %}
 {% load static %}
+<!-- Status Section -->
+<div class="form-section">
+    <h5 class="section-title">
+        <i class="bi bi-flag-fill me-2"></i>
+        Exam Status
+    </h5>
+    <div class="row g-3">
+        <div class="col-md-6">
+            <label class="form-label">Status <span class="text-danger">*</span></label>
+            {{ form.status }}
+            {% if form.status.errors %}
+                <div class="invalid-feedback d-block">{{ form.status.errors.0 }}</div>
+            {% endif %}
+            <small class="form-text text-muted">Set to 'Postponed' if the exam is delayed.</small>
+        </div>
+    </div>
+</div>
 
 {% block title %}{{ title }} - SMS{% endblock %}
 

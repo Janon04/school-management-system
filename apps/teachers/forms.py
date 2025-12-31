@@ -189,10 +189,7 @@ class TeacherForm(forms.ModelForm):
     def clean_employee_id(self):
         employee_id = self.cleaned_data.get('employee_id')
         if employee_id:
-            # Check if employee_id exists for another teacher
-            existing_teacher = Teacher.objects.filter(employee_id=employee_id).exclude(
-                pk=self.instance_pk
-            ).first()
+            subjects = forms.ModelChoiceField(queryset=Subject.objects.filter(is_active=True), required=False, widget=forms.Select(attrs={'class': 'form-select'}))
             if existing_teacher:
                 raise forms.ValidationError('A teacher with this employee ID already exists.')
         return employee_id

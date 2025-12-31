@@ -28,6 +28,13 @@
                 <!-- Sidebar -->
                 <nav class="col-md-2 col-lg-2 d-md-block bg-light sidebar">
                     {% include 'partials/sidebar.html' %}
+                    {% if user.is_authenticated and user.parent_profile %}
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'parents:parent_dashboard' %}">
+                            <i class="bi bi-house-door"></i> My Children
+                        </a>
+                    </li>
+                    {% endif %}
                 </nav>
                 
                 <!-- Main Content -->
@@ -53,7 +60,7 @@
     {% endif %}
     
     <!-- Footer -->
-    <footer class="footer mt-auto py-3 bg-light">
+    <footer class="footer mt-auto py-3 bg-light w-100">
         <div class="container text-center">
             <span class="text-muted">&copy; 2025 School Management System. All rights reserved.</span>
         </div>

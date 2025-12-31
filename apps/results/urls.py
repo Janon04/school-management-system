@@ -30,6 +30,7 @@ urlpatterns = [
     
     # Report Card View
     path('report-card/<int:student_id>/<int:exam_id>/', views.report_card_view, name='report_card'),
+    path('report-card-pdf/<int:student_id>/<int:exam_id>/', views.report_card_pdf, name='report_card_pdf'),
     
     # Student Results
     path('student/<int:student_id>/', views.student_results_view, name='student_results'),

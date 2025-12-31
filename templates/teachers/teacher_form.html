@@ -313,7 +313,7 @@
             <div class="col-md-6 mb-3">
                 <label for="{{ form.subjects.id_for_label }}" class="form-label">Subjects Teaching</label>
                 {{ form.subjects }}
-                <small class="form-text text-muted">Hold Ctrl (Cmd on Mac) to select multiple subjects</small>
+                <!-- Removed multiple selection instruction for consistency -->
                 {% if form.subjects.errors %}
                     <div class="text-danger small">{{ form.subjects.errors }}</div>
                 {% endif %}

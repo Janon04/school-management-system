@@ -1,0 +1,50 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Subjects for {{ class_room.name }} - SMS{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2><i class="bi bi-book"></i> Subjects for {{ class_room.name }}</h2>
+        <a href="{% url 'classes:class_list' %}" class="btn btn-light"><i class="bi bi-arrow-left"></i> Back to Classes</a>
+    </div>
+    <div class="card">
+        <div class="card-body">
+            {% if class_subjects %}
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>Subject Code</th>
+                            <th>Subject Name</th>
+                            <th>Type</th>
+                            <th>Total Marks</th>
+                            <th>Pass Mark</th>
+                            <th>Teacher</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for cs in class_subjects %}
+                        <tr>
+                            <td>{{ cs.subject.code }}</td>
+                            <td>{{ cs.subject.name }}</td>
+                            <td>{{ cs.subject.get_category_display }}</td>
+                            <td>{{ cs.subject.total_marks }}</td>
+                            <td>{{ cs.subject.pass_mark }}</td>
+                            <td>{% if cs.teacher %}{{ cs.teacher.user.get_full_name }}{% else %}<span class="text-muted">Not assigned</span>{% endif %}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <div class="text-center py-5">
+                <i class="bi bi-inbox display-1 text-muted"></i>
+                <p class="text-muted mt-3">No subjects registered for this class.</p>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

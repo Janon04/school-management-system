@@ -78,6 +78,7 @@ class StudentForm(forms.ModelForm):
     class Meta:
         model = Student
         fields = [
+            'middle_name',
             'date_of_birth', 'gender', 'blood_group', 'nationality', 'religion',
             'roll_number', 'class_assigned', 'academic_year', 'admission_date',
             'parent', 'emergency_contact_name', 'emergency_contact_phone',
@@ -85,6 +86,10 @@ class StudentForm(forms.ModelForm):
             'photo', 'is_active'
         ]
         widgets = {
+            'middle_name': forms.TextInput(attrs={
+                'class': 'form-control',
+                'placeholder': 'Enter middle name (optional)'
+            }),
             'date_of_birth': forms.DateInput(attrs={
                 'class': 'form-control',
                 'type': 'date'

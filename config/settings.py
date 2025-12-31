@@ -1,3 +1,21 @@
+
+
+# Choices for Result model (centralized)
+RESULT_STATUS_CHOICES = [
+    ("DRAFT", "Draft"),
+    ("SUBMITTED", "Submitted"),
+    ("APPROVED", "Approved"),
+    ("PUBLISHED", "Published"),
+]
+
+RESULT_GRADE_CHOICES = [
+    ("A", "A - Excellent"),
+    ("B", "B - Very Good"),
+    ("C", "C - Good"),
+    ("D", "D - Satisfactory"),
+    ("E", "E - Pass"),
+    ("F", "F - Fail"),
+]
 """
 Django settings for School Management System project.
 
@@ -31,12 +49,12 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    
+    'django.contrib.humanize',
+    'mathfilters',
     # Third-party apps
     'rest_framework',
     'rest_framework.authtoken',
     'corsheaders',
-    
     # Local apps
     'apps.accounts',
     'apps.students',
@@ -50,6 +68,7 @@ INSTALLED_APPS = [
     'apps.results',
     'apps.promotions',
     'apps.notifications',
+    'apps.config',
 ]
 
 MIDDLEWARE = [
